@@ -1,0 +1,135 @@
+---
+---
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% include headPadrao.html %}
+
+  <title>Monitoramento de Ônibus</title>
+
+</head>
+
+<body>
+  
+  <div id="hideElement1" class="transition-transform duration-700 ease-in-out z-50">
+    
+    {% include header.html %}
+
+    <section class="flex absolute items-start flex-col z-40">
+      <div id="hideBtn1" class="hideBtn relative
+            bg-sptrans text-white font-extrabold
+            w-96 h-24 font-roboto-mono text-center cursor-pointer
+            flex items-center justify-center
+            invisible lg:visible shadow-xl rounded-br-3xl">
+        <i id="HideBtnText" class="fas fa-chevron-up text-3xl pr-2.5 text-white/85"></i>
+        <p id="horas" class="text-6xl">--:--:--</p>
+      </div>
+
+      <div id="minusPlus" class="invisible lg:visible flex flex-row text-center cursor-pointer text-gray-900">
+        <div id="minus" class="shadow-xl px-[15px] py-3 text-[10px] bg-gray-100 rounded-bl-[14px] border-2 border-gray-400
+          hover:text-sptrans hover:bg-gray-400 transition-all duration-300 ease-out">
+          <i class="fas fa-minus"></i>
+        </div>
+        <div id="plus" class="shadow-xl px-[15px] py-3 text-[10px] bg-gray-100 rounded-br-[14px] border-2 border-gray-400
+          hover:text-sptrans hover:bg-gray-400 transition-all duration-300 ease-out">
+          <i class="fas fa-plus"></i>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+  <button id="btnVerMapa" class="fixed bottom-7 border-2 border-sptrans bg-white text-sptrans px-4 py-2 rounded-lg font-bold font-roboto-mono cursor-pointer hover:bg-sptrans hover:text-white transition duration-300 ease-in-out shadow-2xs">
+    <i class="fas fa-map-marked-alt mr-2"></i> Abrir Mapa
+</button>
+
+  <section id="linhas" class="max-w-full px-4 lg:px-10">
+    <div class="bg-white shadow-lg rounded-2xl p-6 overflow-x-auto">
+      <div class="mb-2 flex flex-col place-self-center items-center">
+
+  <div class="flex items-center gap-3">
+    <span class="text-xl font-bold" id="textoTitulo">Favoritar Exibição</span>
+
+    <i id="favStar"
+       class="far fa-star text-yellow-400 text-2xl cursor-pointer transition-transform duration-300"
+       style="display: none;">
+    </i>
+
+    <div id="favInline"
+         class="ml-2 px-3 py-1 rounded-lg text-sm text-white font-semibold shadow-lg
+                opacity-0 pointer-events-none transition-opacity duration-300 hidden">
+      </div>
+  </div>
+
+  <span class="text-sm font-normal font-roboto-mono italic" id="textoCodigo">Código:</span>
+</div>
+
+      <div class="mb-4 relative flex flex-col sm:flex-row justify-center items-center w-full z-10 gap-3">
+        
+        <input 
+          type="text" 
+          id="barraPesquisa" 
+          placeholder="Pesquisar linha"
+          class="w-full sm:w-96 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-sptrans text-base text-center sm:text-left"/>
+
+        <div class="w-full sm:w-96 sm:absolute sm:right-0">
+          <select 
+            id="filtroOrdenacao" 
+            class="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-sptrans text-sm bg-white text-gray-700 cursor-pointer font-bold text-center">
+            <option value="padrao">Ordenar: Padrão</option>
+            <option value="nome">Nome (A-Z)</option>
+            <option value="tempo">Horário </option>
+          </select>
+        </div>
+
+      </div>
+
+      <table class="min-w-full border-collapse mx-auto table-auto lg:text-3xl">
+        <thead>
+          <tr class="bg-gray-100 font-extrabold">
+            <th class="text-center py-3 px-6">Código</th>
+            <th class="text-center py-3 px-6">Nome</th>
+            <th class="text-center py-3 px-6">Previsão</th>
+            <th class="text-center py-3 px-6">Status</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaBody">
+          <tr class="border-b hover:bg-gray-50">
+            <td class="text-center py-3 px-6 font-extrabold">273D-10</td>
+            <td class="text-center py-3 px-6 ">Arthur Alvin</td>
+            <td class="text-center py-3 px-6">11:21</td>
+            <td class="text-center py-3 px-6">
+              <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 font-semibold text-sm lg:text-2xl">
+                <span class="relative flex w-2 h-2 mr-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-green-600"></span>
+                </span>Normal
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="fixed w-full bottom-0 bg-sptrans z-50 py-0 px-2.5 text-white font-medium font-roboto-mono flex items-center justify-between text-[10px] h-[20px]">
+  
+  <div class="flex-1 overflow-hidden relative h-full mr-0 flex items-center justify-end"> 
+    <div class="animacao-letreiro">
+      Desenvolvido por: João Pedro, Mateus S. Rodrigues e Pedro H. Giacomo
+    </p>
+  </div>
+
+  <div class="whitespace-nowrap z-20 bg-sptrans pl-4 border-l-2 border-red-800 h-full flex items-center">
+    <p>Versão: 1.1.1</p>
+  </div>
+
+</section>
+
+  <script type="module" src="../js/exibicao.js"></script>
+  <script src="../js/mobile-navbar.js"></script>
+  <script type="module" src="../js/userMenu.js"></script> </body>
+</html>

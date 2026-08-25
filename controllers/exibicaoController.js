@@ -1,0 +1,379 @@
+const { prisma } = require('../models/prisma'); // Importa a instância do Prisma
+const { nanoid } = require('nanoid');
+
+// Cria uma nova exibição
+async function criarExibicao(req, res) {
+  const usuarioLogado = req.id_usuario_logado;
+  
+  const { nome_exibicao, codigos_parada, config, fac_id } = req.body; 
+  
+  if (!codigos_parada || !Array.isArray(codigos_parada) || codigos_parada.length === 0 || codigos_parada.length > 5) {
+    return res.status(400).json({ 
+      error: 'Há um problema com codigos_parada. (Não é nulo? É um array? Igual a 0? Maior que 5?).' 
+    });
+  }
+
+  try {
+    let codigo_exib;
+    let existe = true;
+
+    while (existe) {
+      codigo_exib = nanoid(6);
+      const exibicaoExistente = await prisma.exibicao.findUnique({
+        where: { codigo_exib: codigo_exib }
+      });
+      existe = !!exibicaoExistente;
+    }
+  
+    // --- [MUDANÇA 2] Processa as configurações ---
+    // Usa valores padrão se o usuário não enviou nada
+    const tempoAtraso = config?.tempo_atraso || 2;
+    const tempoAdiantado = config?.tempo_adiantado || 2;
+    // Mapeia 'distanciaMinOnibus' do front para a variável que vai pro banco
+    const distanciaMinima = config?.distanciaMinOnibus || 20; 
+
+    // Salva no banco de dados
+    const novaExibicao = await prisma.exibicao.create({
+      data: {
+        id_usu: usuarioLogado,
+        codigo_exib: codigo_exib,
+        nome_exibicao: nome_exibicao,
+        
+        fac_id: fac_id ? parseInt(fac_id) : null,
+
+        tempo_atraso: tempoAtraso,
+        tempo_adiantado: tempoAdiantado,
+        // Salvamos a distância no campo 'quantidade_onibus' (reaproveitamento do banco)
+        quantidade_onibus: distanciaMinima, 
+        
+        paradas: {
+          create: codigos_parada.map( cadaCodigo => ({
+            codigo_parada: cadaCodigo
+          }))
+        }
+      }
+    });
+
+    res.status(201).json({
+      message: "Sucesso ao criar exibição!",
+      codigo_exib: codigo_exib,
+      dados: novaExibicao
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Erro ao criar exibição.'
+    });
+  }
+}
+
+// Favoritar uma exibição
+async function favoritar(req, res) {
+  const id_usuario = req.id_usuario_logado; // Vem do Middleware de autenticação
+  const { codigo_exib } = req.body; // O frontend deve enviar { "codigo_exib": "XXXXXX" }
+
+  try {
+    // 1. Precisamos achar o ID interno (UUID) da exibição baseada no código público
+    const exibicao = await prisma.exibicao.findUnique({
+        where: { codigo_exib: codigo_exib }
+    });
+
+    if (!exibicao) {
+        return res.status(404).json({ error: 'Exibição não encontrada para favoritar.' });
+    }
+
+    // 2. Verifica se já está favoritado para não duplicar
+    const jaFavorito = await prisma.favoritos.findFirst({
+        where: {
+            usu_id: id_usuario,
+            exib_id: exibicao.id_exib // Usa o UUID interno
+        }
+    });
+
+    if (jaFavorito) {
+        return res.status(200).json({ message: "Esta exibição já está nos seus favoritos." });
+    }
+  
+    // 3. Salva no banco de dados
+    const novoFavorito = await prisma.favoritos.create({
+      data: {
+        usu_id: id_usuario,
+        exib_id: exibicao.id_exib
+      }
+    });
+
+    res.status(201).json({
+      message: "Sucesso ao favoritar!",
+      dados: novoFavorito
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      error: 'Erro ao favoritar.'
+    });
+  }
+}
+
+// Remover dos favoritos
+async function desfavoritar(req, res) {
+    const id_usuario = req.id_usuario_logado;
+    const { codigo_exib } = req.body;
+  
+    try {
+      // 1. Busca a exibição pelo código para pegar o ID interno
+      const exibicao = await prisma.exibicao.findUnique({
+          where: { codigo_exib: codigo_exib }
+      });
+  
+      if (!exibicao) {
+          return res.status(404).json({ error: 'Exibição não encontrada.' });
+      }
+  
+      // 2. Remove o registro da tabela de favoritos
+      // Usamos deleteMany para garantir que removemos apenas o vínculo deste usuário com esta exibição
+      await prisma.favoritos.deleteMany({
+        where: {
+          usu_id: id_usuario,
+          exib_id: exibicao.id_exib
+        }
+      });
+  
+      res.status(200).json({
+        message: "Removido dos favoritos com sucesso!"
+      });
+  
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        error: 'Erro ao desfavoritar.'
+      });
+    }
+}
+
+// Busca uma exibição pelo código público (6 dígitos)
+async function getExibicao(req, res) {
+  const codigo_exib = req.params.codigo_exib;
+
+  try {
+    const exibicao = await prisma.exibicao.findUnique({
+      where: { codigo_exib: codigo_exib
+      },
+      include: {
+        paradas: {
+          select: { 
+            codigo_parada: true } 
+        }
+      }
+    });
+
+    if (exibicao) {
+      res.status(200).json(exibicao);
+    } else {
+      res.status(404).json({
+        error: 'Erro ao buscar exibição.'
+      });
+    }
+    
+
+  } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        error: 'Ocorreu um erro interno do servidor.'
+     });
+  }
+}
+
+// Busca todas as exibições de um usuário logado
+async function getExibicoesUsuario(req, res) {
+  try {
+    // Pegamos o id do usuario que queremos achar...
+    const id_usu = req.id_usuario_logado;
+
+    const exibicoes = await prisma.exibicao.findMany({
+      where: {
+        id_usu: id_usu
+      },
+      include: {
+        paradas: {
+          select: { codigo_parada: true }
+        }
+      }
+    });
+
+    res.status(200).json(exibicoes);
+
+
+  } catch(error) {
+    console.error("Erro ao buscar exibições: ", error);
+    res.status(500).json({
+      error: 'Erro interno do servidor.'
+    });
+  }
+}
+
+   // Verifica se o usuário já favoritou a exibição
+async function verificarFavorito(req, res) {
+    const id_usuario = req.id_usuario_logado;
+    const codigo_exib = req.query.codigo; // Vamos receber via Query Params
+
+    try {
+        // 1. Busca o ID interno da exibição
+        const exibicao = await prisma.exibicao.findUnique({
+            where: { codigo_exib: codigo_exib }
+        });
+
+        if (!exibicao) {
+            return res.status(404).json({ favoritado: false });
+        }
+
+        // 2. Busca se existe o favorito
+        const favorito = await prisma.favoritos.findFirst({
+            where: {
+                usu_id: id_usuario,
+                exib_id: exibicao.id_exib
+            }
+        });
+
+        // Retorna true se achou, false se não achou
+        res.status(200).json({ favoritado: !!favorito });
+
+    } catch (error) {
+        console.error("Erro ao verificar favorito:", error);
+        res.status(500).json({ error: 'Erro interno.' });
+    }
+}
+
+  // Lista todos os favoritos do usuário logado
+async function listarFavoritos(req, res) {
+    const id_usuario = req.id_usuario_logado;
+
+    try {
+        const favoritos = await prisma.favoritos.findMany({
+            where: {
+                usu_id: id_usuario
+            },
+            include: {
+                exibicao: true // Isso traz o nome e o código da exibição associada!
+            }
+        });
+
+        res.status(200).json(favoritos);
+
+    } catch (error) {
+        console.error("Erro ao listar favoritos:", error);
+        res.status(500).json({ error: 'Erro interno ao buscar favoritos.' });
+    }
+}
+
+  async function deletarExibicao(req, res) {
+  const usuarioLogado = req.id_usuario_logado;
+  const { codigo_exib } = req.body;
+
+  try {
+    // 1. Verifica se a exibição existe
+    const exibicao = await prisma.exibicao.findUnique({
+      where: { codigo_exib: codigo_exib }
+    });
+
+    if (!exibicao) return res.status(404).json({ error: "Exibição não encontrada." });
+    
+    // 2. Verifica permissão (apenas o dono pode excluir)
+    if (exibicao.id_usu !== usuarioLogado) {
+      return res.status(403).json({ error: "Sem permissão para excluir." });
+    }
+
+    // 3. Deleta tudo relacionado (Transação)
+    await prisma.$transaction([
+      // Remove dos favoritos de quem salvou
+      prisma.favoritos.deleteMany({
+        where: { exib_id: exibicao.id_exib } // Usa o UUID
+      }),
+      // Remove os pontos de parada
+      prisma.exibicao_parada.deleteMany({
+        where: { id_exib: codigo_exib } // Usa o Código Público
+      }),
+      // Remove a exibição em si
+      prisma.exibicao.delete({
+        where: { codigo_exib: codigo_exib }
+      })
+    ]);
+
+    res.status(200).json({ message: "Exibição excluída com sucesso!" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Erro ao excluir." });
+  }
+}
+
+async function editarExibicao(req, res) {
+  const usuarioLogado = req.id_usuario_logado;
+  const { codigo_exib, nome_exibicao, codigos_parada, config, fac_id } = req.body;
+
+  try {
+    // 1. Verifica se a exibição existe
+    const exibicaoExistente = await prisma.exibicao.findUnique({
+      where: { codigo_exib: codigo_exib }
+    });
+
+    if (!exibicaoExistente) {
+      return res.status(404).json({ error: "Exibição não encontrada." });
+    }
+
+    // 2. Segurança: Verifica se pertence ao usuário logado
+    if (exibicaoExistente.id_usu !== usuarioLogado) {
+      return res.status(403).json({ error: "Você não tem permissão para editar esta exibição." });
+    }
+
+    // 3. Prepara configurações (mantendo valores padrão se não vierem)
+    const tempoAtraso = config?.tempo_atraso || 2;
+    const tempoAdiantado = config?.tempo_adiantado || 2;
+    const distanciaMinima = config?.distanciaMinOnibus || 20;
+
+    // 4. Atualiza no banco (Transaction: Atualiza dados + Recria paradas)
+    const exibicaoAtualizada = await prisma.exibicao.update({
+      where: { codigo_exib: codigo_exib },
+      data: {
+        nome_exibicao: nome_exibicao,
+        tempo_atraso: tempoAtraso,
+        tempo_adiantado: tempoAdiantado,
+        quantidade_onibus: distanciaMinima, // Lembra que salvamos distância aqui
+        last_update: new Date(),
+
+        fac_id: fac_id ? parseInt(fac_id) : null,
+
+        paradas: {
+          deleteMany: {}, // Remove todas as paradas antigas
+          create: codigos_parada.map(cadaCodigo => ({ // Cria as novas
+            codigo_parada: cadaCodigo
+          }))
+        }
+      }
+    });
+
+    res.status(200).json({
+      message: "Exibição atualizada com sucesso!",
+      dados: exibicaoAtualizada
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Erro ao editar exibição.' });
+  }
+}
+
+
+
+module.exports = {
+    criarExibicao,
+    getExibicao,
+    getExibicoesUsuario,
+    favoritar,
+    desfavoritar,
+    verificarFavorito,
+    listarFavoritos,
+    editarExibicao,
+    deletarExibicao
+};

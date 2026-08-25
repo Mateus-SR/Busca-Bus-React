@@ -1,0 +1,60 @@
+---
+---
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% include headPadrao.html %}
+
+  <title>Monitoramento de Ônibus</title>
+</head>
+<body>
+
+  <!-- Topbar -->
+  {% include header.html %}
+
+  <main>
+    <section class="hero flex" id="inicio">
+      <div class="container hero-grid">
+        <div>
+          <div class="kicker">Transporte urbano</div>
+          <h1>Monitoramento de <br>ônibus <span style="color:var(--red)">em tempo real</span></h1>
+          <p class="sub">Acompanhe a posição dos veículos, horários previstos e atrasos</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Botão flutuante -->
+  <div class="fixed bottom-32 right-12 md:bottom-32 md:right-12 z-1000">
+    <div class="flex flex-col flex-wrap justify-between gap-1.5"> 
+      <input type="text" id="campoCodigo" placeholder="Exemplo: UpilXc" required maxlength="6" class="campoCodParada px-12 py-5 md:px-8 md:py-5 border border-gray-500 bg-white rounded-2xl text-xl z-999 font-roboto-mono font-extrabold">
+      <span id="botaoAcessar" 
+        class="bg-red-600 text-white font-bold text-center z-1000 cursor-pointer
+              px-12 py-5 md:px-8 md:py-5 
+              text-2xl md:text-4xl 
+              rounded-2xl shadow-lg 
+              hover:bg-red-800  
+              focus:ring-2 focus:ring-red-400 focus:ring-opacity-75
+              transition-all duration-200 ease-out">
+        Acessar
+      </span>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../js/mobile-navbar.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="../js/mapa.js"></script>
+  <script type="module" src="../js/inicial.js"></script>
+  <script type="module" src="../js/userMenu.js"></script> <!-- novo arquivo -->
+</body>
+
+
+
+</html>
+
+

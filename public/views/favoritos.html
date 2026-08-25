@@ -1,0 +1,44 @@
+---
+---
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Minhas Linhas Favoritas</title>
+
+  {% include headPadrao.html %}
+  <script type="module" src="../js/verificaLogin.js"></script>
+  
+</head>
+
+<body data-type="favoritos">
+  {% include header.html %}
+
+  <div class="flex justify-center my-6">
+    <h1 id="tituloH1" class="text-2xl font-roboto-mono font-bold"></h1>
+  </div>
+
+  <div class="max-w-5xl mx-auto bg-white rounded-xl shadow p-6 overflow-x-auto">
+    <table class="min-w-full table-auto border-collapse">
+      <thead>
+        <tr class="bg-gray-100 font-bold text-gray-700">
+          <th class="py-3 px-6 text-center w-1/4">Código</th>
+          <th class="py-3 px-6 text-center w-2/4">Nome da exibição</th>
+          <th class="py-3 px-6 text-center w-1/4">Ações</th>
+        </tr>
+      </thead>
+      
+      <tbody id="tabelaLinkLinhas">
+        </tbody>
+    </table>
+    
+  </div>
+
+  <script type="module" src="../js/userMenu.js"></script>
+  <script src="../js/mobile-navbar.js"></script>
+  <script type="module" src="../js/favoritosOuCriados.js"></script> 
+
+</body>
+</html>

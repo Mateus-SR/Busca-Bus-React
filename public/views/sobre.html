@@ -1,0 +1,72 @@
+---
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    {% include headPadrao.html %}
+    
+<style>
+    /* Força o header a estar acima de tudo */
+    header.topbar {
+      position: relative;
+      z-index: 1000;
+    }
+
+    /* Garante que o dropdown fique acima de qualquer outra camada */
+    #botaoAcessaConta {
+      position: relative;
+      z-index: 2000 !important;
+    }
+
+    #userDropdown {
+      position: absolute;
+      z-index: 3000 !important;
+    }
+
+    /* O "sobre" não deve ultrapassar o menu */
+    .sobre-container {
+      position: relative;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <!-- Imagem de fundo -->
+  <div class="relative min-h-screen">
+    <div class="absolute inset-0 bg-cover bg-center filter opacity-60 z-0"
+      style="background-image: url('../img/Onibus2.png'); filter: blur(4px)"></div>
+    <div class="absolute inset-0 bg-black/40 z-0"></div>
+
+
+    <!-- Topbar -->
+    <div class="relative z-10">
+      {% include header.html %}
+    </div>
+    
+    <!-- Caixa do Sobre -->
+<div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+  <div class="relative bg-white border border-gray-300 rounded-xl p-10 w-full max-w-4xl shadow-2xl shadow-black/60 z-20">
+    <h2 class="text-3xl font-extrabold text-center mb-6 text-black">Sobre o projeto</h2>
+
+    <!-- Texto -->
+    <div class="text-gray-700 text-sm break-words text-justify">
+      <p class="mb-4">
+       Começando com o nosso projeto, ele foi feito para o nosso PI (Projeto Interdisciplinar), após propostas feitas numa feira de projetos, onde a necessidade de um site para melhoria do deslocamento de estudantes nos chamou a atenção por ser algo que muita gente do nosso vínculo sempre gostaria de ter: um site de monitoramento de ônibus próprio para a região da Fatec Zona Leste. Foi isso que buscamos realizar neste semestre, baseado na <a class="text-sptrans hover:text-red-800" href="http://www.pos.cps.sp.gov.br/dissertacao/propostas-de-melhoria-de-mobilidade-para-o-deslocamento-de-estudantes-de-uma-ies-de-tecnologia">tese de mestrado coordenador do nosso curso</a>, Edson Company. O projeto utiliza a <a class="text-sptrans hover:text-red-800" href="https://www.sptrans.com.br/desenvolvedores/api-do-olho-vivo-guia-de-referencia">API "Olho Vivo"</a>, da SPTrans, dando suporte às principais funcionalidades desse site.
+      </p>
+
+      <p>
+        Originalmente na Geppetto Company Ltda., nossa equipe, haviam cinco integrantes. No segundo semestre, porém, só restaram três: João "Geppetto" Pedro, Mateus S. Rodrigues e Pedro Henrique Matos, com menções honrosas a Luciano Batista (que precisou trancar o curso, logo no começo do projeto) e Guilherme Calixto (que conseguiu ingressar em outra faculdade ainda no primeiro semestre).
+      </p>
+    </div>
+  </div>
+</div>
+
+
+</body>
+<script src="../js/mobile-navbar.js"></script>
+<script type="module" ="../js/userMenu.js"></script>
+</html>
