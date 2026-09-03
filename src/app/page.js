@@ -1,3 +1,5 @@
+import AcessoRapidoForm from "@/components/home/AcessoRapidoForm";
+
 export default function Home() {
   return (
     <main>
@@ -17,6 +19,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <AcessoRapidoForm/>
     </main>
   );
 }
