@@ -25,12 +25,17 @@ export default function InfoCard({ titulo, children }) {
                 </span>
             </button>
 
-            {aberto && (
-                <>
+            <div
+                className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                    aberto ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                }`}>
+                <div className="overflow-hidden">
                     <div className="border-t w-full" />
-                    <div className="font-medium text-base p-4">{children}</div>
-                </>
-            )}
+                    <div className="font-medium text-base p-4">
+                        {children}
+                    </div>
+                </div>
+            </div>
 		</div>
 	);
 }
