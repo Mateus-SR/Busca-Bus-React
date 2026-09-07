@@ -3,7 +3,7 @@ import AcessoRapidoForm from "@/components/home/AcessoRapidoForm";
 export default function Home() {
   return (
     <main>
-      <section className="py-10 flex bg-linear-to-b from-sptrans/8 to-transparent to-40% font-inter" id="inicio">
+      <section className="py-10 flex bg-linear-to-b from-sptrans/12 to-transparent to-40% font-inter" id="inicio">
       <div className="max-w-300 w-full mx-auto grid grid-cols-1 gap-7">
           <div>
           <div className="text-sptrans font-bold tracking-[0.18em] uppercase text-sm">

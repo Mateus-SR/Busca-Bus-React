@@ -26,7 +26,7 @@ export default function AcessoRapidoForm() {
     }
 
     return (
-        <div className="fixed bottom-32 right12 md:bottom-32 md:right-12 z-1000">
+        <div className="my-16 w-1/2 md:w-1/5 mx-auto z-40">
             <div className="flex flex-col flex-wrap justify-between gap-1.5">
                 <input
                     type="text"
@@ -40,7 +40,7 @@ export default function AcessoRapidoForm() {
                 />
                 <span
                     onClick={handleAcessar}
-                    className="bg-red-600 text-white font-bold text-center cursor-pointer px-12 py-5 md:px-8 md-py-5 text-2xl md:text-4xl rounded-2xl shadow-lg hover:bg-red-800 transition-all duration-200 ease-out"
+                    className="bg-sptrans text-white font-bold text-center cursor-pointer px-12 py-5 md:px-8 md-py-5 text-lg md:text-3xl rounded-2xl shadow-lg hover:bg-red-800 transition-all duration-200 ease-out"
                 >
                     Acessar
                 </span>
