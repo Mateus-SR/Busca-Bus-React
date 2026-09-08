@@ -7,7 +7,7 @@ export default async function ExibicaoPage({ params }) {
 	return (
 		<section className="max-w-full px-4 py-6 lg:px-10">
 			<div className="hidden animate-pulse bg-blue-100 bg-blue-600 bg-green-100 bg-green-600 bg-yellow-100 bg-yellow-600 text-blue-400 text-green-400 text-yellow-400" />
-			<div className="overflow-x-auto rounded-2xl bg-white p-6 mx-10 shadow-lg">
+			<div className="mx-10 overflow-x-auto rounded-2xl bg-white p-6 shadow-lg">
 				<div className="mb-4 flex flex-col items-center">
 					<span className="text-xl font-bold">Exibição</span>
 					<span className="font-roboto-mono text-sm italic">
@@ -18,10 +18,10 @@ export default async function ExibicaoPage({ params }) {
 				<table className="mx-auto min-w-full table-auto border-collapse lg:text-2xl">
 					<thead>
 						<tr className="bg-gray-100 font-extrabold">
-							<th className="px-6 py-3 text-center">Código</th>
-							<th className="px-6 py-3 text-center">Nome</th>
-							<th className="px-6 py-3 text-center">Previsão</th>
-							<th className="px-6 py-3 text-center">Status</th>
+							<th className="px-6 py-1.5 text-center">Código</th>
+							<th className="px-6 py-1.5 text-center">Nome</th>
+							<th className="px-6 py-1.5 text-center">Previsão</th>
+							<th className="px-6 py-1.5 text-center">Status</th>
 						</tr>
 					</thead>
 					<tbody>
