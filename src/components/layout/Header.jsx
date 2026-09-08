@@ -11,7 +11,7 @@ const LINKS_NAV = [
 
 export default function Header() {
     // Placeholder para testes. Será substituido futuramente por AuthContext.   -Mateus
-    const estaLogado = true;
+    const estaLogado = false;
 
     return (
         <header className="bg-sptrans text-white">
