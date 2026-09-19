@@ -1,5 +1,3 @@
-import { exportTraceState } from 'next/dist/trace';
-
 const CORES_POR_STATUS = {
 	Normal: 'green',
 	Atrasado: 'yellow',
