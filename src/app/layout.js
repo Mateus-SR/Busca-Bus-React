@@ -1,4 +1,6 @@
 import "./globals.css";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 
 export const metadata = {
   title: "Busca Bus",
@@ -11,7 +13,11 @@ export default function RootLayout({ children }) {
       lang="pt-br"
       className={`h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>
+          <LoadingProvider>{children}</LoadingProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }

@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { CircleUser, ChevronDown } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function UserMenu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
   const menuRef = useRef(null);
+  const { usuario, logout } = useAuth();
 
   useEffect(() => {
     function handleClickFora(evento) {
@@ -31,7 +33,7 @@ export default function UserMenu() {
         className="px-2 py-2 border-white border-[3px] text-white hover:bg-white/50 transition-all duration-200 ease-out flex items-center gap-2 rounded-xl cursor-pointer"
       >
         <CircleUser className="size-6" />
-        <span className="font-semibold">Olá, Visitante!</span>
+        <span className="font-semibold">Olá, {usuario?.nome ?? "Visitante"}!</span>
         <ChevronDown />
       </button>
 
@@ -53,7 +55,7 @@ export default function UserMenu() {
             </Link>
           </li>
           <li>
-            <button type="button" className="w-full text-left px-4 py-2 rounded-b-xl hover:bg-gray-100 text-black cursor-pointer">
+            <button type="button" onClick={logout} className="w-full text-left px-4 py-2 rounded-b-xl hover:bg-gray-100 text-black cursor-pointer">
               Sair da conta
             </button>
           </li>

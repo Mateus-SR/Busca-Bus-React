@@ -5,15 +5,14 @@ import { useEffect, useState } from "react";
 const DURACAO_MS = 1800;
 
 export default function InlineToast({ mensagem }) {
-	const [visivel, setVisivel] = useState(false);
+	const [visivel, setVisivel] = useState(true);
 
 	useEffect(() => {
 		if (!mensagem) return;
 
-		setVisivel(true);
 		const timeout = setTimeout(() => setVisivel(false), DURACAO_MS);
 		return () => clearTimeout(timeout);
-	}, [mensagem?.id]);
+	}, [mensagem]);
 
 	if (!mensagem) return null;
 
