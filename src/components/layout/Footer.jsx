@@ -1,0 +1,3 @@
+export default function Footer() {
+  return <footer className="fixed bottom-0 z-50 flex h-[20px] w-full items-center justify-between bg-sptrans px-2.5 font-roboto-mono text-[10px] font-medium text-white"><div className="relative mr-0 flex h-full flex-1 items-center justify-end overflow-hidden"><div className="inline-block w-full animate-marquee text-right whitespace-nowrap">Desenvolvido por: João Pedro, Mateus S. Rodrigues e Pedro H. Giacomo</div></div><div className="z-20 flex h-full items-center border-l-2 border-red-800 bg-sptrans pl-4 whitespace-nowrap"><p>Versão: 1.1.1</p></div></footer>;
+}

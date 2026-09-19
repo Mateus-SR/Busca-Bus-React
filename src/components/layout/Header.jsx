@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import UserMenu from "./UserMenu";
 import MobileNavbar from "./MobileNavbar";
+import { useAuth } from "@/contexts/AuthContext";
 
 const LINKS_NAV = [
     { href: "/", label: "Início" },
@@ -10,8 +13,7 @@ const LINKS_NAV = [
   ];
 
 export default function Header() {
-    // Placeholder para testes. Será substituido futuramente por AuthContext.   -Mateus
-    const estaLogado = false;
+    const { estaLogado } = useAuth();
 
     return (
         <header className="bg-sptrans text-white">
@@ -39,12 +41,8 @@ export default function Header() {
                                 Criar conta
                             </Link>
                         </>
-                    ) : (
-                        <>
-                            <UserMenu/>
-                            <MobileNavbar links={LINKS_NAV} className="z-50"/>
-                        </>
-                    )}
+                    ) : <UserMenu />}
+                    <MobileNavbar links={LINKS_NAV} />
                 </div>
             </div>
         </header>

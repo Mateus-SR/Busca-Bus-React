@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { MapPinned } from "lucide-react";
-import { FIXTURE_ONIBUS } from "@/lib/fixtures/exibicaoFixture";
-import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
-import FavoriteStar from "@/components/exibicao/FavoriteStar";
 import RelogioZoomPanel from "@/components/exibicao/RelogioZoomPanel";
+import ExibicaoLive from "@/components/exibicao/ExibicaoLive";
+import Footer from "@/components/layout/Footer";
 
 export default async function ExibicaoPage({ params }) {
 	const { codigo } = await params;
@@ -23,33 +22,9 @@ export default async function ExibicaoPage({ params }) {
 			</Link>
 
 			<section className="max-w-full px-4 lg:px-10">
-				<div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-lg">
-					<div className="mb-2 flex flex-col items-center">
-						<div className="flex items-center gap-3">
-							<span className="text-xl font-bold">Exibição</span>
-							<FavoriteStar />
-						</div>
-
-						<span className="font-roboto-mono text-sm italic">
-							Código: {codigo}
-						</span>
-					</div>
-
-					<ExibicaoTable onibus={FIXTURE_ONIBUS} />
-				</div>
+				<ExibicaoLive codigo={codigo} />
 			</section>
-
-			<footer className="fixed bottom-0 z-50 flex h-[20px] w-full items-center justify-between bg-sptrans px-2.5 font-roboto-mono text-[10px] font-medium text-white">
-				<div className="relative mr-0 flex h-full flex-1 items-center justify-end overflow-hidden">
-					<div className="inline-block w-full animate-marquee text-right whitespace-nowrap">
-						Desenvolvido por: João Pedro, Mateus S. Rodrigues e Pedro H. Giacomo
-					</div>
-				</div>
-
-				<div className="z-20 flex h-full items-center border-l-2 border-red-800 bg-sptrans pl-4 whitespace-nowrap">
-					<p>Versão: 1.1.1</p>
-				</div>
-			</footer>
+			<Footer />
 		</>
 	);
 }
