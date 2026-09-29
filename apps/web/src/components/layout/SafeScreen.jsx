@@ -6,7 +6,8 @@ import {
   StyleSheet, 
   SafeAreaView, 
   TouchableWithoutFeedback, 
-  Keyboard 
+  Keyboard,
+  View
 } from 'react-native';
 
 export function SafeScreen({ children }) {

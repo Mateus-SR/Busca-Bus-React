@@ -1,9 +1,9 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Animated, StyleSheet } from 'react-native';
 
 export function SkeletonCard() {
-  const fadeAnim = useRef(new Animated.Value(0.3)).current;
+  const [fadeAnim] = useState(() => new Animated.Value(0.3));
 
   useEffect(() => {
     Animated.loop(
