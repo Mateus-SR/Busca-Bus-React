@@ -1,8 +1,8 @@
-import Link from "next/link";
-import { MapPinned } from "lucide-react";
-import RelogioZoomPanel from "@/components/exibicao/RelogioZoomPanel";
-import ExibicaoLive from "@/components/exibicao/ExibicaoLive";
-import Footer from "@/components/layout/Footer";
+import Link from 'next/link';
+import { MapPinned } from 'lucide-react';
+import RelogioZoomPanel from '@/components/exibicao/RelogioZoomPanel';
+import ExibicaoLive from '@/components/exibicao/ExibicaoLive';
+import Footer from '@/components/layout/Footer';
 
 export default async function ExibicaoPage({ params }) {
 	const { codigo } = await params;
@@ -15,7 +15,7 @@ export default async function ExibicaoPage({ params }) {
 
 			<Link
 				href={`/exibicao/${codigo}/mapa`}
-				className="fixed bottom-7 z-30 flex items-center rounded-lg border-2 border-sptrans bg-white px-4 py-2 font-roboto-mono font-bold text-sptrans shadow-2xs transition duration-300 ease-in-out hover:bg-sptrans hover:text-white"
+				className="border-sptrans font-roboto-mono text-sptrans hover:bg-sptrans fixed bottom-7 z-30 flex items-center rounded-lg border-2 bg-white px-4 py-2 font-bold shadow-2xs transition duration-300 ease-in-out hover:text-white"
 			>
 				<MapPinned className="mr-2" size={20} />
 				Abrir Mapa
