@@ -1,0 +1,30 @@
+{
+  "name": "@busca-bus/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^3.1.1",
+    "@supabase/supabase-js": "^2.117.1",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.41.0",
+    "next": "^16.3.6",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "tailwindcss": "^4"
+  }
+}
