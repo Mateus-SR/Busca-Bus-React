@@ -1,12 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 import { USUARIO_MOCK } from "@/lib/fixtures/usuarioFixture";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // Inicializa o estado lendo o localStorage de forma síncrona e segura (Lazy Initial State)
   const [usuario, setUsuario] = useState(() => {
     if (typeof window === "undefined") return null;
     const salvo = localStorage.getItem("usuarioMock");
@@ -20,7 +19,7 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const [carregando, setCarregando] = useState(false);
+  const [carregando] = useState(false);
 
   function login() {
     setUsuario(USUARIO_MOCK);

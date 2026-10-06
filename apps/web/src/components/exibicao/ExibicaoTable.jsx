@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import StatusBadge from "@/components/exibicao/StatusBadge";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
+import { minutosAteChegar } from "@busca-bus/core";
 
 export default function ExibicaoTable({ onibus }) {
 	const [busca, setBusca] = useState("");
@@ -27,7 +28,7 @@ export default function ExibicaoTable({ onibus }) {
 				return a.sentidoLinha.localeCompare(b.sentidoLinha);
 			}
 			if (ordenacao === "tempo") {
-				return a.previsao.localeCompare(b.previsao);
+				return minutosAteChegar(a.previsao) - minutosAteChegar(b.previsao);
 			}
 			return 0;
 		});

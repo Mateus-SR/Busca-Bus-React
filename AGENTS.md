@@ -20,6 +20,7 @@ There is no test runner configured in this repository.
 - Public-facing screens live under `apps/web/src/app/(site)`, while auth screens live under `apps/web/src/app/(auth)`.
 - The public site shell is defined in `apps/web/src/app/(site)/layout.js`; do not move shared chrome to the root layout.
 - Keep feature code organized by domain under `apps/web/src/components`, such as `layout`, `home`, `ui`, `exibicao`, `mapa`, `configuracao`, and `listas`.
+- Keep platform-specific code separated: browser/Next.js code belongs in `apps/web`, React Native code in `apps/mobile`, and platform-neutral logic in `packages/core`.
 - Prefer checking existing patterns before introducing new abstractions or helper files.
 
 ## Frontend conventions
@@ -28,6 +29,7 @@ There is no test runner configured in this repository.
 - Tailwind CSS v4 is in use; styling tokens and animation utilities are defined in `apps/web/src/app/globals.css`.
 - Keep user-facing copy and variable names in Portuguese where possible to match the current app language (`codigo`, `erro`, `aberto`, `estaLogado`, `handleAcessar`).
 - Favor small, feature-scoped edits consistent with the current codebase structure.
+- Fixtures are temporary fake data only; do not add credentials or external service calls without an explicit scope change.
 
 ## Working rules for AI agents
 - Respect the route-group structure and existing app boundaries.

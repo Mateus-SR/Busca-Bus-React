@@ -7,28 +7,37 @@ import { Minus, Plus, Save, ChevronDown } from "lucide-react";
 import { INSTITUICOES_MOCK } from "@/lib/fixtures/instituicoesFixture";
 import { EXIBICOES_MOCK } from "@/lib/fixtures/exibicoesFixture";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLoading } from "@/contexts/LoadingContext";
 
 const PADRAO = { nome: "", instituicao: "", semInstituicao: false, atraso: 1, adiantado: 1, distancia: 20, token: "", paradas: [""] };
 
 export default function ConfiguracaoForm({ codigo }) {
   const router = useRouter();
-  const { estaLogado } = useAuth();
+  const { estaLogado, carregando } = useAuth();
+  const { confirm } = useLoading();
   const existente = useMemo(() => EXIBICOES_MOCK.find((item) => item.codigo_exib === codigo), [codigo]);
   const [formulario, setFormulario] = useState(() => existente ? { nome: existente.nome_exibicao, instituicao: existente.instituicao, semInstituicao: false, atraso: existente.config.tempo_atraso, adiantado: existente.config.tempo_adiantado, distancia: existente.config.distanciaMinOnibus, token: "mock-sptrans-token", paradas: existente.codigos_parada } : PADRAO);
   const [dropdownAberto, setDropdownAberto] = useState(false);
   const [mensagem, setMensagem] = useState("");
 
+  if (carregando) return null;
   if (!estaLogado) return <div className="mx-auto mt-12 max-w-2xl rounded-xl bg-white p-10 text-center shadow"><h1 className="text-2xl font-bold">Faça login para configurar uma exibição</h1><Link href="/login" className="mt-6 inline-block rounded-md bg-sptrans px-6 py-3 font-bold text-white">Entrar</Link></div>;
 
   function atualizar(campo, valor) { setFormulario((atual) => ({ ...atual, [campo]: valor })); }
   function atualizarParada(indice, valor) { setFormulario((atual) => ({ ...atual, paradas: atual.paradas.map((parada, i) => i === indice ? valor.replace(/\D/g, "").slice(0, 9) : parada) })); }
-  function salvar(evento) {
+  async function salvar(evento) {
     evento.preventDefault();
     const paradasValidas = formulario.paradas.filter(Boolean);
     if (!formulario.token.trim()) return setMensagem("Token da API é obrigatório nesta demonstração.");
     if (!paradasValidas.length || paradasValidas.some((parada) => ![7, 9].includes(parada.length))) return setMensagem("Um ou mais códigos são inválidos. Verifique os campos em vermelho.");
+    const destino = `/exibicao/${codigo || "Nova01"}`;
     setMensagem(codigo ? "Exibição atualizada com sucesso!" : "Exibição criada com sucesso!");
-    setTimeout(() => router.push(`/exibicao/${codigo || "Nova01"}`), 900);
+    const acessarAgora = await confirm({
+      mensagem: "Gostaria de acessá-la agora?",
+      simTexto: "Acessar",
+      naoTexto: "Continuar aqui",
+    });
+    if (acessarAgora) router.push(destino);
   }
   function adicionar() { if (formulario.paradas.length < 5) atualizar("paradas", [...formulario.paradas, ""]); }
   function remover() { if (formulario.paradas.length > 1) atualizar("paradas", formulario.paradas.slice(0, -1)); }
