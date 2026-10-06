@@ -9,8 +9,6 @@ export default async function ExibicaoPage({ params }) {
 
 	return (
 		<>
-			<div className="hidden animate-pulse bg-blue-100 bg-blue-600 bg-green-100 bg-green-600 bg-yellow-100 bg-yellow-600 text-blue-400 text-green-400 text-yellow-400" />
-
 			<RelogioZoomPanel />
 
 			<Link

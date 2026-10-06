@@ -5,15 +5,23 @@ import { Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { EXIBICOES_MOCK } from "@/lib/fixtures/exibicoesFixture";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLoading } from "@/contexts/LoadingContext";
 
 export default function ExibicoesTable({ modo }) {
-  const { estaLogado } = useAuth();
+  const { estaLogado, carregando } = useAuth();
+  const { confirm } = useLoading();
   const [itens, setItens] = useState(() => EXIBICOES_MOCK.filter((item) => modo === "favoritos" ? item.favorita : !item.favorita));
+  if (carregando) return null;
   if (!estaLogado) return <div className="py-6 text-center text-gray-500">Faça login para ver suas linhas</div>;
   const vazio = modo === "favoritos" ? "Você ainda não favoritou nenhuma linha 😢" : "Você ainda não criou nenhuma exibição 📂";
 
-  function remover(item) {
-    if (!window.confirm(`${modo === "favoritos" ? "Remover" : "Apagar"} "${item.nome_exibicao || item.codigo_exib}"?`)) return;
+  async function remover(item) {
+    const confirmado = await confirm({
+      mensagem: `${modo === "favoritos" ? "Remover" : "Apagar"} "${item.nome_exibicao || item.codigo_exib}"?`,
+      simTexto: modo === "favoritos" ? "Remover" : "Apagar",
+      naoTexto: "Cancelar",
+    });
+    if (!confirmado) return;
     setItens((atuais) => atuais.filter((atual) => atual.codigo_exib !== item.codigo_exib));
   }
 

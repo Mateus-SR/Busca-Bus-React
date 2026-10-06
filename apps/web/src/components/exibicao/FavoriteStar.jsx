@@ -33,7 +33,7 @@ export default function FavoriteStar() {
 				<Star size={24} fill={favoritado ? "currentColor" : "none"} />
 			</button>
 
-			<InlineToast mensagem={mensagem} />
+			<InlineToast key={mensagem?.id} mensagem={mensagem} />
 		</div>
 	);
 }

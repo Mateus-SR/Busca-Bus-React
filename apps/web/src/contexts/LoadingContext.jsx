@@ -20,9 +20,17 @@ export function LoadingProvider({ children }) {
     setLoading({ texto, subtexto, erro: true });
   }
 
-  function confirm(simTexto = "Sim", naoTexto = "Não") {
+  function confirm(opcoes = {}) {
+    const {
+      mensagem = "Tem certeza que deseja continuar?",
+      simTexto = "Sim",
+      naoTexto = "Não",
+    } = typeof opcoes === "string"
+      ? { simTexto: opcoes }
+      : opcoes;
+
     return new Promise((resolve) => {
-      setConfirmacao({ simTexto, naoTexto, resolve });
+      setConfirmacao({ mensagem, simTexto, naoTexto, resolve });
     });
   }
 
@@ -47,7 +55,7 @@ export function LoadingProvider({ children }) {
       {confirmacao && (
         <div className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-7 shadow-2xl">
-            <p className="text-lg font-semibold text-gray-900">Tem certeza que deseja continuar?</p>
+            <p className="text-lg font-semibold text-gray-900">{confirmacao.mensagem}</p>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => responderConfirmacao(false)} className="rounded-lg border border-gray-300 px-4 py-2 font-bold"> {confirmacao.naoTexto} </button>
               <button type="button" onClick={() => responderConfirmacao(true)} className="rounded-lg bg-sptrans px-4 py-2 font-bold text-white"> {confirmacao.simTexto} </button>

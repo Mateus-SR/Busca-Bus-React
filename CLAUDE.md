@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Busca Bus — a real-time bus monitoring frontend (Next.js App Router, React 19). Bootstrapped with `create-next-app`; still early-stage — most routes are scaffolded placeholders (`.gitkeep` only, no page implemented yet).
+Busca Bus — a real-time bus monitoring frontend (Next.js App Router, React 19) in an npm workspace that also prepares a React Native app and shared domain package.
 
 ## Commands
 
@@ -20,12 +20,13 @@ There is no test runner configured in this repo.
 ## Architecture
 
 - **Next.js App Router** under [apps/web/src/app/](apps/web/src/app/), using route groups:
-  - `(site)` — public-facing pages, wrapped in [src/app/(site)/layout.js](src/app/(site)/layout.js) which renders the shared `Header`. Contains the homepage and scaffolded routes: `exibicao/[codigo]`, `sobre`, `favoritos`, `minhas-exibicoes`, `configuracao/[codigo]`, `mapa`.
-  - `(auth)` — auth-related pages (`login`, `cadastro`, `reset-senha`), currently unimplemented.
+  - `(site)` — public-facing pages, wrapped in [apps/web/src/app/(site)/layout.js](apps/web/src/app/(site)/layout.js), which renders the shared `Header`. Contains the homepage, displays, maps, configuration, lists and informational pages.
+  - `(auth)` — auth-related pages (`login`, `cadastro`, `reset-senha`).
   - Root layout ([src/app/layout.js](src/app/layout.js)) only sets metadata and imports `globals.css` — no shared chrome lives there; that's the job of the `(site)` layout.
-- **Components** are organized by domain under [apps/web/src/components/](apps/web/src/components/): `layout` (Header, UserMenu, MobileNavbar), `ui` (generic pieces like `InfoCard`), `home` (homepage-specific, e.g. `AcessoRapidoForm`), plus scaffolded-but-empty folders for `auth`, `exibicao`, `configuracao`, `listas`, `mapa`.
-- Planned-but-not-yet-populated folders exist for `src/contexts`, `src/hooks`, `src/lib`, `src/utils` — check before assuming a helper doesn't exist yet, since this structure was pre-created by [criar-estrutura.ps1](criar-estrutura.ps1).
-- Auth state is not wired up yet: `Header.jsx` currently hardcodes `estaLogado = true` as a placeholder for a future `AuthContext` (see comment in [src/components/layout/Header.jsx](src/components/layout/Header.jsx)).
+- **Components** are organized by domain under [apps/web/src/components/](apps/web/src/components/): `layout`, `ui`, `home`, `exibicao`, `configuracao`, `listas` and `mapa`.
+- **Shared state and fixtures** live under `apps/web/src/contexts`, `apps/web/src/hooks` and `apps/web/src/lib/fixtures`; web adapters keep browser storage and Next.js concerns out of shared code.
+- **Platform separation:** `apps/web` contains web-only components and browser APIs, `apps/mobile` contains React Native components and storage adapters, and `packages/core` contains platform-neutral types, API boundaries, time calculations and store factories.
+- Auth is currently a clearly identified mock/local implementation in `AuthContext`; it exposes a loading state so consumers do not flash unauthenticated content.
 - Import alias: `@/*` maps to `apps/web/src/*` (configured in [apps/web/jsconfig.json](apps/web/jsconfig.json)).
 - Client components are explicit: components using state/effects/router hooks are marked `"use client"` (e.g. `MobileNavbar`, `UserMenu`, `InfoCard`, `AcessoRapidoForm`); everything else is a server component by default.
 - The React Compiler is enabled (`reactCompiler: true` in [apps/web/next.config.mjs](apps/web/next.config.mjs)) via `babel-plugin-react-compiler`.
@@ -39,5 +40,5 @@ There is no test runner configured in this repo.
 ## Migration guardrails
 
 - Preserve existing web behavior and styling during the workspace migration.
-- Change source code only for broken paths/imports, required platform adapters, or directly discovered compatibility errors.
-- Keep web-only routing, DOM behavior, Leaflet, and browser storage inside `apps/web`; shared packages must not depend on them.
+- Fixtures are temporary fake data with the same shape as the future services; they must not contain credentials or realistic tokens.
+- Keep web-only routing, DOM behavior, Leaflet, and browser storage inside `apps/web`; keep React Native code inside `apps/mobile`; shared packages must not depend on either platform.

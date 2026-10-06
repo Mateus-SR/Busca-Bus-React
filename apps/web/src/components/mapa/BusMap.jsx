@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ONIBUS_MAPA_MOCK } from "@/lib/fixtures/mapaFixture";
 
-export default function BusMap() {
+export default function BusMap({ codigo, onibus = [] }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -12,17 +11,17 @@ export default function BusMap() {
     import("leaflet").then(({ default: L }) => {
       if (cancelado || !containerRef.current) return;
       mapa = L.map(containerRef.current).setView([-23.556, -46.475], 13);
-      ONIBUS_MAPA_MOCK.forEach((onibus) => {
-        L.marker([onibus.latitude, onibus.longitude], { icon: L.divIcon({ className: "bus-marker", html: `<span>${onibus.codigo}</span>`, iconSize: [80, 26], iconAnchor: [40, 13] }) })
+      onibus.forEach((onibusAtual) => {
+        L.marker([onibusAtual.latitude, onibusAtual.longitude], { icon: L.divIcon({ className: "bus-marker", html: `<span>${onibusAtual.codigo}</span>`, iconSize: [80, 26], iconAnchor: [40, 13] }) })
           .addTo(mapa)
-          .bindPopup(`<strong>${onibus.codigo}</strong><br />${onibus.sentido}`);
+          .bindPopup(`<strong>${onibusAtual.codigo}</strong><br />${onibusAtual.sentido}`);
       });
     });
     return () => {
       cancelado = true;
       mapa?.remove();
     };
-  }, []);
+  }, [onibus]);
 
-  return <div ref={containerRef} className="h-full min-h-[420px] w-full" />;
+  return <div ref={containerRef} data-codigo={codigo} className="h-full min-h-[420px] w-full" />;
 }

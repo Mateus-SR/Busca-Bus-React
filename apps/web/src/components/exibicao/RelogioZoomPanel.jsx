@@ -10,7 +10,23 @@ function formatarNumero(valor) {
 }
 
 export default function RelogioZoomPanel() {
-	const { headerOculto, setHeaderOculto, setConteudoExtra } = usePainelHeader();
+	const { setConteudoExtra, setHeaderOculto } = usePainelHeader();
+
+	useEffect(() => {
+		setConteudoExtra(<RelogioAba />);
+
+		return () => setConteudoExtra(null);
+	}, [setConteudoExtra]);
+
+	useEffect(() => {
+		return () => setHeaderOculto(false);
+	}, [setHeaderOculto]);
+
+	return null;
+}
+
+function RelogioAba() {
+	const { headerOculto, setHeaderOculto } = usePainelHeader();
 	const [hora, setHora] = useState("--:--:--");
 
 	useEffect(() => {
@@ -26,34 +42,23 @@ export default function RelogioZoomPanel() {
 		return () => clearInterval(intervalo);
 	}, []);
 
-	// Registra o conteúdo no slot do HeaderChrome: assim ele fica dentro do
-	// mesmo wrapper que sobe (-translate-y-full) junto com o Header. Como aqui
-	// é `absolute` (fora do fluxo), a altura do wrapper é só a do Header — a
-	// distância que ele sobe é exatamente a altura do Header, então esta aba,
-	// posicionada logo abaixo dele, permanece parada na tela.
-	useEffect(() => {
-		setConteudoExtra(
-			<section className="absolute z-40 hidden flex-col items-start lg:flex">
-				<button
-					type="button"
-					onClick={() => setHeaderOculto((v) => !v)}
-					aria-label={headerOculto ? "Mostrar cabeçalho" : "Esconder cabeçalho"}
-					className="flex h-24 w-96 cursor-pointer items-center justify-center rounded-br-3xl bg-sptrans font-roboto-mono font-extrabold text-white shadow-xl"
-				>
-					{headerOculto ? (
-						<ChevronDown className="mr-2.5 text-white/85" size={28} />
-					) : (
-						<ChevronUp className="mr-2.5 text-white/85" size={28} />
-					)}
-					<p className="text-6xl">{hora}</p>
-				</button>
+	return (
+		<section className="absolute z-40 hidden flex-col items-start lg:flex">
+			<button
+				type="button"
+				onClick={() => setHeaderOculto((v) => !v)}
+				aria-label={headerOculto ? "Mostrar cabeçalho" : "Esconder cabeçalho"}
+				className="flex h-24 w-96 cursor-pointer items-center justify-center rounded-br-3xl bg-sptrans font-roboto-mono font-extrabold text-white shadow-xl"
+			>
+				{headerOculto ? (
+					<ChevronDown className="mr-2.5 text-white/85" size={28} />
+				) : (
+					<ChevronUp className="mr-2.5 text-white/85" size={28} />
+				)}
+				<p className="text-6xl">{hora}</p>
+			</button>
 
-				<ZoomControls />
-			</section>,
-		);
-
-		return () => setConteudoExtra(null);
-	}, [headerOculto, hora, setConteudoExtra, setHeaderOculto]);
-
-	return null;
+			<ZoomControls />
+		</section>
+	);
 }

@@ -14,7 +14,7 @@ const LINKS_NAV = [
 ];
 
 export default function Header() {
-  const { estaLogado } = useAuth();
+  const { estaLogado, carregando } = useAuth();
 
   return (
     <header className="bg-sptrans text-white">
@@ -39,7 +39,7 @@ export default function Header() {
         <div className="justify-self-end flex items-center gap-2.5">
           
           {/* Autenticação ou Menu do Usuário */}
-          {!estaLogado ? (
+          {carregando ? null : !estaLogado ? (
             <div className="hidden md:flex gap-2.5 items-center">
               <Link href="/login" className="border-white border-[3px] font-bold rounded-xl px-3.5 py-2 bg-white text-black hover:bg-white/80 transition-all duration-200 ease-out">
                 Entrar

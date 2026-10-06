@@ -26,10 +26,12 @@ export function AccessibilityProvider({ children }) {
 
   const increaseFont = () => setFontSize(prev => prev === 'normal' ? 'large' : 'xlarge');
   const decreaseFont = () => setFontSize(prev => prev === 'xlarge' ? 'large' : 'normal');
+  const fontSizeMinimo = fontSize === 'normal';
+  const fontSizeMaximo = fontSize === 'xlarge';
   const setContrast = (mode) => setContrastMode(mode);
 
   return (
-    <AccessibilityContext.Provider value={{ fontSize, increaseFont, decreaseFont, contrastMode, setContrast }}>
+    <AccessibilityContext.Provider value={{ fontSize, increaseFont, decreaseFont, fontSizeMinimo, fontSizeMaximo, contrastMode, setContrast }}>
       {children}
     </AccessibilityContext.Provider>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Minus, Plus, ZoomIn, ZoomOut } from "lucide-react";
 
 const NIVEIS_ZOOM = [50, 67, 75, 90, 100, 110, 125, 133, 150];
@@ -12,13 +13,16 @@ export default function ZoomControls() {
 
 	useEffect(() => {
 		return () => {
-			document.documentElement.style.fontSize = "";
+			document.documentElement.style.removeProperty("--display-zoom");
 		};
 	}, []);
 
 	function aplicarZoom(novoIndice, tipo) {
 		setZoomAtual(novoIndice);
-		document.documentElement.style.fontSize = `${NIVEIS_ZOOM[novoIndice]}%`;
+		document.documentElement.style.setProperty(
+			"--display-zoom",
+			`${NIVEIS_ZOOM[novoIndice] / 100}`,
+		);
 		setPopup({ id: Date.now(), tipo, valor: NIVEIS_ZOOM[novoIndice] });
 	}
 
@@ -48,20 +52,23 @@ export default function ZoomControls() {
 				</button>
 			</div>
 
-			{popup && (
-				<div
-					key={popup.id}
-					onAnimationEnd={() => setPopup(null)}
-					className="fixed top-4 left-1/2 z-[1000] mt-[32px] -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-gray-400 bg-white px-[14px] py-[10px] text-center font-roboto-mono text-3xl font-bold text-sptrans shadow-xl"
-				>
-					{popup.tipo === "plus" ? (
-						<ZoomIn className="inline align-middle" />
-					) : (
-						<ZoomOut className="inline align-middle" />
-					)}
-					<span className="ml-2 align-middle">{popup.valor}%</span>
-				</div>
-			)}
+			{popup &&
+				typeof document !== "undefined" &&
+				createPortal(
+					<div
+						key={popup.id}
+						onAnimationEnd={() => setPopup(null)}
+						className="fixed top-4 left-1/2 z-[1000] mt-[32px] -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-gray-400 bg-white px-[14px] py-[10px] text-center font-roboto-mono text-3xl font-bold text-sptrans shadow-xl"
+					>
+						{popup.tipo === "plus" ? (
+							<ZoomIn className="inline align-middle" />
+						) : (
+							<ZoomOut className="inline align-middle" />
+						)}
+						<span className="ml-2 align-middle">{popup.valor}%</span>
+					</div>,
+					document.body,
+				)}
 		</>
 	);
 }
