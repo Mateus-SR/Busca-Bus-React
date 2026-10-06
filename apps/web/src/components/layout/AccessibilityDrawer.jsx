@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import { PersonStanding, Contrast, X, AArrowDown, AArrowUp } from "lucide-react";
 
 export default function AccessibilityDrawer() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,46 +13,31 @@ export default function AccessibilityDrawer() {
       <button
         onClick={() => setIsOpen(true)}
         aria-label="Abrir menu de acessibilidade"
-        className="p-2.5 rounded-xl border-2 border-white/50 bg-white/10 hover:bg-white/30 hover:scale-105 font-bold flex items-center justify-center transition-all duration-200 text-white cursor-pointer"
+        className="font-bold rounded-xl p-2 border-white border-[3px] text-white hover:bg-white/50 transition-all duration-200 ease-out cursor-pointer"
+        
         title="Acessibilidade"
       >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="24" 
-          height="24" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          className="h-5 w-5"
-        >
-          <circle cx="12" cy="5" r="1"/>
-          <path d="m9 20 3-6 3 6"/>
-          <path d="m6 8 6 2 6-2"/>
-          <path d="M12 10v4"/>
-        </svg>
+        <PersonStanding strokeWidth={3} />
       </button>
 
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          className="fixed inset-0 bg-black opacity-50 z-9990 transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <div className={`accessibility-drawer fixed top-0 right-0 h-full w-80 bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`accessibility-drawer fixed top-0 right-0 h-full w-80 bg-white dark:bg-sptrans text-gray-900 dark:text-white shadow-2xl z-9999 transform transition-transform duration-300 ease-in-out p-6 flex flex-col justify-between ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         
         <div>
-          <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-red-800">
             <h2 className="text-lg font-bold">Acessibilidade</h2>
             <button 
               onClick={() => setIsOpen(false)}
               aria-label="Fechar menu de acessibilidade"
-              className="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors font-bold cursor-pointer"
+              className="px-3 py-2 rounded-full hover:bg-gray-200 dark:hover:bg-red-800 transition-colors font-bold cursor-pointer flex items-center justify-center"
             >
-              ✕
+              <X size={24} strokeWidth={3} />
             </button>
           </div>
 
@@ -63,18 +49,18 @@ export default function AccessibilityDrawer() {
               <div className="grid grid-cols-2 gap-2">
                 <button 
                   onClick={decreaseFont}
-                  className="py-2.5 px-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-bold transition-all duration-200 text-sm cursor-pointer"
+                  className="py-2.5 px-4 rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-300 text-black font-bold transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Diminuir (A-)
+                  Diminuir <AArrowDown size={18} strokeWidth={2.5} />
                 </button>
                 <button 
                   onClick={increaseFont}
-                  className="py-2.5 px-4 rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 font-bold transition-all duration-200 text-sm cursor-pointer"
+                  className="py-2.5 px-4 rounded-xl border border-gray-300 bg-gray-50 hover:bg-gray-300 text-black font-bold transition-all duration-200 text-sm cursor-pointer flex items-center justify-center gap-2"
                 >
-                  Aumentar (A+)
+                  Aumentar <AArrowUp size={18} strokeWidth={2.5} />
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1.5">Atual: {fontSize === 'normal' ? 'Normal' : fontSize === 'large' ? 'Grande' : 'Muito Grande'}</p>
+              <p className="text-sm text-gray-150 mt-1.5">Atual: {fontSize === 'normal' ? 'Normal' : fontSize === 'large' ? 'Grande' : 'Muito Grande'}</p>
             </div>
 
             {/* Modos de Contraste */}
@@ -93,32 +79,28 @@ export default function AccessibilityDrawer() {
                 </button>
                 <button 
                   onClick={() => setContrast('dark')}
-                  className={`w-full py-2.5 px-4 rounded-xl font-bold transition-all duration-200 border cursor-pointer ${
+                  className={`w-full py-2.5 px-4 rounded-xl font-bold transition-all duration-200 border cursor-pointer flex items-center justify-center gap-2 ${
                     contrastMode === 'dark' 
                       ? 'bg-yellow-400 text-black border-yellow-500 shadow-md' 
                       : 'bg-black text-white border-black hover:bg-gray-800 hover:border-yellow-400'
                   }`}
                 >
-                  ◐ Alto Contraste Escuro
+                  <Contrast size={16} /> Alto Contraste Escuro
                 </button>
                 <button 
                   onClick={() => setContrast('light')}
-                  className={`w-full py-2.5 px-4 rounded-xl font-bold transition-all duration-200 border cursor-pointer ${
+                  className={`w-full py-2.5 px-4 rounded-xl font-bold transition-all duration-200 border cursor-pointer flex items-center justify-center gap-2 ${
                     contrastMode === 'light' 
                       ? 'bg-blue-600 text-white border-blue-700 shadow-md' 
                       : 'bg-white text-black border-black hover:bg-gray-100 hover:border-blue-600 shadow-sm'
                   }`}
                 >
-                  ◑ Alto Contraste Claro
+                  <Contrast size={16} className="rotate-180" /> Alto Contraste Claro
                 </button>
               </div>
             </div>
 
           </div>
-        </div>
-
-        <div className="text-xs text-center text-gray-400 pt-4 border-t border-gray-200 dark:border-gray-800">
-          BuscaBus • Inclusão e Mobilidade
         </div>
       </div>
     </div>
