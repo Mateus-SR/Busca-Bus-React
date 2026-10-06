@@ -24,18 +24,19 @@ export default function AccessibilityDrawer() {
 
   const drawer = (
     <>
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[9990] bg-black opacity-50 transition-opacity"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      <button
+        type="button"
+        aria-label="Fechar menu de acessibilidade"
+        onClick={() => setIsOpen(false)}
+        className={`fixed inset-0 z-[9990] bg-black/50 transition-opacity duration-300 ease-in-out ${
+          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      />
 
       <div
-        className={`accessibility-drawer fixed top-0 right-0 z-[9999] flex h-full w-80 transform flex-col justify-between bg-white p-6 text-gray-900 shadow-2xl transition-transform duration-300 ease-in-out dark:bg-sptrans dark:text-white ${
+        className={`accessibility-drawer fixed top-0 right-0 z-[9999] flex h-dvh w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-transform duration-300 ease-in-out sm:p-6 dark:bg-sptrans dark:text-white ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
-        style={{ transform: isOpen ? "translateX(0)" : "translateX(100%)" }}
       >
         <div>
           <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-red-800">
@@ -98,8 +99,9 @@ export default function AccessibilityDrawer() {
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(true)}
-        aria-label="Abrir menu de acessibilidade"
+        onClick={() => setIsOpen((value) => !value)}
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Fechar menu de acessibilidade" : "Abrir menu de acessibilidade"}
         className="font-bold rounded-xl p-2 border-white border-[3px] text-white hover:bg-white/50 transition-all duration-200 ease-out cursor-pointer"
         
         title="Acessibilidade"

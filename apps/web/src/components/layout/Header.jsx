@@ -18,10 +18,10 @@ export default function Header() {
 
   return (
     <header className="bg-sptrans text-white">
-      <div className="max-w-300 w-full mx-auto grid grid-cols-[1fr_2fr_1fr] items-center py-2.5 px-4">
+      <div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2.5 sm:px-4 md:grid-cols-[1fr_2fr_1fr]">
         
         {/* Logo */}
-        <Link href="/" className="font-extrabold tracking-[0.2px]" aria-label="Página inicial Busca Bus">
+        <Link href="/" className="text-sm font-extrabold leading-tight tracking-[0.2px] sm:text-base" aria-label="Página inicial Busca Bus">
           Busca Bus
           <br/> Monitoramento
         </Link>

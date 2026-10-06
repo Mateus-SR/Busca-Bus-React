@@ -58,7 +58,7 @@ export default function ZoomControls() {
 					<div
 						key={popup.id}
 						onAnimationEnd={() => setPopup(null)}
-						className="fixed top-4 left-1/2 z-[1000] mt-[32px] -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-gray-400 bg-white px-[14px] py-[10px] text-center font-roboto-mono text-3xl font-bold text-sptrans shadow-xl"
+						className="fixed top-4 left-1/2 z-[1000] mt-[32px] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-gray-400 bg-white px-3 py-2 text-center font-roboto-mono text-xl font-bold text-sptrans shadow-xl sm:px-[14px] sm:py-[10px] sm:text-3xl"
 					>
 						{popup.tipo === "plus" ? (
 							<ZoomIn className="inline align-middle" />

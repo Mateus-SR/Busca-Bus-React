@@ -53,7 +53,7 @@ export default function ExibicaoLive({ codigo }) {
   }, [radar?.onibus]);
 
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white p-6 shadow-lg">
+    <div className="overflow-x-auto rounded-2xl bg-white p-3 shadow-lg sm:p-6">
       
       {/* Elemento invisível do leitor de tela */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
@@ -61,9 +61,9 @@ export default function ExibicaoLive({ codigo }) {
       </div>
 
       {/* Interface visual */}
-      <div className="mb-2 flex flex-col items-center">
-        <div className="flex items-center gap-3">
-          <span className="text-xl font-bold">{exibicao?.nome_exibicao}</span>
+      <div className="mb-3 flex flex-col items-center">
+        <div className="flex max-w-full items-center gap-2 text-center">
+          <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome_exibicao}</span>
           <FavoriteStar />
         </div>
         <span className="font-roboto-mono text-sm italic">Código: {codigo}</span>
