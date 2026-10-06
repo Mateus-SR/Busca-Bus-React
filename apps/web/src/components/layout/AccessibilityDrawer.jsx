@@ -12,7 +12,15 @@ export default function AccessibilityDrawer() {
     () => true,
     () => false,
   );
-  const { fontSize, increaseFont, decreaseFont, contrastMode, setContrast } = useAccessibility();
+  const {
+    fontSize,
+    increaseFont,
+    decreaseFont,
+    fontSizeMinimo,
+    fontSizeMaximo,
+    contrastMode,
+    setContrast,
+  } = useAccessibility();
 
   const drawer = (
     <>
@@ -45,10 +53,22 @@ export default function AccessibilityDrawer() {
             <div>
               <span className="mb-2 block text-sm font-semibold">Tamanho do Texto</span>
               <div className="grid grid-cols-2 gap-2">
-                <button onClick={decreaseFont} className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300">
+                <button
+                  type="button"
+                  onClick={decreaseFont}
+                  disabled={fontSizeMinimo}
+                  aria-label="Diminuir tamanho do texto"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gray-50"
+                >
                   Diminuir <AArrowDown size={18} strokeWidth={2.5} />
                 </button>
-                <button onClick={increaseFont} className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300">
+                <button
+                  type="button"
+                  onClick={increaseFont}
+                  disabled={fontSizeMaximo}
+                  aria-label="Aumentar tamanho do texto"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gray-50"
+                >
                   Aumentar <AArrowUp size={18} strokeWidth={2.5} />
                 </button>
               </div>
