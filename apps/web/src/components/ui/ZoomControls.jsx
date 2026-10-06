@@ -12,13 +12,16 @@ export default function ZoomControls() {
 
 	useEffect(() => {
 		return () => {
-			document.documentElement.style.fontSize = "";
+			document.documentElement.style.removeProperty("--display-zoom");
 		};
 	}, []);
 
 	function aplicarZoom(novoIndice, tipo) {
 		setZoomAtual(novoIndice);
-		document.documentElement.style.fontSize = `${NIVEIS_ZOOM[novoIndice]}%`;
+		document.documentElement.style.setProperty(
+			"--display-zoom",
+			`${NIVEIS_ZOOM[novoIndice] / 100}`,
+		);
 		setPopup({ id: Date.now(), tipo, valor: NIVEIS_ZOOM[novoIndice] });
 	}
 

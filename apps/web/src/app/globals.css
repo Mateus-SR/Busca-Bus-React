@@ -72,6 +72,9 @@
   --black: #000000;
   --white: #ffffff;
   --bg: #ffffff;
+  --accessibility-font-size: 16px;
+  --display-zoom: 1;
+  font-size: calc(var(--accessibility-font-size) * var(--display-zoom));
 }
 
 body {
@@ -96,9 +99,9 @@ body {
 /* -- REGRAS DE ACESSIBILIDADE -- */
 
 /* Tamanho da Fonte */
-html.text-normal { font-size: 16px; }
-html.text-large { font-size: 18px; }
-html.text-xlarge { font-size: 20px; }
+html.text-normal { --accessibility-font-size: 16px; }
+html.text-large { --accessibility-font-size: 18px; }
+html.text-xlarge { --accessibility-font-size: 20px; }
 
 /* 1. ALTO CONTRASTE ESCURO */
 html.high-contrast-dark,
