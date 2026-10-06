@@ -29,8 +29,8 @@ export default function AcessoRapidoForm() {
     }
 
     return (
-        <div className="my-16 w-1/2 md:w-1/5 mx-auto z-40">
-            <form onSubmit={handleAcessar} className="flex flex-col flex-wrap justify-between gap-1.5">
+        <div className="z-40 mx-auto my-10 w-full max-w-md px-4 sm:my-16 sm:px-0 md:w-1/5">
+            <form onSubmit={handleAcessar} className="flex flex-col gap-2">
                 <input
                     type="text"
                     value={codigo}
@@ -39,11 +39,11 @@ export default function AcessoRapidoForm() {
                     maxLength={6}
                     aria-invalid={erro}
                     aria-describedby={erro ? "codigo-erro" : undefined}
-                    className={`px-12 py-5 md:px-8 md:py-5 border border-gray-500 rounded-2xl text-xl font-roboto-mono font-extrabold ${
+                    className={`w-full rounded-2xl border border-gray-500 px-5 py-4 text-center text-lg font-roboto-mono font-extrabold sm:px-8 sm:py-5 sm:text-xl ${
                         erro ? "bg-sptrans/25" : "bg-white"
                     }`}
                 />
-                <button type="submit" className="bg-sptrans text-white font-bold text-center cursor-pointer px-12 py-5 md:px-8 md:py-5 text-lg md:text-3xl rounded-2xl shadow-lg hover:bg-red-800 transition-all duration-200 ease-out">
+                <button type="submit" className="cursor-pointer rounded-2xl bg-sptrans px-5 py-4 text-center text-lg font-bold text-white shadow-lg transition-all duration-200 ease-out hover:bg-red-800 sm:px-8 sm:py-5 sm:text-2xl">
                     Acessar
                 </button>
                 {erro && <p id="codigo-erro" className="text-sm text-red-700">Informe um código com 6 caracteres.</p>}

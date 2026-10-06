@@ -45,13 +45,13 @@ export default function ExibicaoTable({ onibus }) {
 				aoMudarOrdenacao={setOrdenacao}
 			/>
 
-			<table className="mx-auto min-w-full table-auto border-collapse lg:text-3xl">
+			<table className="mx-auto min-w-[40rem] table-auto border-collapse text-sm sm:min-w-full sm:text-base lg:text-3xl">
 				<thead>
 					<tr className="bg-gray-100 font-extrabold">
-						<th className="px-6 py-3 text-center">Código</th>
-						<th className="px-6 py-3 text-center">Nome</th>
-						<th className="px-6 py-3 text-center">Previsão</th>
-						<th className="px-6 py-3 text-center">Status</th>
+						<th className="px-3 py-3 text-center sm:px-6">Código</th>
+						<th className="px-3 py-3 text-center sm:px-6">Nome</th>
+						<th className="px-3 py-3 text-center sm:px-6">Previsão</th>
+						<th className="px-3 py-3 text-center sm:px-6">Status</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -60,12 +60,12 @@ export default function ExibicaoTable({ onibus }) {
 							key={item.id}
 							className="animate-fadeIn border-b hover:bg-gray-50"
 						>
-							<td className="px-6 py-3 text-center font-extrabold">
+							<td className="px-3 py-3 text-center font-extrabold sm:px-6">
 								{item.codigoLetreiro}
 							</td>
-							<td className="px-6 py-3 text-center">{item.sentidoLinha}</td>
-							<td className="px-6 py-3 text-center">{item.previsao}</td>
-							<td className="px-6 py-3 text-center">
+							<td className="px-3 py-3 text-center sm:px-6">{item.sentidoLinha}</td>
+							<td className="px-3 py-3 text-center sm:px-6">{item.previsao}</td>
+							<td className="px-3 py-3 text-center sm:px-6">
 								<StatusBadge status={item.status} />
 							</td>
 						</tr>

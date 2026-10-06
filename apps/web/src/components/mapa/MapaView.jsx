@@ -10,9 +10,9 @@ const BusMap = dynamic(() => import("@/components/mapa/BusMap"), {
 
 export default function MapaView({ codigo, voltarHref, onibus }) {
   return (
-    <main className="flex h-[calc(100vh-68px)] flex-col overflow-hidden bg-gray-100">
+    <main className="flex h-[calc(100dvh-68px)] min-h-[32rem] flex-col overflow-hidden bg-gray-100">
       <div className="relative flex-1">
-        <Link href={voltarHref} className="absolute top-4 left-6 z-[1000] flex items-center gap-2 rounded-full bg-white px-4 py-2 font-bold text-black shadow-lg transition hover:bg-gray-200">
+        <Link href={voltarHref} className="absolute top-3 left-3 z-[1000] flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-black shadow-lg transition hover:bg-gray-200 sm:top-4 sm:left-6 sm:px-4 sm:text-base">
           ← Voltar
         </Link>
         <BusMap codigo={codigo} onibus={onibus} />
