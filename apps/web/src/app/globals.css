@@ -145,6 +145,73 @@ html.high-contrast-dark button:not([class*="bg-red"]):hover {
   color: #000000 !important;
 }
 
+html.high-contrast-dark .status-badge {
+  color: #000000 !important;
+  border: 2px solid #ffffff !important;
+  font-weight: 800 !important;
+}
+
+html.high-contrast-dark .status-badge-ping,
+html.high-contrast-dark .status-badge-dot {
+  border: 1px solid #000000 !important;
+}
+
+html.high-contrast-dark .status-badge.bg-green-100 {
+  background-color: #86efac !important;
+}
+
+html.high-contrast-dark .status-badge.bg-yellow-100 {
+  background-color: #fde047 !important;
+}
+
+html.high-contrast-dark .status-badge.bg-blue-100 {
+  background-color: #93c5fd !important;
+}
+
+html.high-contrast-dark .status-badge-ping.bg-green-400 {
+  background-color: #166534 !important;
+}
+
+html.high-contrast-dark .status-badge-ping.bg-yellow-400 {
+  background-color: #854d0e !important;
+}
+
+html.high-contrast-dark .status-badge-ping.bg-blue-400 {
+  background-color: #1e40af !important;
+}
+
+html.high-contrast-dark .status-badge-dot.bg-green-600 {
+  background-color: #14532d !important;
+}
+
+html.high-contrast-dark .status-badge-dot.bg-yellow-600 {
+  background-color: #713f12 !important;
+}
+
+html.high-contrast-dark .status-badge-dot.bg-blue-600 {
+  background-color: #1e3a8a !important;
+}
+
+html.high-contrast-dark table thead tr {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+html.high-contrast-dark table thead th {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
+html.high-contrast-dark table tbody tr:hover {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+html.high-contrast-dark table tbody tr:hover td {
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+
 /* 2. ALTO CONTRASTE CLARO */
 html.high-contrast-light,
 html.high-contrast-light body,

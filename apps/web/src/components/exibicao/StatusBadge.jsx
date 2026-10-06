@@ -9,14 +9,14 @@ export default function StatusBadge({ status }) {
 
     return (
         <span
-            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold lg:text-lg ${estilo.badge}`}
+            className={`status-badge inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold lg:text-lg ${estilo.badge}`}
         >
             <span className="relative mr-2 flex h-2 w-2">
                 <span
-                    className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${estilo.ping}`}
+                    className={`status-badge-ping absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${estilo.ping}`}
                 />
                 <span
-                    className={`relative inline-flex h-2 w-2 rounded-full ${estilo.dot}`}
+                    className={`status-badge-dot relative inline-flex h-2 w-2 rounded-full ${estilo.dot}`}
                 />
             </span>
             {status}
