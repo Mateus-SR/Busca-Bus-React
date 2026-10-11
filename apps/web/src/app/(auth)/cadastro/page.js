@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
+import { validarEmail, validarSenha } from "@busca-bus/core";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -15,8 +16,8 @@ export default function CadastroPage() {
     evento.preventDefault();
     const { nome, email, senha } = formulario;
     if (!nome || !email || !senha) return setMensagem("Por favor, preencha todos os campos.");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setMensagem("Informe um e-mail válido.");
-    if (!/(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(senha)) return setMensagem("A senha precisa ter letras e números, e no mínimo 6 caracteres.");
+    if (!validarEmail(email)) return setMensagem("Informe um e-mail válido.");
+    if (!validarSenha(senha)) return setMensagem("A senha precisa ter letras e números, e no mínimo 6 caracteres.");
     router.push("/login");
   }
 

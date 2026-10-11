@@ -9,6 +9,22 @@ export function AccessibilityProvider({ children }) {
   const [contrastMode, setContrastMode] = useState('normal'); // 'normal', 'dark', 'light'
 
   useEffect(() => {
+    const tarefa = window.setTimeout(() => {
+      const salvo = localStorage.getItem('accessibilityPreferences');
+      if (!salvo) return;
+      try {
+        const preferencias = JSON.parse(salvo);
+        if (['normal', 'large', 'xlarge'].includes(preferencias.fontSize)) setFontSize(preferencias.fontSize);
+        if (['normal', 'dark', 'light'].includes(preferencias.contrastMode)) setContrastMode(preferencias.contrastMode);
+      } catch (erro) {
+        console.error('Erro ao carregar preferências de acessibilidade', erro);
+        localStorage.removeItem('accessibilityPreferences');
+      }
+    }, 0);
+    return () => window.clearTimeout(tarefa);
+  }, []);
+
+  useEffect(() => {
     const root = document.documentElement;
     
     // Gerenciar tamanhos de fonte
@@ -22,6 +38,7 @@ export function AccessibilityProvider({ children }) {
     } else if (contrastMode === 'light') {
       root.classList.add('high-contrast-light');
     }
+    localStorage.setItem('accessibilityPreferences', JSON.stringify({ fontSize, contrastMode }));
   }, [fontSize, contrastMode]);
 
   const increaseFont = () => setFontSize(prev => prev === 'normal' ? 'large' : 'xlarge');

@@ -1,6 +1,6 @@
 export default function SobrePage() {
 	return (
-		<main className="relative min-h-screen bg-[url('/img/Onibus2.png')] bg-cover bg-center">
+		<main className="relative min-h-screen bg-[url(/img/Onibus2.png)] bg-cover bg-center">
 			<div className="absolute inset-0 bg-black/40" />
 			<div className="relative flex min-h-screen items-center justify-center bg-gray-100/90 p-4">
 				<article className="w-full max-w-4xl rounded-xl border border-gray-300 bg-white p-6 shadow-2xl sm:p-10">
