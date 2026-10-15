@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 
-function Metric({ label, value }) {
+function Metric({ label, value, className = '' }) {
 	return (
-		<div className="rounded border bg-gray-50 p-2 text-gray-900">
+		<div className={`rounded border bg-gray-50 p-2 text-gray-900 ${className}`}>
 			<dt className="text-xs text-gray-600">{label}</dt>
 			<dd className="font-roboto-mono text-sm font-bold text-gray-950">
 				{value ?? '—'}
@@ -12,6 +12,17 @@ function Metric({ label, value }) {
 		</div>
 	);
 }
+
+function hora(iso) {
+	return iso ? new Date(iso).toLocaleTimeString('pt-BR') : null;
+}
+
+const DURACOES_SIMULACAO = [
+	{ segundos: 30, rotulo: '30 s' },
+	{ segundos: 60, rotulo: '1 min' },
+	{ segundos: 120, rotulo: '2 min' },
+	{ segundos: 300, rotulo: '5 min' },
+];
 
 const UNIDADES_BYTES = { KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
 
@@ -33,12 +44,21 @@ export default function VisaoDesenvolvedor({
 	configuracao,
 	permitirMultiplosPorLinha,
 	onPermitirMultiplosPorLinha,
-	diagnosticoSocketAtivo,
-	onDiagnosticoSocket,
 	onLimpar,
 	onAtualizar,
+	conexao,
+	eventosConexao = [],
+	onSimular,
 }) {
 	const [unidadeSnapshot, setUnidadeSnapshot] = useState('auto');
+	const [cenarioSimulado, setCenarioSimulado] = useState('rede');
+	const [duracaoSimulacao, setDuracaoSimulacao] = useState(60);
+	const [retornoSimulacao, setRetornoSimulacao] = useState(null);
+	async function executarSimulacao(cenario) {
+		setRetornoSimulacao('Enviando...');
+		const resposta = await onSimular?.(cenario, duracaoSimulacao);
+		setRetornoSimulacao(resposta?.ok ? null : (resposta?.erro ?? 'Falha ao simular.'));
+	}
 	if (!aberto) return null;
 	const paradas = diagnostico?.paradas ?? [];
 	const parada = paradas[0];
@@ -59,10 +79,23 @@ export default function VisaoDesenvolvedor({
 			? 'conectado'
 			: parada?.estadoConexao;
 	const emAndamento = paradas.some((item) => item.consultaEmAndamento);
+	const simulacao = diagnostico?.simulacao;
+	const simulacaoAtiva = simulacao?.disponivel && simulacao.cenario !== 'normal';
+	const ultimaFalha = paradas
+		.filter((item) => item.ultimaFalhaEm)
+		.sort((a, b) => b.ultimaFalhaEm.localeCompare(a.ultimaFalhaEm))[0];
+	const ultimaRecuperacao = paradas
+		.map((item) => item.recuperadoEm)
+		.filter(Boolean)
+		.sort()
+		.at(-1);
+	const falhasSeguidas = soma('falhasSeguidas');
 	const anomalias = [
 		parada?.duplicatasDescartadas > 0 &&
 			`${parada.duplicatasDescartadas} duplicata(s) descartada(s)`,
-		parada?.falhas > 0 && `${parada.falhas} falha(s) de consulta`,
+		falhasSeguidas > 0 &&
+			`${falhasSeguidas} falha(s) seguida(s) de consulta${ultimaFalha?.ultimoErro ? ` (${ultimaFalha.ultimoErro})` : ''}`,
+		conexao?.fallbackRest && 'socket indisponível: usando o fallback REST',
 		parada?.ultimaDuracaoMs > 3000 && 'latência acima de 3 segundos',
 		frontend?.respostasDescartadas > 0 &&
 			`${frontend.respostasDescartadas} resposta(s) fora de ordem`,
@@ -77,7 +110,7 @@ export default function VisaoDesenvolvedor({
 				<h2 className="font-roboto-mono text-base font-bold">
 					Detalhes técnicos
 				</h2>
-				<div className="flex gap-2">
+				<div className="flex flex-wrap items-center gap-2">
 					<button
 						type="button"
 						onClick={onAtualizar}
@@ -85,6 +118,53 @@ export default function VisaoDesenvolvedor({
 					>
 						Forçar atualização
 					</button>
+					{simulacao?.disponivel && (
+						<>
+							<select
+								value={cenarioSimulado}
+								onChange={(evento) => setCenarioSimulado(evento.target.value)}
+								aria-label="Cenário de falha a simular"
+								className="rounded border border-slate-600 bg-slate-800 px-2 py-1 text-sm"
+							>
+								{simulacao.cenarios
+									.filter((item) => item.id !== 'normal')
+									.map((item) => (
+										<option key={item.id} value={item.id}>
+											{item.rotulo}
+										</option>
+									))}
+							</select>
+							<select
+								value={duracaoSimulacao}
+								onChange={(evento) =>
+									setDuracaoSimulacao(Number(evento.target.value))
+								}
+								aria-label="Duração da simulação"
+								className="rounded border border-slate-600 bg-slate-800 px-2 py-1 text-sm"
+							>
+								{DURACOES_SIMULACAO.map((item) => (
+									<option key={item.segundos} value={item.segundos}>
+										{item.rotulo}
+									</option>
+								))}
+							</select>
+							<button
+								type="button"
+								onClick={() => executarSimulacao(cenarioSimulado)}
+								className="rounded bg-amber-700 px-3 py-1 text-sm hover:bg-amber-600"
+							>
+								Simular
+							</button>
+							<button
+								type="button"
+								onClick={() => executarSimulacao('queda_socket')}
+								title="Fecha só a conexão deste navegador; ele reconecta sozinho"
+								className="rounded bg-slate-700 px-3 py-1 text-sm hover:bg-slate-600"
+							>
+								Derrubar socket
+							</button>
+						</>
+					)}
 					<button
 						type="button"
 						onClick={onLimpar}
@@ -94,6 +174,62 @@ export default function VisaoDesenvolvedor({
 					</button>
 				</div>
 			</div>
+			{retornoSimulacao && (
+				<p role="status" className="mb-2 text-sm text-amber-300">
+					{retornoSimulacao}
+				</p>
+			)}
+			{simulacaoAtiva && (
+				<div
+					role="alert"
+					className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded border border-red-400 bg-red-950/50 p-2 text-sm text-red-200"
+				>
+					<span>
+						Simulação ativa: <strong>{simulacao.rotulo}</strong> (afeta todas as
+						salas deste servidor) · até {hora(simulacao.expiraEm)}
+					</span>
+					<button
+						type="button"
+						onClick={() => executarSimulacao('normal')}
+						className="rounded bg-red-800 px-3 py-1 hover:bg-red-700"
+					>
+						Encerrar simulação
+					</button>
+				</div>
+			)}
+			<details open className="mb-3">
+				<summary className="cursor-pointer font-bold">
+					Conexão do navegador
+				</summary>
+				<dl className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">
+					<Metric label="Reconexões" value={conexao?.reconexoes} />
+					<Metric label="Desconexões" value={conexao?.desconexoes} />
+					<Metric label="Última queda" value={hora(conexao?.ultimaDesconexaoEm)} />
+					<Metric
+						label="Última reconexão"
+						value={hora(conexao?.ultimaReconexaoEm)}
+					/>
+					<Metric
+						label="Fallback REST"
+						value={conexao?.fallbackRest ? 'ativo' : 'inativo'}
+					/>
+				</dl>
+				<details className="mt-2">
+					<summary className="cursor-pointer">
+						Eventos de conexão ({eventosConexao.length})
+					</summary>
+					<div className="mt-2 max-h-48 overflow-auto rounded bg-black p-2 text-xs">
+						{eventosConexao.length
+							? eventosConexao.map((evento, indice) => (
+									<div key={`${evento.em}-${indice}`} className="mb-1">
+										{hora(evento.em)} · {evento.tipo}
+										{evento.detalhe ? ` · ${evento.detalhe}` : ''}
+									</div>
+								))
+							: 'Nenhum evento registrado.'}
+					</div>
+				</details>
+			</details>
 			<div className="flex flex-row gap-2">
 				<label className="mb-3 flex flex-1 items-start gap-2 rounded border border-slate-700 bg-slate-900 p-2 text-sm">
 					<input
@@ -110,22 +246,6 @@ export default function VisaoDesenvolvedor({
 						<span className="text-xs text-slate-400">
 							Altera globalmente para essa sala, compartilhado com todos os
 							usuários.
-						</span>
-					</span>
-				</label>
-				<label className="mb-3 flex flex-1 items-start gap-2 rounded border border-slate-700 bg-slate-900 p-2 text-sm">
-					<input
-						type="checkbox"
-						checked={diagnosticoSocketAtivo}
-						onChange={(evento) => onDiagnosticoSocket(evento.target.checked)}
-						className="mt-1"
-					/>
-					<span>
-						<strong>Enviar diagnóstico entre sessões Socket.IO</strong>
-						<br />
-						<span className="text-xs text-slate-400">
-							Sincronizado entre todos os navegadores desta exibição. Desligue
-							para não enviar o diagnóstico pelo socket.
 						</span>
 					</span>
 				</label>
@@ -150,22 +270,43 @@ export default function VisaoDesenvolvedor({
 						</summary>
 						<dl className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
 							<Metric
-								label="Consultas (todos os pontos)"
+								label="Consultas (total)"
 								value={soma('consultas')}
 							/>
-							<Metric label="Falhas (todos os pontos)" value={soma('falhas')} />
+							<Metric
+								label="Falhas acumuladas (total) / Falhas seguidas"
+								value={soma('falhas') + " / " + falhasSeguidas}
+							/>
+							<Metric label="Última falha / Última recuperação" value={(hora(ultimaFalha?.ultimaFalhaEm) || "-") + " / " + (hora(ultimaRecuperacao) || "-")} />
+
 							<Metric
 								label="Latência máxima (ms)"
 								value={maior('ultimaDuracaoMs')}
 							/>
+							
 							<Metric
-								label="Veículos recebidos"
-								value={soma('veiculosNormalizados')}
+								label="Último erro"
+								value={ultimaFalha?.ultimoErro}
+								className="col-span-2 sm:col-span-3"
 							/>
-							<Metric
-								label="Filtrados por distância"
-								value={soma('veiculosFiltradosPorDistancia')}
-							/>
+
+							<div className="col-span-3 grid grid-cols-3 gap-2 sm:col-span-1">
+								<Metric
+									className="flex flex-row-reverse *:flex-col items-center justify-center gap-1.5"
+									label="Veículos recebidos"
+									value={soma('veiculosNormalizados')}
+								/>
+								<Metric
+									className="flex flex-row-reverse *:flex-col items-center justify-center gap-1.5"
+									label="Veículos exibidos"
+									value={frontend?.veiculosRenderizados}
+								/>
+								<Metric
+									className="flex flex-row-reverse *:flex-col items-center justify-center gap-1.5"
+									label="Filtrados por distância"
+									value={soma('veiculosFiltradosPorDistancia')}
+								/>
+							</div>
 							<Metric
 								label="Duplicatas descartadas"
 								value={soma('duplicatasDescartadas')}
@@ -182,10 +323,6 @@ export default function VisaoDesenvolvedor({
 							<Metric
 								label="Respostas descartadas"
 								value={frontend?.respostasDescartadas}
-							/>
-							<Metric
-								label="Veículos exibidos"
-								value={frontend?.veiculosRenderizados}
 							/>
 							<div className="rounded border bg-gray-50 p-2 text-gray-900">
 								<dt className="flex items-center justify-between gap-1 text-xs text-gray-600">
@@ -213,7 +350,7 @@ export default function VisaoDesenvolvedor({
 							/>
 							<Metric label="Salas ativas" value={socket?.salasAtivas} />
 							<Metric
-								label="Snapshots enviados"
+								label={`Snapshots enviados (sala${socket?.metricasDesde ? `, desde ${hora(socket.metricasDesde)}` : ''})`}
 								value={socket?.snapshotsEnviados}
 							/>
 						</dl>
@@ -234,7 +371,7 @@ export default function VisaoDesenvolvedor({
 											<dl className="grid grid-cols-2 gap-2 xl:grid-cols-4">
 												<Metric label="Estado" value={item.estadoConexao} />
 												<Metric label="Consultas" value={item.consultas} />
-												<Metric label="Falhas" value={item.falhas} />
+												<Metric label="Falhas / Falhas seguidas" value={item.falhas + " / " + item.falhasSeguidas} />
 												<Metric
 													label="Latência (ms)"
 													value={item.ultimaDuracaoMs}

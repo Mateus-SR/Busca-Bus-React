@@ -18,7 +18,6 @@ export default function ExibicaoLive({ codigo }) {
     config: { ...exibicao?.config, permitirMultiplosPorLinha },
   }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha]);
   const radar = useRadarOnibus(codigo, [], debugAberto, atualizacaoSolicitada, opcoesRadar);
-  const configurarDiagnosticoSocket = radar.configurarDiagnosticoSocket;
   
   const [mensagemVoz, setMensagemVoz] = useState("");
   
@@ -118,9 +117,10 @@ export default function ExibicaoLive({ codigo }) {
           radar.configurar({ ...exibicao?.config, permitirMultiplosPorLinha: permitir });
         }}
         onLimpar={radar.limparDiagnostico}
+        conexao={radar.conexao}
+        eventosConexao={radar.eventosConexao}
+        onSimular={radar.simular}
         onAtualizar={() => setAtualizacaoSolicitada((valor) => valor + 1)}
-        diagnosticoSocketAtivo={radar.diagnosticoSocketAtivo}
-        onDiagnosticoSocket={configurarDiagnosticoSocket}
       />
       
       {radar.erro && (

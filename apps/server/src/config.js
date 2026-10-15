@@ -24,6 +24,10 @@ export function loadConfig(env = process.env) {
     sptransBaseUrl: env.SPTRANS_BASE_URL || "https://api.olhovivo.sptrans.com.br/v2.1",
     sptransTimeoutMs: Number(env.SPTRANS_TIMEOUT_MS || 10000),
     pollIntervalMs: Number(env.POLL_INTERVALO_MS || INTERVALO_COLETA_MS),
+    // Janela em que as atualizações das paradas de uma sala viram um único snapshot por cliente.
+    coalescingMs: Number(env.COALESCING_MS || 500),
+    // Simulação de falhas pelo painel (Detalhes técnicos). Ligada fora de produção; em produção só com SIMULACAO_FALHAS=1.
+    simulacaoHabilitada: env.SIMULACAO_FALHAS ? env.SIMULACAO_FALHAS === "1" : !production,
     testDisplayCode: env.TEST_DISPLAY_CODE || "dev",
     testStopCodes: split(env.TEST_STOP_CODES || env.TEST_STOP_CODE || "650004840"),
   };

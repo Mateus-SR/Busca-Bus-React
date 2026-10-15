@@ -81,7 +81,8 @@ function compactarSnapshot(codigo, exibicao, snapshots, incluirDiagnostico, diag
       ...onibus,
       codigoParada: item.codigoParada,
     }))),
-    diagnosticoSocket,
+    // Só vai junto quando o diagnóstico foi pedido; sem ele é peso morto em toda resposta.
+    diagnosticoSocket: incluirDiagnostico ? diagnosticoSocket : undefined,
   };
   if (incluirDiagnostico) {
     resposta.diagnostico = {
