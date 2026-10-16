@@ -1,5 +1,5 @@
 # Busca Bus
-## [FatecDSM-2025/2]
+## [FatecDSM-2026/2]
 ### Monitoramento de ônibus em tempo real para o transporte urbano de São Paulo
 
 Originalmente projetado para uso interno na Fatec Zona Leste, o projeto cresceu e agora atende qualquer instituição do município de São Paulo, em toda localidade onde os ônibus da SPTrans atuam. O sistema consulta a API [Olho Vivo](https://www.sptrans.com.br/desenvolvedores/api-do-olho-vivo-guia-de-referencia) da SPTrans e mostra, em uma "exibição" (um painel pensado para ficar aberto numa tela), os ônibus que estão chegando a uma ou mais paradas, com o status de cada um (Normal, Atrasado ou Adiantado).
