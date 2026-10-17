@@ -15,11 +15,19 @@ function normalizarVeiculo(veiculo, linha, codigoParada) {
 export function normalizarPrevisao(resposta, codigoParada) {
   const onibusPorId = new Map();
   let duplicatas = 0;
+  // Registros que foram sobrescritos por outro com o mesmo id (para o painel mostrar o que foi descartado).
+  const duplicadosDescartados = [];
   const linhas = resposta?.linhas || resposta?.p?.l || [];
   for (const linha of linhas) {
     for (const veiculo of linha.vs || []) {
       const normalizado = normalizarVeiculo(veiculo, linha, codigoParada);
-      if (onibusPorId.has(normalizado.id)) duplicatas += 1;
+      const anterior = onibusPorId.get(normalizado.id);
+      if (anterior) {
+        duplicatas += 1;
+        if (duplicadosDescartados.length < 50) {
+          duplicadosDescartados.push({ id: anterior.id, codigoLetreiro: anterior.codigoLetreiro, previsao: anterior.previsao });
+        }
+      }
       onibusPorId.set(normalizado.id, normalizado);
     }
   }
@@ -34,6 +42,7 @@ export function normalizarPrevisao(resposta, codigoParada) {
       : null,
     onibus: [...onibusPorId.values()],
     duplicatas,
+    duplicadosDescartados,
     respostaBruta: resposta,
   };
 }

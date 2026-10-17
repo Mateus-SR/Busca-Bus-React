@@ -143,6 +143,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
               snapshotBytesAtual: metricasRef.current.snapshotBytesAtual,
               snapshotBytesTotal: metricasRef.current.snapshotBytesTotal,
               origem,
+              recebidoEmMs: Date.now(),
             },
           }
         : null;
