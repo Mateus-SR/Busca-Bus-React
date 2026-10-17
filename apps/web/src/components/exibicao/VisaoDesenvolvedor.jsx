@@ -280,7 +280,7 @@ export default function VisaoDesenvolvedor({
 						{atualizando ? 'Atualizando...' : 'Forçar atualização'}
 					</button>
 					<button type="button" onClick={onLimpar} className={botaoSecundario}>
-						Limpar
+						Limpar (detalhes front)
 					</button>
 				</div>
 			</div>
@@ -668,8 +668,7 @@ export default function VisaoDesenvolvedor({
 							label="Exibição iniciada"
 							value={horaCompleta(socket?.salaIniciadaEm)}
 						/>
-						<Metric label="Reconexões" value={conexao?.reconexoes} />
-						<Metric label="Desconexões" value={conexao?.desconexoes} />
+						<Metric label="Reconexões / Desconexões" value={conexao?.reconexoes + " / " + conexao?.desconexoes}/>
 						<Metric
 							label="Última queda"
 							value={hora(conexao?.ultimaDesconexaoEm)}
