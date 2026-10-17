@@ -9,6 +9,7 @@ export const CENARIOS = Object.freeze([
   { id: "erro500", rotulo: "SPTrans com erro 500" },
   { id: "lenta", rotulo: "SPTrans lenta (+3 s)" },
   { id: "vazia", rotulo: "Sem previsões (resposta vazia)" },
+  { id: "duplicatas", rotulo: "Veículos repetidos na resposta" },
   { id: "json_invalido", rotulo: "Resposta inválida (HTML no lugar de JSON)" },
 ]);
 
@@ -73,6 +74,12 @@ export function criarSimulador(clienteReal, { timeoutMs = 10_000 } = {}) {
       case "vazia": {
         const resposta = await clienteReal.buscarPrevisao(codigoParada, ...resto);
         return { ...resposta, p: resposta?.p ? { ...resposta.p, l: [] } : resposta?.p };
+      }
+      case "duplicatas": {
+        // Repete o primeiro veículo de cada linha, como se a SPTrans devolvesse o mesmo prefixo duas vezes.
+        const resposta = await clienteReal.buscarPrevisao(codigoParada, ...resto);
+        const linhas = resposta?.p?.l?.map((linha) => (linha.vs?.length ? { ...linha, vs: [...linha.vs, { ...linha.vs[0] }] } : linha));
+        return linhas ? { ...resposta, p: { ...resposta.p, l: linhas } } : resposta;
       }
       case "json_invalido":
         throw new SyntaxError("Unexpected token '<', \"<!DOCTYPE \"... is not valid JSON (simulado)");

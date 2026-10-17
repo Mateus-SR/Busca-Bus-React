@@ -1,6 +1,8 @@
 import { normalizarPrevisao } from "../sptrans/normalizar.js";
 import { calcularStatus } from "@busca-bus/core";
 
+const LIMITE_OCULTOS = 100;
+
 function criarEstado(codigoParada) {
   return {
     codigoParada,
@@ -24,6 +26,8 @@ function criarEstado(codigoParada) {
     ultimaTentativaEm: null,
     ultimoResultadoQuantidade: 0,
     descartesDuplicados: 0,
+    ultimasDuplicatas: 0,
+    ultimosDuplicados: [],
     listeners: new Set(),
   };
 }
@@ -57,6 +61,8 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
       .then((resposta) => {
         const normalizado = normalizarPrevisao(resposta, codigoParada);
         atual.descartesDuplicados += normalizado.duplicatas;
+        atual.ultimasDuplicatas = normalizado.duplicatas;
+        atual.ultimosDuplicados = normalizado.duplicadosDescartados;
         atual.ultimoResultadoQuantidade = normalizado.onibus.length;
         const idsAtuais = new Set(normalizado.onibus.map((item) => item.id));
         for (const id of atual.promessa.keys()) {
@@ -77,6 +83,7 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
         atual.falhas = 0;
         // A consulta já terminou: quem for notificado não pode enxergar `emAndamento` como verdadeiro.
         atual.emAndamento = null;
+        preverProximaConsulta(atual);
         notificar(atual);
         return atual;
       })
@@ -88,6 +95,7 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
         atual.ultimoErro = atual.erro;
         atual.ultimaDuracaoMs = Date.now() - iniciouEm;
         atual.emAndamento = null;
+        preverProximaConsulta(atual);
         notificar(atual);
         return atual;
       })
@@ -105,6 +113,13 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
     if (atual.falhas > 0) return Math.min(intervaloMs * (2 ** (atual.falhas - 1)), 60_000);
     const atraso = intervaloMs - (Date.now() % intervaloMs);
     return atraso < intervaloMs / 2 ? atraso + intervaloMs : atraso;
+  }
+
+  // O snapshot sai antes de `agendar` rodar de novo (ele roda depois do `await atualizar`), então sem isto o painel
+  // veria o horário da consulta que acabou de terminar. Só vale sem timer pendente; com timer, o horário já é o certo.
+  function preverProximaConsulta(atual) {
+    if (atual.refs === 0 || atual.timer) return;
+    atual.proximaConsultaEm = new Date(Date.now() + proximoAtraso(atual)).toISOString();
   }
 
   function agendar(atual) {
@@ -155,25 +170,71 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
     };
   }
 
+  // Tudo o que foi recebido e não aparece na tela, com o motivo. Só vai no bloco de diagnóstico.
+  function listarOcultos(atual, foraDaDistancia, ocultosPorLinha) {
+    const prefixo = `${atual.codigoParada}-`;
+    const curto = (id) => (String(id).startsWith(prefixo) ? String(id).slice(prefixo.length) : String(id));
+    const todos = [
+      ...ocultosPorLinha.map(({ item, substituto }) => ({
+        motivo: "linha",
+        veiculo: curto(item.id),
+        linha: item.codigoLetreiro,
+        sentido: item.sentidoLinha,
+        previsao: item.previsao,
+        substituto: { veiculo: curto(substituto.id), previsao: substituto.previsao },
+      })),
+      ...foraDaDistancia.map(({ item, minutos }) => ({
+        motivo: "distancia",
+        veiculo: curto(item.id),
+        linha: item.codigoLetreiro,
+        sentido: item.sentidoLinha,
+        previsao: item.previsao,
+        minutos,
+      })),
+      ...atual.ultimosDuplicados.map((item) => ({
+        motivo: "duplicata",
+        veiculo: curto(item.id),
+        linha: item.codigoLetreiro,
+        previsao: item.previsao,
+      })),
+    ];
+    return {
+      veiculosOcultos: todos.slice(0, LIMITE_OCULTOS),
+      veiculosOcultosTruncados: Math.max(0, todos.length - LIMITE_OCULTOS),
+    };
+  }
+
   function snapshot(atual, configuracao = {}) {
     const limiteMinutos = Number(configuracao.distanciaMaxMin ?? configuracao.distanciaMinOnibus ?? 20);
     const distanciaMaxima = limiteMinutos * 60;
-    const onibusDentroDaDistancia = Number.isFinite(distanciaMaxima) && distanciaMaxima >= 0
-      ? atual.onibus.filter((item) => {
-          const minutos = minutosAtePrevisao(item.previsao);
-          return minutos != null && minutos <= limiteMinutos;
-        })
-      : [];
+    const distanciaValida = Number.isFinite(distanciaMaxima) && distanciaMaxima >= 0;
+    const onibusDentroDaDistancia = [];
+    const foraDaDistancia = [];
+    for (const item of atual.onibus) {
+      const minutos = minutosAtePrevisao(item.previsao);
+      if (distanciaValida && minutos != null && minutos <= limiteMinutos) onibusDentroDaDistancia.push(item);
+      else foraDaDistancia.push({ item, minutos });
+    }
     const onibus = onibusDentroDaDistancia.map((item) => ({
       ...item,
       status: calcularStatus(item.previsao, atual.promessa.get(item.id), configuracao),
     }));
-    const onibusExibidos = configuracao.permitirMultiplosPorLinha
-      ? onibus
-      : [...onibus.reduce((porLinha, item) => {
-          if (!porLinha.has(item.codigoLetreiro)) porLinha.set(item.codigoLetreiro, item);
-          return porLinha;
-        }, new Map()).values()];
+    // Sem "vários por linha", só o primeiro de cada linha aparece; os demais viram "ocultos" (e o painel os lista).
+    const ocultosPorLinha = [];
+    let onibusExibidos = onibus;
+    if (!configuracao.permitirMultiplosPorLinha) {
+      const mantidoPorLinha = new Map();
+      onibusExibidos = [];
+      for (const item of onibus) {
+        const mantido = mantidoPorLinha.get(item.codigoLetreiro);
+        if (!mantido) {
+          mantidoPorLinha.set(item.codigoLetreiro, item);
+          onibusExibidos.push(item);
+        } else {
+          ocultosPorLinha.push({ motivo: "linha", item, substituto: mantido });
+        }
+      }
+    }
     return {
       codigoParada: atual.codigoParada,
       onibus: onibusExibidos,
@@ -190,6 +251,7 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
         ultimoErro: atual.ultimoErro,
         recuperadoEm: atual.recuperadoEm,
         proximaConsultaEm: atual.proximaConsultaEm,
+        geradoEm: new Date().toISOString(),
         referenciasAtivas: atual.refs,
         consultaEmAndamento: Boolean(atual.emAndamento),
         ultimaConsultaEm: atual.ultimaConsultaEm,
@@ -199,6 +261,9 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
         distanciaMaxMin: limiteMinutos,
         duplicatasDescartadas: atual.descartesDuplicados,
         veiculosFiltradosPorLinha: onibus.length - onibusExibidos.length,
+        veiculosBrutos: atual.ultimoResultadoQuantidade + atual.ultimasDuplicatas,
+        veiculosExibidos: onibusExibidos.length,
+        ...listarOcultos(atual, foraDaDistancia, ocultosPorLinha),
         permitirMultiplosPorLinha: Boolean(configuracao.permitirMultiplosPorLinha),
         sptrans: clienteSptrans.diagnostico?.() ?? null,
       },
