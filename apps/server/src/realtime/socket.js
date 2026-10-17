@@ -113,7 +113,16 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
       // `desde` marca o início da contagem e recomeça no "Limpar"; `iniciadaEm` é o início da exibição e não muda.
       registro = { snapshotsEnviados: 0, snapshotBytesAtual: 0, snapshotBytesTotal: 0, desde: agora, iniciadaEm: agora };
       metricasPorSala.set(codigo, registro);
-      if (metricasPorSala.size > MAX_SALAS_COM_METRICAS) metricasPorSala.delete(metricasPorSala.keys().next().value);
+      // Passou do limite: descarta a mais antiga que não está em uso. Uma sala com gente conectada nunca é despejada,
+      // senão ela perderia `iniciadaEm` ao esvaziar e voltar. Com muitas salas ativas o registro passa do limite até
+      // elas fecharem, o que é limitado pelo número de salas ativas.
+      if (metricasPorSala.size > MAX_SALAS_COM_METRICAS) {
+        for (const antigo of metricasPorSala.keys()) {
+          if (antigo === codigo || salas.has(antigo)) continue;
+          metricasPorSala.delete(antigo);
+          break;
+        }
+      }
     }
     return registro;
   }
@@ -344,6 +353,8 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
   function diagnosticoSocket(sala) {
     const daSala = sala?.metricas ?? metricas;
     return {
+      // `clientesConectados` é do servidor inteiro (todas as salas); para a sala em questão, use `usuariosNaSala`.
+      usuariosNaSala: sala?.assinaturas?.size ?? 0,
       clientesConectados: metricas.conectados,
       totalConexoes: metricas.totalConexoes,
       entradas: metricas.entradas,
