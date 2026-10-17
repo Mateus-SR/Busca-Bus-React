@@ -60,11 +60,15 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
   }, [codigo, diagnosticoAtivo]);
   // Só uma mudança real de paradas justifica reentrar na sala; um objeto novo com o mesmo conteúdo não.
   const chaveParadas = JSON.stringify(opcoes.paradas?.length ? opcoes.paradas : [opcoes.parada ?? null]);
+  // `aguardar` segura a conexão até a exibição ter sido carregada. Sem isso, o primeiro ENTRAR sairia sem paradas (o
+  // servidor assumiria a parada de teste) ou com as de fixture, e a config real só entraria numa reconexão.
+  const aguardar = Boolean(opcoes.aguardar);
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_API_URL) {
       const intervaloFixture = setInterval(() => setOnibus((atuais) => atuais.map((item) => ({ ...item }))), 5000);
       return () => clearInterval(intervaloFixture);
     }
+    if (aguardar) return;
     let ativo = true;
     let atualizacao = 0;
     let fallbackAtivo = false;
@@ -244,7 +248,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       socket.disconnect();
       if (socketRef.current === socket) socketRef.current = null;
     };
-  }, [codigo, atualizacaoSolicitada, chaveParadas]);
+  }, [codigo, atualizacaoSolicitada, chaveParadas, aguardar]);
   return {
     onibus, atualizadoEm, ponto, pontos, configuracao: configuracaoServidor, exibicaoDesde: null, estadoConexao,
     carregando: estadoConexao === "iniciando", erro, diagnostico, historicoDiagnostico, eventosOnibus,

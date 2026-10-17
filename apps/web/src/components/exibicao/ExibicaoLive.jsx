@@ -8,7 +8,11 @@ import useRadarOnibus from "@/hooks/useRadarOnibus";
 import VisaoDesenvolvedor from "@/components/exibicao/VisaoDesenvolvedor";
 
 export default function ExibicaoLive({ codigo }) {
-  const { exibicao } = useExibicao(codigo);
+  const { exibicao, carregando: carregandoExibicao, erro: erroExibicao } = useExibicao(codigo);
+  // Sem paradas não há o que consultar: o servidor cairia na parada de teste e mostraria ônibus de outro ponto.
+  const semParadas = !carregandoExibicao && !exibicao?.paradas?.length;
+  // Só com a API configurada: sem ela a tela roda em fixtures e não há conexão a esperar.
+  const mostrarSemParadas = semParadas && Boolean(process.env.NEXT_PUBLIC_API_URL);
   const [debugAberto, setDebugAberto] = useState(false);
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
@@ -16,7 +20,8 @@ export default function ExibicaoLive({ codigo }) {
     parada: exibicao?.paradas?.[0],
     paradas: exibicao?.paradas,
     config: { ...exibicao?.config, permitirMultiplosPorLinha },
-  }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha]);
+    aguardar: carregandoExibicao || semParadas,
+  }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
   const radar = useRadarOnibus(codigo, [], debugAberto, atualizacaoSolicitada, opcoesRadar);
   
   const [mensagemVoz, setMensagemVoz] = useState("");
@@ -131,12 +136,19 @@ export default function ExibicaoLive({ codigo }) {
         }}
       />
       
+      {mostrarSemParadas && (
+        <p role="status" className="mb-3 text-center text-sm text-red-600">
+          {erroExibicao
+            ? `Não foi possível carregar a exibição: ${erroExibicao}`
+            : "Esta exibição não tem pontos de parada cadastrados."}
+        </p>
+      )}
       {radar.erro && (
         <p role="status" className="mb-3 text-center text-sm text-red-600">
           Não foi possível atualizar o radar: {radar.erro}
         </p>
       )}
-      {!radar.erro && (
+      {!radar.erro && !mostrarSemParadas && (
         <p role="status" className="mb-3 text-center text-sm text-gray-500">
           {radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`}
         </p>

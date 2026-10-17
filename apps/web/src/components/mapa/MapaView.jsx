@@ -11,11 +11,12 @@ const BusMap = dynamic(() => import("@/components/mapa/BusMap"), {
 });
 
 export default function MapaView({ codigo, voltarHref, onibus = [] }) {
-  const { exibicao } = useExibicao(codigo);
+  const { exibicao, carregando } = useExibicao(codigo);
   const radar = useRadarOnibus(codigo, onibus, false, 0, {
     parada: exibicao?.paradas?.[0],
     paradas: exibicao?.paradas,
     config: exibicao?.config,
+    aguardar: carregando || !exibicao?.paradas?.length,
   });
   const dadosOnibus = codigo ? radar.onibus : onibus;
 
