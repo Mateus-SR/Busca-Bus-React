@@ -249,11 +249,32 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
     onibus, atualizadoEm, ponto, pontos, configuracao: configuracaoServidor, exibicaoDesde: null, estadoConexao,
     carregando: estadoConexao === "iniciando", erro, diagnostico, historicoDiagnostico, eventosOnibus,
     conexao, eventosConexao,
-    limparDiagnostico: () => {
+    // Zera tudo que o painel acumula: listas, contadores do navegador e, no servidor, os contadores da sala.
+    // `fallbackRest` não é contador, é o estado atual da conexão, então fica como está.
+    limparDiagnostico: useCallback(() => {
       setHistoricoDiagnostico([]);
       setEventosOnibus([]);
       setEventosConexao([]);
-    },
+      setConexao((atual) => ({
+        reconexoes: 0,
+        desconexoes: 0,
+        ultimaDesconexaoEm: null,
+        ultimaReconexaoEm: null,
+        fallbackRest: atual.fallbackRest,
+      }));
+      Object.assign(metricasRef.current, { sequencia: 0, respostasDescartadas: 0, snapshotBytesTotal: 0 });
+      const socket = socketRef.current;
+      if (socket?.connected) socket.emit(EVENTOS_SOCKET.LIMPAR_METRICAS, { codigo });
+    }, [codigo]),
+    // "Forçar atualização": pede ao servidor uma consulta nova à SPTrans para as paradas da sala, sem reconectar.
+    // Responde { ok, consultadas?, ignoradas?, erro?, aguardeMs? }; `semSocket` indica que não há socket para pedir.
+    atualizar: useCallback(() => new Promise((resolve) => {
+      const socket = socketRef.current;
+      if (!socket?.connected) return resolve({ ok: false, semSocket: true, erro: "Socket desconectado." });
+      socket.timeout(15_000).emit(EVENTOS_SOCKET.ATUALIZAR, { codigo }, (erroTempo, resposta) => {
+        resolve(erroTempo ? { ok: false, erro: "Sem resposta do servidor." } : (resposta ?? { ok: false, erro: "Sem resposta." }));
+      });
+    }), [codigo]),
     // Cenários de falha (simulação) e queda do socket, pelo painel. Responde { ok, simulacao?, erro? }.
     simular: useCallback((cenario, duracaoSeg) => new Promise((resolve) => {
       const socket = socketRef.current;

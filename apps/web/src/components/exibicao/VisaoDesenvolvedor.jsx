@@ -95,6 +95,15 @@ function hora(iso) {
 	return iso ? new Date(iso).toLocaleTimeString('pt-BR') : null;
 }
 
+// Só a hora quando é de hoje; com a data quando a exibição está aberta há dias.
+function horaCompleta(iso) {
+	if (!iso) return null;
+	const data = new Date(iso);
+	return data.toDateString() === new Date().toDateString()
+		? data.toLocaleTimeString('pt-BR')
+		: data.toLocaleString('pt-BR');
+}
+
 const DURACOES_SIMULACAO = [
 	{ segundos: 30, rotulo: '30 s' },
 	{ segundos: 60, rotulo: '1 min' },
@@ -132,6 +141,26 @@ export default function VisaoDesenvolvedor({
 	const [cenarioSimulado, setCenarioSimulado] = useState('rede');
 	const [duracaoSimulacao, setDuracaoSimulacao] = useState(60);
 	const [retornoSimulacao, setRetornoSimulacao] = useState(null);
+	const [atualizando, setAtualizando] = useState(false);
+	const [retornoAtualizacao, setRetornoAtualizacao] = useState(null);
+	async function forcarAtualizacao() {
+		setAtualizando(true);
+		setRetornoAtualizacao(null);
+		try {
+			const resposta = await onAtualizar?.();
+			setRetornoAtualizacao(
+				resposta?.ok
+					? resposta.reconectando
+						? 'Socket desconectado: reconectando para buscar dados novos.'
+						: resposta.ignoradas > 0
+							? `Atualização pedida (${resposta.consultadas} parada(s) consultada(s); ${resposta.ignoradas} atualizada(s) há pouco).`
+							: null
+					: (resposta?.erro ?? 'Falha ao atualizar.')
+			);
+		} finally {
+			setAtualizando(false);
+		}
+	}
 	// Relógio do contador de "Próxima consulta" (o painel só existe aberto, então o tique é barato).
 	const [agora, setAgora] = useState(() => Date.now());
 	useEffect(() => {
@@ -244,17 +273,27 @@ export default function VisaoDesenvolvedor({
 				<div className="flex flex-wrap items-center gap-2">
 					<button
 						type="button"
-						onClick={onAtualizar}
-						className={botaoSecundario}
+						onClick={forcarAtualizacao}
+						disabled={atualizando}
+						className="rounded bg-slate-700 px-3 py-1 text-sm hover:bg-slate-600 disabled:cursor-wait disabled:opacity-60"
 					>
-						Forçar atualização
+						{atualizando ? 'Atualizando...' : 'Forçar atualização'}
 					</button>
 					<button type="button" onClick={onLimpar} className={botaoSecundario}>
 						Limpar
 					</button>
 				</div>
 			</div>
-
+			{retornoAtualizacao && (
+				<p role="status" className="mb-2 text-sm text-amber-300">
+					{retornoAtualizacao}
+				</p>
+			)}
+			{retornoSimulacao && (
+				<p role="status" className="mb-2 text-sm text-amber-300">
+					{retornoSimulacao}
+				</p>
+			)}
 			{simulacaoAtiva && (
 				<div
 					role="alert"
@@ -273,7 +312,63 @@ export default function VisaoDesenvolvedor({
 					</button>
 				</div>
 			)}
-
+			<details open className="mb-3">
+				<summary className="cursor-pointer font-bold">
+					Conexão do navegador
+				</summary>
+				<dl className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+					<Metric
+						label="Exibição iniciada"
+						value={horaCompleta(socket?.salaIniciadaEm)}
+					/>
+					<Metric label="Reconexões" value={conexao?.reconexoes} />
+					<Metric label="Desconexões" value={conexao?.desconexoes} />
+					<Metric label="Última queda" value={hora(conexao?.ultimaDesconexaoEm)} />
+					<Metric
+						label="Última reconexão"
+						value={hora(conexao?.ultimaReconexaoEm)}
+					/>
+					<Metric
+						label="Fallback REST"
+						value={conexao?.fallbackRest ? 'ativo' : 'inativo'}
+					/>
+				</dl>
+				<details className="mt-2">
+					<summary className="cursor-pointer">
+						Eventos de conexão ({eventosConexao.length})
+					</summary>
+					<div className="mt-2 max-h-48 overflow-auto rounded bg-black p-2 text-xs">
+						{eventosConexao.length
+							? eventosConexao.map((evento, indice) => (
+									<div key={`${evento.em}-${indice}`} className="mb-1">
+										{hora(evento.em)} · {evento.tipo}
+										{evento.detalhe ? ` · ${evento.detalhe}` : ''}
+									</div>
+								))
+							: 'Nenhum evento registrado.'}
+					</div>
+				</details>
+			</details>
+			<div className="flex flex-row gap-2">
+				<label className="mb-3 flex flex-1 items-start gap-2 rounded border border-slate-700 bg-slate-900 p-2 text-sm">
+					<input
+						type="checkbox"
+						checked={permitirMultiplosPorLinha}
+						onChange={(evento) =>
+							onPermitirMultiplosPorLinha(evento.target.checked)
+						}
+						className="mt-1"
+					/>
+					<span>
+						<strong>Testar vários ônibus da mesma linha</strong>
+						<br />
+						<span className="text-xs text-slate-400">
+							Altera globalmente para essa sala, compartilhado com todos os
+							usuários.
+						</span>
+					</span>
+				</label>
+			</div>
 			{!diagnostico ? (
 				<p className="mb-3 text-sm text-slate-300">
 					Aguardando diagnóstico do próximo snapshot...

@@ -17,6 +17,9 @@ const MAX_PARADAS = 8;
 const JANELA_COALESCING_PADRAO_MS = 500;
 const MAX_EVENTOS_POR_JANELA = 30;
 const JANELA_EVENTOS_MS = 10_000;
+// Intervalo mínimo entre duas atualizações forçadas da mesma parada, qualquer que seja a sala ou o cliente que peça:
+// protege o limite de requisições da SPTrans, que é compartilhado por todos.
+const INTERVALO_MINIMO_ATUALIZACAO_FORCADA_MS = 5000;
 
 function numeroNaFaixa(valor, [minimo, maximo]) {
   if (valor === null || valor === undefined || valor === "" || typeof valor === "boolean") return undefined;
@@ -101,10 +104,14 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
   // recriada, mas os contadores continuam de onde estavam em vez de voltar a zero.
   const metricasPorSala = new Map();
   const MAX_SALAS_COM_METRICAS = 100;
+  // Última atualização forçada por parada. Fica fora das salas para valer também entre salas que dividem a parada.
+  const atualizacoesForcadasEm = new Map();
   function metricasDaSala(codigo) {
     let registro = metricasPorSala.get(codigo);
     if (!registro) {
-      registro = { snapshotsEnviados: 0, snapshotBytesAtual: 0, snapshotBytesTotal: 0, desde: new Date().toISOString() };
+      const agora = new Date().toISOString();
+      // `desde` marca o início da contagem e recomeça no "Limpar"; `iniciadaEm` é o início da exibição e não muda.
+      registro = { snapshotsEnviados: 0, snapshotBytesAtual: 0, snapshotBytesTotal: 0, desde: agora, iniciadaEm: agora };
       metricasPorSala.set(codigo, registro);
       if (metricasPorSala.size > MAX_SALAS_COM_METRICAS) metricasPorSala.delete(metricasPorSala.keys().next().value);
     }
@@ -196,6 +203,42 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
       // Consulta já, em vez de esperar o próximo ciclo, para o efeito aparecer no painel na hora.
       for (const parada of assinatura.paradas) poller.atualizarAgora(parada);
       return responder(ack, { ok: true, simulacao: estado });
+    });
+    // "Forçar atualização" do painel: consulta a SPTrans agora, sem reconectar. O resultado chega pelo snapshot normal,
+    // para todos da sala. Paradas atualizadas há pouco são ignoradas (ver INTERVALO_MINIMO_ATUALIZACAO_FORCADA_MS).
+    escutar(EVENTOS_SOCKET.ATUALIZAR, (payload, ack) => {
+      if (!permitido()) return responder(ack, { ok: false, erro: "Muitas requisições." });
+      const codigo = String(payload?.codigo ?? "");
+      const sala = salas.get(codigo);
+      const assinatura = sala?.assinaturas.get(socket);
+      if (!assinatura) return responder(ack, { ok: false, erro: "Exibição não conectada." });
+      if (!assinatura.diagnostico) return responder(ack, { ok: false, erro: "Abra os detalhes técnicos para forçar a atualização." });
+      const agora = Date.now();
+      for (const [parada, em] of atualizacoesForcadasEm) {
+        if (agora - em >= INTERVALO_MINIMO_ATUALIZACAO_FORCADA_MS) atualizacoesForcadasEm.delete(parada);
+      }
+      const liberadas = assinatura.paradas.filter((parada) => !atualizacoesForcadasEm.has(parada));
+      if (!liberadas.length) {
+        const espera = Math.max(...assinatura.paradas.map((parada) => INTERVALO_MINIMO_ATUALIZACAO_FORCADA_MS - (agora - atualizacoesForcadasEm.get(parada))));
+        return responder(ack, { ok: false, erro: `Atualizado há pouco. Aguarde ${Math.ceil(espera / 1000)} s para forçar de novo.`, aguardeMs: espera });
+      }
+      for (const parada of liberadas) atualizacoesForcadasEm.set(parada, agora);
+      // `atualizarAgora` nunca rejeita (a falha vira estado da parada), mas o allSettled garante o ack mesmo assim.
+      Promise.allSettled(liberadas.map((parada) => poller.atualizarAgora(parada)))
+        .then(() => responder(ack, { ok: true, consultadas: liberadas.length, ignoradas: assinatura.paradas.length - liberadas.length }));
+    });
+    // "Limpar" do painel: recomeça a contagem da sala (snapshots e bytes). Vale para quem está na sala, porque o contador
+    // é compartilhado; o início da exibição (`iniciadaEm`) é preservado. Quem pediu recebe já um snapshot com os valores novos.
+    escutar(EVENTOS_SOCKET.LIMPAR_METRICAS, (payload, ack) => {
+      if (!permitido()) return responder(ack, { ok: false, erro: "Muitas requisições." });
+      const codigo = String(payload?.codigo ?? "");
+      const sala = salas.get(codigo);
+      const assinatura = sala?.assinaturas.get(socket);
+      if (!assinatura) return responder(ack, { ok: false, erro: "Exibição não conectada." });
+      if (!assinatura.diagnostico) return responder(ack, { ok: false, erro: "Abra os detalhes técnicos para limpar as métricas." });
+      Object.assign(sala.metricas, { snapshotsEnviados: 0, snapshotBytesAtual: 0, snapshotBytesTotal: 0, desde: new Date().toISOString() });
+      if (assinatura.pronta) emitirSnapshot(socket, codigo, sala, assinatura);
+      return responder(ack, { ok: true, desde: sala.metricas.desde });
     });
     escutar(EVENTOS_SOCKET.CONFIGURAR, (payload, ack) => {
       if (!permitido()) return responder(ack, { ok: false, erro: "Muitas requisições." });
@@ -309,6 +352,7 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
       snapshotBytesAtual: daSala.snapshotBytesAtual,
       snapshotBytesTotal: daSala.snapshotBytesTotal,
       metricasDesde: daSala.desde ?? null,
+      salaIniciadaEm: daSala.iniciadaEm ?? null,
       servidorSnapshotsEnviados: metricas.snapshotsEnviados,
       servidorSnapshotBytesTotal: metricas.snapshotBytesTotal,
       salasAtivas: salas.size,

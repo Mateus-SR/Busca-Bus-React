@@ -120,7 +120,15 @@ export default function ExibicaoLive({ codigo }) {
         conexao={radar.conexao}
         eventosConexao={radar.eventosConexao}
         onSimular={radar.simular}
-        onAtualizar={() => setAtualizacaoSolicitada((valor) => valor + 1)}
+        onAtualizar={async () => {
+          const resposta = await radar.atualizar();
+          // Sem socket não há a quem pedir: reconectar é o único jeito de buscar dados novos.
+          if (resposta.semSocket) {
+            setAtualizacaoSolicitada((valor) => valor + 1);
+            return { ok: true, reconectando: true };
+          }
+          return resposta;
+        }}
       />
       
       {radar.erro && (
