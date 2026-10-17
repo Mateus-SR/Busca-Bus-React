@@ -11,10 +11,7 @@ export default function CartaoColetaSptrans({ resumo }) {
 				<Metric label="Falhas acumuladas (total)" value={soma('falhas')} />
 				<Metric
 					label="Última falha / Última recuperação"
-					value={
-						hora(ultimaFalha?.ultimaFalhaEm) ||
-						'-' + ' / ' + (hora(ultimaRecuperacao) || '-')
-					}
+					value={`${hora(ultimaFalha?.ultimaFalhaEm) || '-'} / ${hora(ultimaRecuperacao) || '-'}`}
 				/>
 				<Metric
 					label="Último erro"

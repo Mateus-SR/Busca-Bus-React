@@ -16,7 +16,7 @@ export default function CartaoConexaoNavegador({
 				/>
 				<Metric
 					label="Reconexões / Desconexões"
-					value={conexao?.reconexoes + ' / ' + conexao?.desconexoes}
+					value={`${conexao?.reconexoes ?? '—'} / ${conexao?.desconexoes ?? '—'}`}
 				/>
 				<Metric
 					label="Última queda"
