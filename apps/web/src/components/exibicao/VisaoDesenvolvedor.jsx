@@ -55,11 +55,6 @@ export default function VisaoDesenvolvedor({
 				executarSimulacao={simulacaoControle.executarSimulacao}
 			/>
 			<div className="flex flex-row gap-2">
-				<OpcaoMultiplosPorLinha
-					marcado={permitirMultiplosPorLinha}
-					aoAlterar={onPermitirMultiplosPorLinha}
-					className="mb-3 flex flex-1 items-start gap-2 rounded border border-slate-700 bg-slate-900 p-2 text-sm"
-				/>
 			</div>
 			<FaixaResumo
 				diagnostico={diagnostico}
