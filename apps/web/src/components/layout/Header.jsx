@@ -22,7 +22,10 @@ const LINKS_USUARIO = [
 export default function Header() {
   const { estaLogado, carregando, logout } = useAuth();
 
-  const linksMobile = [...LINKS_NAV, ...(estaLogado ? LINKS_USUARIO : []), ...(estaLogado ? [{ href: "#logout", label: "Sair da Conta", action: "logout" }] : [])];
+  const linksMobile = [
+    { grupo: "publico", itens: LINKS_NAV },
+    ...(estaLogado ? [{ grupo: "conta", itens: LINKS_USUARIO.concat([{ href: "#logout", label: "Sair da Conta", action: "logout" }]) }] : []),
+  ];
 
   return (
     <header className="bg-sptrans text-white">
