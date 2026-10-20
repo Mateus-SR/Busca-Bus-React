@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
-export default function MobileNavbar({ links }) {
+export default function MobileNavbar({ links, onLogout }) {
   const [aberto, setAberto] = useState(false);
 
   return (
@@ -29,20 +29,38 @@ export default function MobileNavbar({ links }) {
       )}
       <nav
         aria-label="Navegação mobile"
-        className={`fixed top-0 right-0 z-50 flex h-dvh w-[min(80vw,20rem)] flex-col items-center justify-center gap-7 bg-sptrans px-6 transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 z-50 flex h-dvh w-[min(80vw,20rem)] flex-col items-center justify-center gap-4 bg-sptrans px-6 transition-transform duration-300 md:hidden ${
           aberto ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {links.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            onClick={() => setAberto(false)}
-            className="rounded-lg px-4 py-3 text-center text-xl font-bold text-white"
-          >
-            {link.label}
-          </Link>
-        ))}
+        {links.map((link) => {
+          if (link.action === "logout") {
+            return (
+              <button
+                key={link.label}
+                type="button"
+                onClick={() => {
+                  setAberto(false);
+                  onLogout?.();
+                }}
+                className="w-full rounded-lg px-4 py-3 text-center text-xl font-bold text-white"
+              >
+                {link.label}
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setAberto(false)}
+              className="w-full rounded-lg px-4 py-3 text-center text-xl font-bold text-white"
+            >
+              {link.label}
+            </Link>
+          );
+        })}
       </nav>
     </>
   );
