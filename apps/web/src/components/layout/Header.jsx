@@ -36,7 +36,7 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-sptrans text-white">
+    <header className="relative z-[1200] bg-sptrans text-white">
       <div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2.5 sm:px-4 md:grid-cols-[1fr_2fr_1fr]">
         
         {/* Logo */}

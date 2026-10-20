@@ -16,7 +16,7 @@ export default function MobileNavbar({ links, onLogout }) {
         onClick={() => setAberto((v) => !v)}
         aria-expanded={aberto}
         aria-label={aberto ? "Fechar menu de navegação" : "Abrir menu de navegação"}
-        className={`z-[60] cursor-pointer rounded-lg border border-white/30 bg-white/10 p-2 text-white transition hover:bg-white/20 md:hidden ${
+        className={`relative z-[1300] cursor-pointer rounded-lg border border-white/30 bg-white/10 p-2 text-white transition hover:bg-white/20 md:hidden ${
           aberto ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
@@ -28,12 +28,12 @@ export default function MobileNavbar({ links, onLogout }) {
           type="button"
           aria-label="Fechar menu de navegação"
           onClick={() => setAberto(false)}
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="fixed inset-0 z-[1100] bg-black/50 md:hidden"
         />
       )}
       <nav
         aria-label="Navegação mobile"
-        className={`fixed top-0 right-0 z-50 flex h-dvh w-[min(80vw,20rem)] flex-col justify-start bg-sptrans px-5 py-8 text-white shadow-2xl transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 right-0 z-[1200] flex h-dvh w-[min(80vw,20rem)] flex-col justify-start bg-sptrans px-5 py-8 text-white shadow-2xl transition-transform duration-300 md:hidden ${
           aberto ? "translate-x-0" : "translate-x-full"
         }`}
       >
