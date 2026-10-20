@@ -3,9 +3,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import ConfirmLogoutModal from "@/components/ui/ConfirmLogoutModal";
 
 export default function MobileNavbar({ links, onLogout }) {
   const [aberto, setAberto] = useState(false);
+  const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
 
   return (
     <>
@@ -66,7 +68,7 @@ export default function MobileNavbar({ links, onLogout }) {
                       type="button"
                       onClick={() => {
                         setAberto(false);
-                        onLogout?.();
+                        setModalLogoutAberto(true);
                       }}
                       className="mt-1 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-left text-base font-bold text-white transition hover:bg-white/20"
                     >
@@ -90,6 +92,15 @@ export default function MobileNavbar({ links, onLogout }) {
           ))}
         </div>
       </nav>
+
+      <ConfirmLogoutModal
+        aberto={modalLogoutAberto}
+        onClose={() => setModalLogoutAberto(false)}
+        onConfirm={() => {
+          setModalLogoutAberto(false);
+          onLogout?.();
+        }}
+      />
     </>
   );
 }
