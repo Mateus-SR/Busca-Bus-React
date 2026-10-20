@@ -24,7 +24,15 @@ export default function Header() {
 
   const linksMobile = [
     { grupo: "publico", itens: LINKS_NAV },
-    ...(estaLogado ? [{ grupo: "conta", itens: LINKS_USUARIO.concat([{ href: "#logout", label: "Sair da Conta", action: "logout" }]) }] : []),
+    {
+      grupo: "conta",
+      itens: estaLogado
+        ? LINKS_USUARIO.concat([{ href: "#logout", label: "Sair da Conta", action: "logout" }])
+        : [
+            { href: "/login", label: "Entrar" },
+            { href: "/cadastro", label: "Criar conta" },
+          ],
+    },
   ];
 
   return (
