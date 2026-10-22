@@ -1,29 +1,39 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { USUARIO_MOCK } from "@/lib/fixtures/usuarioFixture";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(() => {
-    if (typeof window === "undefined") return null;
-    const salvo = localStorage.getItem("usuarioMock");
-    if (!salvo) return null;
-    try {
-      return JSON.parse(salvo);
-    } catch (e) {
-      console.error("Erro ao carregar usuário salvo", e);
-      localStorage.removeItem("usuarioMock");
-      return null;
-    }
-  });
+  const [usuario, setUsuario] = useState(null);
+  const [carregando, setCarregando] = useState(true);
 
-  const [carregando] = useState(false);
+  useEffect(() => {
+    const tarefa = window.setTimeout(() => {
+      const salvo = localStorage.getItem("usuarioMock");
+      if (!salvo) {
+        setCarregando(false);
+        return;
+      }
+      try {
+        setUsuario(JSON.parse(salvo));
+      } catch (e) {
+        console.error("Erro ao carregar usuário salvo", e);
+        localStorage.removeItem("usuarioMock");
+      } finally {
+        setCarregando(false);
+      }
+    }, 0);
+    return () => window.clearTimeout(tarefa);
+  }, []);
 
-  function login() {
+  function login({ email, senha, lembrar } = {}) {
+    if (!email || !senha) return;
     setUsuario(USUARIO_MOCK);
-    localStorage.setItem("usuarioMock", JSON.stringify(USUARIO_MOCK));
+    if (lembrar) {
+      localStorage.setItem("usuarioMock", JSON.stringify(USUARIO_MOCK));
+    }
   }
 
   function logout() {

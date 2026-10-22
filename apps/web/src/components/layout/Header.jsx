@@ -13,11 +13,30 @@ const LINKS_NAV = [
   { href: "/sobre", label: "Sobre" },
 ];
 
+const LINKS_USUARIO = [
+  { href: "/minhas-exibicoes", label: "Minhas Exibições" },
+  { href: "/favoritos", label: "Meus Favoritos" },
+  { href: "/configuracao", label: "Criar Exibição" },
+];
+
 export default function Header() {
-  const { estaLogado, carregando } = useAuth();
+  const { estaLogado, carregando, logout } = useAuth();
+
+  const linksMobile = [
+    { grupo: "publico", itens: LINKS_NAV },
+    {
+      grupo: "conta",
+      itens: estaLogado
+        ? LINKS_USUARIO.concat([{ href: "#logout", label: "Sair da Conta", action: "logout" }])
+        : [
+            { href: "/login", label: "Entrar" },
+            { href: "/cadastro", label: "Criar conta" },
+          ],
+    },
+  ];
 
   return (
-    <header className="bg-sptrans text-white">
+    <header className="relative z-[1200] bg-sptrans text-white">
       <div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2.5 sm:px-4 md:grid-cols-[1fr_2fr_1fr]">
         
         {/* Logo */}
@@ -55,7 +74,7 @@ export default function Header() {
           {/* Gaveta de Acessibilidade posicionada logo após o fluxo de login/conta */}
           <AccessibilityDrawer />
           
-          <MobileNavbar links={LINKS_NAV} />
+          <MobileNavbar links={linksMobile} onLogout={logout} />
         </div>
       </div>
     </header>

@@ -1,6 +1,6 @@
 const ESTILOS = {
     Normal: { badge: "bg-green-100 text-green-700", ping: "bg-green-400", dot: "bg-green-600" },
-    Atrasado: { badge: "bg-yellow-100 text-yellow-700", ping: "bg-yellow-400", dot: "bg-yellow-600" },
+    Atrasado: { badge: "bg-red-100 text-red-700", ping: "bg-red-400", dot: "bg-red-600" },
     Adiantado: { badge: "bg-blue-100 text-blue-700", ping: "bg-blue-400", dot: "bg-blue-600" },
 };
 

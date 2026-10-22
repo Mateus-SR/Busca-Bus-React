@@ -1,0 +1,74 @@
+# render.yaml — Blueprint do Busca Bus (fica na RAIZ do repositório)
+#
+# Um repositório, dois serviços:
+#   - busca-bus-web     → Static Site (Next.js com output: "export")
+#   - busca-bus-server  → Web Service gratuito (REST + auth + WebSocket)
+#
+# Os dois serviços já estão declarados. Preencha as variáveis `sync: false`
+# no painel do Render antes de ativar o fluxo autenticado/tempo real.
+#
+# Regras importantes:
+#   - NÃO usar `rootDir`: os serviços dependem de packages/core e do
+#     package-lock.json da raiz, e arquivos fora do rootDir não ficam
+#     disponíveis no build. Quem evita deploys desnecessários é o buildFilter
+#     (caminhos relativos à RAIZ do repositório).
+#   - `plan: free` explícito no servidor: se omitido, o Render cria o serviço
+#     com o plano padrão (pago). Static Site não aceita `plan`.
+#   - Só pode existir UM web service gratuito rodando 24/7 (750 h/mês por
+#     workspace). Nunca crie um segundo (staging, preview, teste).
+#   - Segredos nunca entram aqui: use `sync: false` (valor digitado no painel)
+#     ou `generateValue: true` (o Render gera).
+
+services:
+  # ── Front-end: site estático ─────────────────────────────────────────
+  - type: web
+    name: busca-bus-web
+    runtime: static
+    buildCommand: npm ci && npm run build --workspace apps/web
+    staticPublishPath: apps/web/out
+    buildFilter:
+      paths:
+        - apps/web/**
+        - packages/core/**
+        - package.json
+        - package-lock.json
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Habilitar junto com o servidor. É embutida NO BUILD do Next:
+      # depois de alterar, faça um novo deploy do site.
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+
+  - type: web
+    name: busca-bus-server
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build --workspace apps/server
+    startCommand: npm run start --workspace apps/server
+    healthCheckPath: /v1/health
+    buildFilter:
+      paths:
+        - apps/server/**
+        - packages/core/**
+        - package.json
+        - package-lock.json
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: SPTRANS_DEFAULT_TOKEN
+        sync: false
+      - key: EMAIL_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: APP_URL
+        sync: false
