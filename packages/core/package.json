@@ -2,10 +2,12 @@
   "name": "@busca-bus/core",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "main": "src/index.js",
   "exports": {
     ".": "./src/index.js",
-    "./store": "./src/store/index.js"
+    "./store": "./src/store/index.js",
+    "./cliente": "./src/cliente/index.js"
   },
   "dependencies": {
     "zustand": "^5.0.15"

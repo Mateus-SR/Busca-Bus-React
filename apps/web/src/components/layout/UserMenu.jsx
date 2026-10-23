@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { CircleUser, ChevronDown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import ConfirmLogoutModal from "@/components/ui/ConfirmLogoutModal";
 
 export default function UserMenu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
   const menuRef = useRef(null);
   const { usuario, logout } = useAuth();
 
@@ -55,12 +57,28 @@ export default function UserMenu() {
             </Link>
           </li>
           <li>
-            <button type="button" onClick={logout} className="w-full text-left px-4 py-2 rounded-b-xl hover:bg-gray-100 text-black cursor-pointer">
+            <button
+              type="button"
+              onClick={() => {
+                setDropdownAberto(false);
+                setModalLogoutAberto(true);
+              }}
+              className="w-full text-left px-4 py-2 rounded-b-xl hover:bg-gray-100 text-black cursor-pointer"
+            >
               Sair da conta
             </button>
           </li>
         </ul>
       )}
+
+      <ConfirmLogoutModal
+        aberto={modalLogoutAberto}
+        onClose={() => setModalLogoutAberto(false)}
+        onConfirm={() => {
+          setModalLogoutAberto(false);
+          logout();
+        }}
+      />
     </div>
   );
 }
