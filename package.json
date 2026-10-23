@@ -10,6 +10,9 @@
     "dev": "npm run dev --workspace apps/web",
     "build": "npm run build --workspace apps/web",
     "start": "npm run start --workspace apps/web",
-    "lint": "npm run lint --workspace apps/web"
+    "lint": "npm run lint --workspace apps/web",
+    "dev:server": "npm run dev --workspace apps/server",
+    "build:server": "npm run build --workspace apps/server",
+    "start:server": "npm run start --workspace apps/server"
   }
 }

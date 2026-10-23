@@ -48,3 +48,4 @@ next-env.d.ts
 
 # Ignorar node_modules em subpastas apps
 apps/*/node_modules
+/apps/web/out
