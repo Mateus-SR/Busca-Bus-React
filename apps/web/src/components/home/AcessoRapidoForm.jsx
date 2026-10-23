@@ -25,7 +25,7 @@ export default function AcessoRapidoForm() {
             setErro(true);
             return;
         }
-        router.push(`/exibicao/${encodeURIComponent(codigo)}`);
+        router.push(`/exibicao?codigo=${encodeURIComponent(codigo)}`);
     }
 
     return (

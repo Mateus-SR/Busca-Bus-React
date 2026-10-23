@@ -6,6 +6,7 @@ import { useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { useAuth } from "@/contexts/AuthContext";
+import { validarEmail } from "@busca-bus/core";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -23,11 +24,11 @@ export default function LoginPage() {
       setMensagem("Por favor, preencha todos os campos.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formulario.email)) {
+    if (!validarEmail(formulario.email)) {
       setMensagem("Informe um e-mail válido.");
       return;
     }
-    login();
+    login(formulario);
     router.push("/");
   }
 
