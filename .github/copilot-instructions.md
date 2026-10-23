@@ -20,9 +20,9 @@ There is no test runner configured in this repository, so there is currently no 
 - The `(site)` route group in `src/app/(site)/layout.js` owns the shared site chrome. It renders `Header` through `HeaderHider` and `PainelHeaderProvider`; pages in this group inherit the header.
 - The `(auth)` route group intentionally does not inherit the site header. Login, registration, and reset-password pages provide their own full-screen presentation.
 - Routes are organized around dynamic resources:
-  - `/exibicao/[codigo]` is the main display page.
-  - `/exibicao/[codigo]/mapa` is the display-specific map.
-  - `/configuracao/[codigo]` edits an existing mocked display, while `/configuracao` creates one.
+  - `/exibicao?codigo=XXXXXX` is the main display page (`/exibicao` without a code shows the access form).
+  - `/mapa?codigo=XXXXXX` is the display-specific map (`/mapa` without a code is the general map).
+  - `/configuracao?editar=XXXXXX` edits an existing mocked display, while `/configuracao` creates one.
 - Domain components live under `src/components/` (`layout`, `home`, `exibicao`, `configuracao`, `listas`, `mapa`, and `ui`).
 - Shared client state lives under `src/contexts/`. `AuthContext` and `LoadingContext` are currently mock/local-only implementations.
 - Mock data lives under `src/lib/fixtures/`. The frontend-only migration deliberately avoids real backend, Supabase, SPTrans, and external API calls. Keep service boundaries replaceable for a future backend migration.
@@ -35,7 +35,7 @@ There is no test runner configured in this repository, so there is currently no 
 - Prefer Server Components. Add `"use client"` only for state, effects, browser APIs, event handlers, or client-only libraries.
 - Keep `window`, `document`, `localStorage`, and `sessionStorage` inside Client Components and effects/event handlers. Do not read browser APIs during server rendering.
 - Use `next/link` for internal navigation and `next/navigation` for router operations.
-- Use route parameters instead of reproducing the legacy query-string routes when the parameter identifies a resource.
+- Use query-string routes (`?codigo=`, `?editar=`) for resource identifiers: the site is a static export and display codes are arbitrary, so dynamic route segments cannot be pre-generated.
 - Preserve the existing component boundaries and pass data through props/context instead of manipulating DOM nodes directly.
 - Do not use `dangerouslySetInnerHTML` to reproduce legacy template strings. Render tables, dropdowns, toasts, and messages as JSX.
 - Keep UI copy and local identifiers in Portuguese (`codigo`, `erro`, `estaLogado`, `handleAcessar`) to match the existing codebase.
