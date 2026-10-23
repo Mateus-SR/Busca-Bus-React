@@ -3,6 +3,16 @@ export function converteHoraMinuto(hora) {
   return horas * 60 + minutos;
 }
 
-export function minutosAteChegar(previsao, agoraMin = new Date().getHours() * 60 + new Date().getMinutes()) {
+// A SPTrans informa as previsões em horário de São Paulo. Usar o fuso do aparelho/servidor (UTC no Render) quebra a conta.
+const FUSO_SPTRANS = "America/Sao_Paulo";
+const formatadorSaoPaulo = new Intl.DateTimeFormat("en-GB", { timeZone: FUSO_SPTRANS, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+export function minutosDoDiaEmSaoPaulo(data = new Date()) {
+  const partes = formatadorSaoPaulo.formatToParts(data);
+  const valor = (tipo) => Number(partes.find((parte) => parte.type === tipo).value);
+  return valor("hour") * 60 + valor("minute");
+}
+
+export function minutosAteChegar(previsao, agoraMin = minutosDoDiaEmSaoPaulo()) {
   return (converteHoraMinuto(previsao) - agoraMin + 1440) % 1440;
 }
