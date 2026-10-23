@@ -1,11 +1,18 @@
-export function criarUsuariosRepo(db) {
-  const collection = db?.collection("usuarios");
+import { Usuario } from "./models/Usuario.js";
+
+export function criarUsuariosRepo() {
   return {
-    disponivel: Boolean(collection),
-    async porEmail(email) { return collection?.findOne({ email }); },
+    disponivel: true,
+
+    async porEmail(email) {
+      return Usuario.findOne({
+        email: email.toLowerCase().trim(),
+      });
+    },
+
     async criar(usuario) {
-      const result = await collection.insertOne(usuario);
-      return { ...usuario, _id: result.insertedId };
+      const novoUsuario = await Usuario.create(usuario);
+      return novoUsuario.toObject();
     },
   };
 }
