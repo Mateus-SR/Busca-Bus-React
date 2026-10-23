@@ -30,7 +30,7 @@ export default function ConfiguracaoForm({ codigo }) {
     const paradasValidas = formulario.paradas.filter(Boolean);
     if (!formulario.token.trim()) return setMensagem("Token da API é obrigatório nesta demonstração.");
     if (!paradasValidas.length || paradasValidas.some((parada) => ![7, 9].includes(parada.length))) return setMensagem("Um ou mais códigos são inválidos. Verifique os campos em vermelho.");
-    const destino = `/exibicao/${codigo || "Nova01"}`;
+    const destino = `/exibicao?codigo=${encodeURIComponent(codigo || "Nova01")}`;
     setMensagem(codigo ? "Exibição atualizada com sucesso!" : "Exibição criada com sucesso!");
     const acessarAgora = await confirm({
       mensagem: "Gostaria de acessá-la agora?",

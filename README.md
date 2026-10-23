@@ -134,7 +134,7 @@ Regra de organização: código de navegador/Next.js fica em `apps/web`, código
    - O site estará em `http://localhost:3000`.
 6. Teste a integração:
    - `http://localhost:4000/v1/health` deve responder `{"ok":true,...}`.
-   - Abra `http://localhost:3000/exibicao/dev` para ver a **exibição de teste local**, que usa a parada `650004840`. Ela só existe enquanto o `MONGODB_URI` **não** estiver configurado _(o alias `testes` também é aceito pelo servidor)_. Digite a URL direto no navegador: o campo da tela inicial exige 6 caracteres.
+   - Abra `http://localhost:3000/exibicao?codigo=dev` para ver a **exibição de teste local**, que usa a parada `650004840`. Ela só existe enquanto o `MONGODB_URI` **não** estiver configurado _(o alias `testes` também é aceito pelo servidor)_. Digite a URL direto no navegador: o campo da tela inicial exige 6 caracteres.
    - Para conferir a SPTrans pelo servidor, sem o site:
      ```text
      GET http://localhost:4000/v1/paradas/650004840/validar
@@ -306,7 +306,7 @@ Os nomes dos eventos ficam em `packages/core/src/eventos.js`.
 Limites por conexão: 30 eventos a cada 10 s e mensagens de até 64 KB.
 
 ## Estado atual e limitações conhecidas
-- **Páginas do site são estáticas.** `apps/web/src/app/(site)/exibicao/[codigo]` (e `configuracao/[codigo]`, `exibicao/[codigo]/mapa`) usam `generateStaticParams` com as exibições de demonstração (`UpilXc`, `Busca1`, `Fatec2`) e `dev`. Um código novo criado só no MongoDB **não ganha página no site hospedado** até ser incluído nesse arquivo e o site ser gerado de novo.
+- **Rotas por query string.** O site é exportado como estático (`output: "export"`), então qualquer código de exibição funciona sem gerar página nova: `/exibicao?codigo=XXXXXX`, `/mapa?codigo=XXXXXX` e `/configuracao?editar=XXXXXX`. As páginas leem o parâmetro com `useSearchParams` dentro de `<Suspense>`.
 - **Login do site é simulado.** O `AuthContext` usa um usuário de mentira guardado no `localStorage`. A API de login existe no servidor, mas o site ainda não a usa.
 - **Favoritos, configuração, listas e mapa usam fixtures** (`apps/web/src/lib/fixtures/`). Sem `NEXT_PUBLIC_API_URL`, a exibição também mostra ônibus fictícios.
 - **Sem rota para criar exibições** (veja [Exibições no MongoDB](#exibições-no-mongodb)); recuperação de senha e renovação de sessão ainda não estão implementadas.
