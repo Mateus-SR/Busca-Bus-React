@@ -1,4 +1,4 @@
-export { converteHoraMinuto, minutosAteChegar } from "./time.js";
+export { converteHoraMinuto, minutosAteChegar, minutosDoDiaEmSaoPaulo } from "./time.js";
 export { calcularStatus } from "./status.js";
 export { formatarDuracao } from "./duracao.js";
 export { EVENTOS, EVENTOS_SOCKET } from "./eventos.js";

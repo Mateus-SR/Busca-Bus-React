@@ -1,5 +1,5 @@
 import { normalizarPrevisao } from "../sptrans/normalizar.js";
-import { calcularStatus } from "@busca-bus/core";
+import { calcularStatus, minutosDoDiaEmSaoPaulo } from "@busca-bus/core";
 
 const LIMITE_OCULTOS = 100;
 
@@ -37,7 +37,7 @@ function minutosAtePrevisao(previsao, agora = new Date()) {
   const partes = previsao.match(/^(\d{1,2}):(\d{2})$/);
   if (!partes) return null;
   const destino = Number(partes[1]) * 60 + Number(partes[2]);
-  const atual = agora.getHours() * 60 + agora.getMinutes();
+  const atual = minutosDoDiaEmSaoPaulo(agora);
   const diferenca = destino - atual;
   if (diferenca >= 0) return diferenca;
   return diferenca < -720 ? diferenca + 1440 : null;
