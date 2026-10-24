@@ -10,7 +10,7 @@ const BusMap = dynamic(() => import("@/components/mapa/BusMap"), {
   loading: () => <div className="flex h-full min-h-[420px] items-center justify-center">Carregando mapa...</div>,
 });
 
-export default function MapaView({ codigo, voltarHref, onibus = [] }) {
+export default function MapaView({ codigo, voltarHref, onibus = [], pontos = [] }) {
   const { exibicao, carregando } = useExibicao(codigo);
   const radar = useRadarOnibus(codigo, onibus, false, 0, {
     parada: exibicao?.paradas?.[0],
@@ -26,7 +26,7 @@ export default function MapaView({ codigo, voltarHref, onibus = [] }) {
         <Link href={voltarHref} className="absolute top-3 left-3 z-[1000] flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-bold text-black shadow-lg transition hover:bg-gray-200 sm:top-4 sm:left-6 sm:px-4 sm:text-base">
           ← Voltar
         </Link>
-        <BusMap codigo={codigo} onibus={dadosOnibus} pontos={codigo ? radar.pontos : []} ponto={radar.ponto} />
+        <BusMap codigo={codigo} onibus={dadosOnibus} pontos={codigo ? radar.pontos : pontos} ponto={radar.ponto} />
       </div>
     </main>
   );
