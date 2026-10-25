@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import StatusBadge from "@/components/exibicao/StatusBadge";
+import ExibicaoCard from "@/components/exibicao/ExibicaoCard";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import { minutosAteChegar } from "@busca-bus/core";
 
@@ -45,7 +46,18 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 				aoMudarOrdenacao={setOrdenacao}
 			/>
 
-			<table className="mx-auto min-w-[40rem] table-auto border-collapse text-sm sm:min-w-full sm:text-base lg:text-3xl">
+			{/* Abaixo de lg: cards, sem rolagem horizontal. Mesma lista filtrada/ordenada da tabela. */}
+			<ul className="flex flex-col gap-3 lg:hidden">
+				{linhasExibidas.map((item) => (
+					<ExibicaoCard
+						key={item.id}
+						item={item}
+						detalhesTecnicos={detalhesTecnicos}
+					/>
+				))}
+			</ul>
+
+			<table className="mx-auto hidden min-w-full table-auto border-collapse lg:table lg:text-3xl">
 				<thead>
 					<tr className="bg-gray-100 font-extrabold">
 						{detalhesTecnicos && <th className="hidden px-2 py-3 text-center text-xs sm:table-cell sm:px-3 sm:text-sm lg:text-base">ID</th>}
