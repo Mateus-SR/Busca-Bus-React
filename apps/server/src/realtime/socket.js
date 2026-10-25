@@ -1,5 +1,6 @@
 import { Server } from "socket.io";
 import { EVENTOS_SOCKET } from "@busca-bus/core";
+import { montarListaPontos } from "../sptrans/normalizar.js";
 
 const CONFIG_PADRAO = {
   tempoAtraso: 2,
@@ -77,7 +78,7 @@ function montarResposta(codigo, lista, configuracao) {
     estadoConexao: lista.some((item) => item.estadoConexao === "conectado") ? "conectado" : "reconectando",
     erro: lista.find((item) => item.erro)?.erro || null,
     paradas: lista.map((item) => item.codigoParada),
-    pontos: lista.map((item) => item.ponto).filter(Boolean),
+    pontos: montarListaPontos(lista),
     ponto: lista.find((item) => item.ponto)?.ponto || null,
     onibus: lista.flatMap((item) => item.onibus.map((onibus) => ({ ...onibus, codigoParada: item.codigoParada }))),
   };
@@ -330,7 +331,8 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
   // Contabiliza o envio no servidor (global) e na sala. Os bytes não incluem o bloco de diagnóstico.
   function emitirSnapshot(cliente, codigo, sala, assinatura) {
     assinatura.pendente = false;
-    const lista = [...assinatura.snapshots.values()];
+    // Na ordem das paradas da exibição, não na de chegada das respostas da SPTrans (que varia a cada conexão).
+    const lista = assinatura.paradas.map((parada) => assinatura.snapshots.get(parada)).filter(Boolean);
     const resposta = montarResposta(codigo, lista, sala.configuracao);
     const tamanho = Buffer.byteLength(JSON.stringify(resposta), "utf8");
     metricas.snapshotsEnviados += 1;

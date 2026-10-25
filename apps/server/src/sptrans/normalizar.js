@@ -46,3 +46,10 @@ export function normalizarPrevisao(resposta, codigoParada) {
     respostaBruta: resposta,
   };
 }
+
+// Lista de pontos na ordem dos snapshots (que já vem na ordem das paradas da exibição). O índice na lista é o número e
+// a cor do ponto no mapa, então ela precisa ter uma entrada por parada: sem o `ponto` da SPTrans (ainda não carregou,
+// ou a última consulta falhou) entra um marcador vazio, em vez de sumir e deslocar os pontos seguintes.
+export function montarListaPontos(snapshots) {
+  return snapshots.map((item) => item.ponto ?? { codigo: item.codigoParada, nome: null, posicao: null });
+}

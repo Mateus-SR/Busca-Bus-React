@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { criarExibicoesRepo } from "../../repos/exibicoes.js";
+import { montarListaPontos } from "../../sptrans/normalizar.js";
 
 export function exibicoesRoutes(db, config, poller, io = null) {
   const router = Router();
@@ -75,7 +76,7 @@ function compactarSnapshot(codigo, exibicao, snapshots, incluirDiagnostico, diag
     estadoConexao: snapshots.some((item) => item.estadoConexao === "conectado") ? "conectado" : "reconectando",
     erro: snapshots.find((item) => item.erro)?.erro || null,
     paradas: snapshots.map((item) => item.codigoParada),
-    pontos: snapshots.map((item) => item.ponto).filter(Boolean),
+    pontos: montarListaPontos(snapshots),
     ponto: snapshots.find((item) => item.ponto)?.ponto || null,
     onibus: snapshots.flatMap((item) => item.onibus.map((onibus) => ({
       ...onibus,
