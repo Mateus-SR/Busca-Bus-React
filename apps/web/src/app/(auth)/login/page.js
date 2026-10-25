@@ -18,19 +18,27 @@ export default function LoginPage() {
     setFormulario((atual) => ({ ...atual, [campo]: valor }));
   }
 
-  function entrar(evento) {
-    evento.preventDefault();
-    if (!formulario.email || !formulario.senha) {
-      setMensagem("Por favor, preencha todos os campos.");
-      return;
-    }
-    if (!validarEmail(formulario.email)) {
-      setMensagem("Informe um e-mail válido.");
-      return;
-    }
-    login(formulario);
-    router.push("/");
+ async function entrar(evento) {
+  evento.preventDefault();
+  setMensagem("");
+
+  if (!formulario.email || !formulario.senha) {
+    setMensagem("Por favor, preencha todos os campos.");
+    return;
   }
+
+  if (!validarEmail(formulario.email)) {
+    setMensagem("Informe um e-mail válido.");
+    return;
+  }
+
+  try {
+    await login(formulario);
+    router.push("/");
+  } catch (erro) {
+    setMensagem(erro.message || "Não foi possível realizar o login.");
+  }
+}
 
   return (
     <AuthBackground>

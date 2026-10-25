@@ -85,24 +85,13 @@ body {
 }
 
 /* -- COMPONENTES CUSTOMIZADOS -- */
-.bus-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #b91c1c;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #b91c1c;
-  font: 700 10px "Roboto Mono", monospace;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
-}
-
 .bus-marker-wrap {
   background: transparent;
   border: 0;
 }
 
-.bus-marker-favicon {
+.bus-marker-icone {
+  display: block;
   position: absolute;
   right: 50%;
   bottom: 0;
@@ -110,20 +99,56 @@ body {
   object-fit: contain;
 }
 
+/* Balão do ônibus: branco com borda vermelha fixa; a cor do ponto aparece só no ícone e na bolinha numerada. */
 .bus-marker-card {
   position: absolute;
-  bottom: 100%;
+  bottom: calc(100% + 5px);
   left: 50%;
-  min-width: 64px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transform: translateX(-50%);
-  border: 2px solid;
+  border: 2px solid #b91c1c;
   border-radius: 999px;
   background: #ffffff;
-  padding: 3px 6px;
-  text-align: center;
-  font: 700 10px "Roboto Mono", monospace;
+  color: #b91c1c;
+  padding: 2px 7px;
+  font: 700 13px "Roboto Mono", monospace;
   white-space: nowrap;
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+
+.bus-marker-card:has(.bus-marker-ponto) {
+  padding-left: 2px;
+}
+
+/* Ponta do balão apontando para o ônibus; herda fundo e borda do balão. */
+.bus-marker-card::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  transform: translateX(-50%) rotate(45deg);
+  border: solid;
+  border-width: 0 2px 2px 0;
+  border-color: inherit;
+  background: inherit;
+}
+
+.bus-marker-ponto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  min-height: 15px;
+  padding: 0 4px; 
+  border-radius: 999px; 
+  color: #ffffff;
+  font: 700 16px "Roboto Mono", monospace;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .stop-marker-wrap {
@@ -144,12 +169,30 @@ body {
 
 .bus-tooltip,
 .leaflet-tooltip {
-  border: 1px solid #cbd5e1;
+  border: 3px solid #111827;
   border-radius: 999px;
   background: #ffffff;
+  background: #ffffff;
   color: #111827;
-  font: 700 10px "Roboto Mono", monospace;
+  font: 700 13px "Roboto Mono", monospace;
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+}
+
+.bus-tooltip {
+  border-radius: 10px;
+  padding: 4px 8px;
+  line-height: 1.35;
+}
+
+.stop-tooltip-conteudo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 150px;
+  max-width: 200px;
+  white-space: normal;
+  text-align: center;
 }
 
 .leaflet-control-zoom {
@@ -278,6 +321,18 @@ html.high-contrast-dark table tbody tr:hover td {
   border-color: #000000 !important;
 }
 
+html.high-contrast-dark .bus-marker-card {
+  background-color: #000000 !important;
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast-dark .bus-marker-ponto {
+  color: #ffffff !important;
+  border: 1px solid #ffffff;
+}
+
 /* 2. ALTO CONTRASTE CLARO */
 html.high-contrast-light,
 html.high-contrast-light body,
@@ -332,4 +387,16 @@ html.high-contrast-light .accessibility-drawer button:hover {
   background-color: #000000 !important;
   color: #ffffff !important;
   border-color: #000000 !important;
+}
+
+html.high-contrast-light .bus-marker-card {
+  background-color: #ffffff !important;
+  border-color: #000000 !important;
+  color: #000000 !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast-light .bus-marker-ponto {
+  color: #ffffff !important;
+  border: 1px solid #000000;
 }
