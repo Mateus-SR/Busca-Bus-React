@@ -9,8 +9,8 @@ export default function ExibicaoCard({ item, detalhesTecnicos = false }) {
 	return (
 		<li className="animate-fadeIn">
 			<div className="flex overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-				<div className="flex w-1/3 shrink-0 flex-col items-center justify-center gap-1 border-r border-gray-200 bg-gray-100 p-3 text-center">
-					<span className="text-2xl leading-none font-extrabold">
+				<div className="flex w-1/4 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-gray-200 bg-gray-100 p-3 text-center">
+					<span className="text-xl leading-none font-extrabold">
 						<span className="sr-only">Linha </span>
 						{item.codigoLetreiro}
 					</span>
