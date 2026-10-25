@@ -161,7 +161,10 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         const cor = corDoPonto(indice);
         const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
           .addTo(mapaRef.current)
-          .bindTooltip(`<strong>Ponto ${indice + 1}:</strong> ${escaparHtml(item.nome || item.codigo || codigo)}`, { permanent: true, direction: "top", offset: [0, -34] });
+          .bindTooltip(
+            `<span class="stop-tooltip-conteudo"><span class="bus-marker-ponto" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
+            { permanent: true, direction: "top", offset: [0, -34] },
+          );
         pontosRef.current.set(String(item.codigo), marcador);
         if (indice === 0) mapaRef.current.setView([lat, lng], 16);
       });
