@@ -2,32 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import { criarSvgOnibus } from "@/components/mapa/iconeOnibus";
+import { corDoPonto, escaparHtml, infoPontoDoOnibus } from "@/components/mapa/pontosMapa";
 
 function obterPosicao(onibus) {
   if (onibus.posicao) return [onibus.posicao.lat, onibus.posicao.lng];
   return [onibus.latitude, onibus.longitude];
 }
 
-const CORES_PONTOS = ["#dc2626", "#2563eb", "#16a34a", "#9333ea", "#ea580c", "#0891b2"];
-
 function tamanhoIcone(zoom) {
   return Math.max(24, Math.min(38, 26 + (zoom - 15) * 2));
 }
 
 // Só o que muda o desenho do ícone entra na chave; sem ela, o ícone era recriado a cada atualização e a cada zoom.
-function chaveIcone(onibus, cor, zoom) {
-  return `${onibus.codigoLetreiro ?? onibus.codigo ?? ""}|${cor}|${tamanhoIcone(zoom)}`;
+function chaveIcone(onibus, info, zoom) {
+  return `${onibus.codigoLetreiro ?? onibus.codigo ?? ""}|${info.cor}|${info.numero ?? ""}|${tamanhoIcone(zoom)}`;
 }
 
-function criarIcone(L, onibus, cor, zoom = 16) {
-  const codigo = onibus.codigoLetreiro ?? onibus.codigo ?? "Ônibus";
+// Balão branco com borda vermelha fixa (identidade do app); a cor do ponto fica só no ícone e na bolinha numerada.
+function criarIcone(L, onibus, info, zoom = 16) {
+  const codigo = escaparHtml(onibus.codigoLetreiro ?? onibus.codigo ?? "Ônibus");
   const tamanho = tamanhoIcone(zoom);
+  const numero = info.numero ? `<span class="bus-marker-ponto" style="background:${info.cor}">${info.numero}</span>` : "";
   return L.divIcon({
     className: "bus-marker-wrap",
-    html: `<span class="bus-marker-card" style="border-color:${cor};color:${cor}">${codigo}</span>${criarSvgOnibus(cor, tamanho)}`,
-    iconSize: [Math.max(80, tamanho), tamanho + 22],
-    iconAnchor: [Math.max(40, tamanho / 2), tamanho],
+    html: `<span class="bus-marker-card">${numero}<span class="bus-marker-codigo">${codigo}</span></span>${criarSvgOnibus(info.cor, tamanho)}`,
+    iconSize: [Math.max(80, tamanho), tamanho],
+    iconAnchor: [Math.max(80, tamanho) / 2, tamanho],
+    // O detalhe (sentido) abre ao lado do ônibus, sem cobrir o balão.
+    tooltipAnchor: [tamanho / 2 + 4, -tamanho / 2],
   });
+}
+
+function conteudoTooltip(onibus) {
+  const codigo = escaparHtml(onibus.codigoLetreiro ?? onibus.codigo ?? "Ônibus");
+  const sentido = onibus.sentidoLinha ?? onibus.sentido;
+  return sentido ? `<strong>${codigo}</strong><br />Sentido: ${escaparHtml(sentido)}` : `<strong>${codigo}</strong>`;
 }
 
 function criarIconeParada(L, cor) {
@@ -87,23 +96,22 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         if (posicao.some((valor) => typeof valor !== "number")) return;
         const id = String(onibusAtual.id);
         atuais.add(id);
-        const indicePonto = Math.max(0, (pontos.findIndex((item) => String(item.codigo) === String(onibusAtual.codigoParada)) || 0));
-        const cor = CORES_PONTOS[indicePonto % CORES_PONTOS.length];
+        const info = infoPontoDoOnibus(onibusAtual, pontos);
         const marcadorExistente = marcadoresRef.current.get(id);
         const zoomAtual = mapaRef.current.getZoom();
-        const chave = chaveIcone(onibusAtual, cor, zoomAtual);
+        const chave = chaveIcone(onibusAtual, info, zoomAtual);
         if (marcadorExistente) {
-          marcadorExistente.setLatLng(posicao);
+          marcadorExistente.setLatLng(posicao).setTooltipContent(conteudoTooltip(onibusAtual));
           if (chavesIconeRef.current.get(id) !== chave) {
-            marcadorExistente.setIcon(criarIcone(L, onibusAtual, cor, zoomAtual));
+            marcadorExistente.setIcon(criarIcone(L, onibusAtual, info, zoomAtual));
             chavesIconeRef.current.set(id, chave);
           }
           return;
         }
         chavesIconeRef.current.set(id, chave);
-        const marcador = L.marker(posicao, { icon: criarIcone(L, onibusAtual, cor, zoomAtual) })
+        const marcador = L.marker(posicao, { icon: criarIcone(L, onibusAtual, info, zoomAtual) })
           .addTo(mapaRef.current)
-          .bindTooltip(`<strong>${onibusAtual.codigoLetreiro ?? onibusAtual.codigo}</strong><br />${onibusAtual.sentidoLinha ?? onibusAtual.sentido ?? ""}`, { permanent: true, direction: "top", offset: [0, -16], className: "bus-tooltip" });
+          .bindTooltip(conteudoTooltip(onibusAtual), { direction: "right", className: "bus-tooltip" });
         marcadoresRef.current.set(id, marcador);
       });
       marcadoresRef.current.forEach((marcador, id) => {
@@ -126,12 +134,11 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         marcadoresRef.current.forEach((marcador, id) => {
           const item = onibus.find((atual) => String(atual.id) === id);
           if (!item) return;
-          const indice = Math.max(0, pontos.findIndex((atual) => String(atual.codigo) === String(item.codigoParada)));
-          const cor = CORES_PONTOS[indice % CORES_PONTOS.length];
+          const info = infoPontoDoOnibus(item, pontos);
           const zoomAtual = mapaRef.current.getZoom();
-          const chave = chaveIcone(item, cor, zoomAtual);
+          const chave = chaveIcone(item, info, zoomAtual);
           if (chavesIconeRef.current.get(id) === chave) return;
-          marcador.setIcon(criarIcone(L, item, cor, zoomAtual));
+          marcador.setIcon(criarIcone(L, item, info, zoomAtual));
           chavesIconeRef.current.set(id, chave);
         });
       };
@@ -151,10 +158,13 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         if (!item?.posicao || pontosRef.current.has(String(item.codigo))) return;
         const { lat, lng } = item.posicao;
         if (![lat, lng].every((valor) => typeof valor === "number")) return;
-        const cor = CORES_PONTOS[indice % CORES_PONTOS.length];
+        const cor = corDoPonto(indice);
         const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
           .addTo(mapaRef.current)
-          .bindTooltip(`<strong>Ponto ${indice + 1}:</strong> ${item.nome || item.codigo || codigo}`, { permanent: true, direction: "top", offset: [0, -34] });
+          .bindTooltip(
+            `<span class="stop-tooltip-conteudo"><span class="bus-marker-ponto" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
+            { permanent: true, direction: "top", offset: [0, -34] },
+          );
         pontosRef.current.set(String(item.codigo), marcador);
         if (indice === 0) mapaRef.current.setView([lat, lng], 16);
       });
