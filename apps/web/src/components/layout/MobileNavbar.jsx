@@ -31,10 +31,17 @@ export default function MobileNavbar({ links, onLogout }) {
           className="fixed inset-0 z-[1100] bg-black/50 md:hidden"
         />
       )}
+      {/*
+        O painel fica fora da tela quando fechado. Um elemento `fixed` fora da tela alarga o layout viewport nos
+        navegadores de celular (a página aparece encolhida e arrastável); `overflow-x: hidden` no body não evita isso.
+        Por isso o painel é `absolute` dentro de um recorte `fixed` do tamanho da tela: o que sai dele é cortado e
+        não conta como largura da página. `invisible` tira o menu fechado da ordem de tabulação e do leitor de tela.
+      */}
+      <div className="recorte-gaveta pointer-events-none fixed inset-x-0 top-0 z-[1200] h-dvh overflow-hidden md:hidden">
       <nav
         aria-label="Navegação mobile"
-        className={`fixed top-0 right-0 z-[1200] flex h-dvh w-[min(80vw,20rem)] flex-col justify-start bg-sptrans px-5 py-8 text-white shadow-2xl transition-transform duration-300 md:hidden ${
-          aberto ? "translate-x-0" : "translate-x-full"
+        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] flex-col justify-start bg-sptrans px-5 py-8 text-white shadow-2xl transition-[transform,visibility] duration-300 ${
+          aberto ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         <div className="mb-6 flex items-center justify-between border-b border-white/20 pb-4">
@@ -92,6 +99,7 @@ export default function MobileNavbar({ links, onLogout }) {
           ))}
         </div>
       </nav>
+      </div>
 
       <ConfirmLogoutModal
         aberto={modalLogoutAberto}
