@@ -377,6 +377,12 @@ html.high-contrast-light button:not([class*="bg-red"]):hover {
   color: #ffffff !important;
 }
 
+/* Recorte das gavetas (menu e acessibilidade): só contém o painel, não pode virar uma cortina de tela cheia */
+html.high-contrast-dark .recorte-gaveta,
+html.high-contrast-light .recorte-gaveta {
+  background-color: transparent !important;
+}
+
 html.high-contrast-dark .accessibility-drawer button:hover {
   background-color: #fbbf24 !important;
   color: #000000 !important;

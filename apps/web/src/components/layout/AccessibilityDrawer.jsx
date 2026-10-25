@@ -33,9 +33,11 @@ export default function AccessibilityDrawer() {
         }`}
       />
 
+      {/* Recorte `fixed` do tamanho da tela: a gaveta fechada fica fora dele e não alarga o layout no celular (ver MobileNavbar). */}
+      <div className="recorte-gaveta pointer-events-none fixed inset-x-0 top-0 z-[9999] h-dvh overflow-hidden">
       <div
-        className={`accessibility-drawer fixed top-0 right-0 z-[9999] flex h-dvh w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-transform duration-300 ease-in-out sm:p-6 dark:bg-sptrans dark:text-white ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`accessibility-drawer pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 dark:bg-sptrans dark:text-white ${
+          isOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         <div>
@@ -92,6 +94,7 @@ export default function AccessibilityDrawer() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </>
   );
