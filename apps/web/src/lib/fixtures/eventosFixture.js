@@ -1,0 +1,86 @@
+export const EVENTOS_MOCK = [
+	{
+		id_evento: 'ev-001',
+		tipo: 'PALESTRA',
+		titulo: 'Dados & I.A',
+		cor: 'vermelho',
+		inicio: '2026-10-19T07:00',
+		fim: '2026-10-19T08:30',
+		local: 'Auditório',
+		descricao:
+			'Palestra sobre como dados alimentam modelos de inteligência artificial e quais carreiras surgem a partir disso.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		id_evento: 'ev-002',
+		tipo: 'EVENTO',
+		titulo: 'Encontro RH',
+		cor: 'verde',
+		inicio: '2026-10-20T07:00',
+		fim: '2026-10-20T08:00',
+		local: 'Sala 110',
+		descricao:
+			'Bate-papo com profissionais de RH sobre currículo, entrevistas e processos seletivos de estágio.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		id_evento: 'ev-003',
+		tipo: 'EVENTO',
+		titulo: 'Aula de Vôlei',
+		cor: 'laranja',
+		inicio: '2026-10-20T08:00',
+		fim: '2026-10-20T09:30',
+		local: 'Quadra',
+		descricao:
+			'Aula aberta de vôlei para todos os cursos. Traga roupa leve e água.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		id_evento: 'ev-004',
+		tipo: 'EVENTO',
+		titulo: 'Workshop de UX',
+		cor: 'verde',
+		inicio: '2026-10-26T09:00',
+		fim: '2026-10-26T11:00',
+		local: 'Laboratório 202',
+		descricao:
+			'Oficina prática de pesquisa com usuários e prototipação rápida em ferramentas de design.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		id_evento: 'ev-006',
+		tipo: 'EVENTO',
+		titulo: 'Hackathon',
+		cor: 'azul',
+		inicio: '2026-10-28T08:00',
+		fim: '2026-10-28T12:00',
+		local: 'Laboratórios 101 e 102',
+		descricao:
+			'Maratona de programação em equipes. Inscrição prévia pelo representante de sala.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		// testar evento lado a lado
+		id_evento: 'ev-007',
+		tipo: 'PALESTRA',
+		titulo: 'Segurança Digital',
+		cor: 'vermelho',
+		inicio: '2026-10-28T10:00',
+		fim: '2026-10-28T11:30',
+		local: 'Auditório',
+		descricao:
+			'Boas práticas de senhas, golpes digitais e proteção de dados pessoais.',
+		instituicao: 'fatec-zl',
+	},
+	{
+		id_evento: 'ev-008',
+		tipo: 'EVENTO',
+		titulo: 'Workshop de Yoga',
+		cor: 'rosa',
+		inicio: '2026-11-05T11:30',
+		fim: '2026-11-05T13:00',
+		local: 'Quadra ETEC',
+		descricao: 'Workshop de yoga para promover bem-estar e reduzir o estresse.',
+		instituicao: 'fatec-zl',
+	},
+];
