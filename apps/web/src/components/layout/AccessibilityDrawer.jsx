@@ -36,17 +36,17 @@ export default function AccessibilityDrawer() {
       {/* Recorte `fixed` do tamanho da tela: a gaveta fechada fica fora dele e não alarga o layout no celular (ver MobileNavbar). */}
       <div className="recorte-gaveta pointer-events-none fixed inset-x-0 top-0 z-[9999] h-dvh overflow-hidden">
       <div
-        className={`accessibility-drawer pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 dark:bg-sptrans dark:text-white ${
+        className={`accessibility-drawer pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 ${
           isOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         <div>
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4 dark:border-red-800">
+          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
             <h2 className="text-lg font-bold">Acessibilidade</h2>
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Fechar menu de acessibilidade"
-              className="flex cursor-pointer items-center justify-center rounded-full px-3 py-2 font-bold transition-colors hover:bg-gray-200 dark:hover:bg-red-800"
+              className="flex cursor-pointer items-center justify-center rounded-full px-3 py-2 font-bold transition-colors hover:bg-gray-200"
             >
               <X size={24} strokeWidth={3} />
             </button>
@@ -75,7 +75,7 @@ export default function AccessibilityDrawer() {
                   Aumentar <AArrowUp size={18} strokeWidth={2.5} />
                 </button>
               </div>
-              <p className="mt-1.5 text-sm text-gray-150">Atual: {fontSize === "normal" ? "Normal" : fontSize === "large" ? "Grande" : "Muito Grande"}</p>
+              <p className="mt-1.5 text-sm">Atual: {fontSize === "normal" ? "Normal" : fontSize === "large" ? "Grande" : "Muito Grande"}</p>
             </div>
 
             <div>
