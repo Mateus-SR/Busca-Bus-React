@@ -1,0 +1,3 @@
+/* CSS do Leaflet, carregado só junto do mapa (importado em BusMap.jsx) e dentro da camada `leaflet`,
+   declarada no globals.css abaixo dos utilitários do Tailwind. */
+@import "leaflet/dist/leaflet.css" layer(leaflet);

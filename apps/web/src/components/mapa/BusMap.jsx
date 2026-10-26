@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import "./leaflet.css";
 import { criarSvgOnibus } from "@/components/mapa/iconeOnibus";
 import { corDoPonto, escaparHtml, infoPontoDoOnibus } from "@/components/mapa/pontosMapa";
 

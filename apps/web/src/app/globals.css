@@ -1,5 +1,8 @@
+/* Ordem das camadas: `leaflet` (CSS de terceiros, ver components/mapa/leaflet.css) fica abaixo dos
+   utilitários do Tailwind, que passam a vencê-lo sem precisar de !important. */
+@layer theme, base, leaflet, components, utilities;
+
 @import "tailwindcss";
-@import "leaflet/dist/leaflet.css";
 
 @theme {
   --color-sptrans: oklch(0.6284 0.257 28.22);
