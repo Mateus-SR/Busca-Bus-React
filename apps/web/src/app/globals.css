@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
 @theme {
   --color-sptrans: oklch(0.6284 0.257 28.22);
-  --font-roboto-mono: "Roboto Mono", monospace;
-  --font-inter: "Inter", system-ui, Arial, sans-serif;
+  /* As fontes vêm do next/font (layout.js), que define --fonte-inter e --fonte-roboto-mono no <html>. */
+  --font-roboto-mono: var(--fonte-roboto-mono), ui-monospace, monospace;
+  --font-inter: var(--fonte-inter), system-ui, Arial, sans-serif;
+  --font-sans: var(--fonte-inter), system-ui, Arial, sans-serif;
 
   /* Animações */
   --animate-fadeOut: fadeOut 2.5s ease-in-out normal;
@@ -80,7 +81,6 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
   overflow-x: hidden;
 }
 
@@ -113,7 +113,7 @@ body {
   background: #ffffff;
   color: #b91c1c;
   padding: 2px 7px;
-  font: 700 13px "Roboto Mono", monospace;
+  font: 700 13px var(--font-roboto-mono);
   white-space: nowrap;
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
 }
@@ -146,7 +146,7 @@ body {
   padding: 0 4px; 
   border-radius: 999px; 
   color: #ffffff;
-  font: 700 16px "Roboto Mono", monospace;
+  font: 700 16px var(--font-roboto-mono);
   line-height: 1;
   white-space: nowrap;
 }
@@ -172,9 +172,8 @@ body {
   border: 3px solid #111827;
   border-radius: 999px;
   background: #ffffff;
-  background: #ffffff;
   color: #111827;
-  font: 700 13px "Roboto Mono", monospace;
+  font: 700 13px var(--font-roboto-mono);
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
 }
 
