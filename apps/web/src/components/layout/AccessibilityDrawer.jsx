@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAccessibility } from "@/contexts/AccessibilityContext";
+import useGaveta from "@/hooks/useGaveta";
+import useMontado from "@/hooks/useMontado";
 import { PersonStanding, Contrast, X, AArrowDown, AArrowUp } from "lucide-react";
 
 export default function AccessibilityDrawer() {
   const [isOpen, setIsOpen] = useState(false);
-  const montado = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
+  const montado = useMontado();
+  const gatilhoRef = useRef(null);
+  const painelRef = useRef(null);
   const {
     fontSize,
     increaseFont,
@@ -22,28 +22,37 @@ export default function AccessibilityDrawer() {
     setContrast,
   } = useAccessibility();
 
+  useGaveta({ aberto: isOpen, aoFechar: () => setIsOpen(false), painelRef, gatilhoRef });
+
   const drawer = (
     <>
       <button
         type="button"
-        aria-label="Fechar menu de acessibilidade"
+        tabIndex={-1}
+        aria-hidden="true"
         data-contraste-ignorar
         onClick={() => setIsOpen(false)}
-        className={`fixed inset-0 z-[9990] bg-black/50 transition-opacity duration-300 ease-in-out ${
-          isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+        className={`fixed inset-0 z-[9990] bg-black/50 transition-[opacity,visibility] duration-300 ease-in-out motion-reduce:transition-none ${
+          isOpen ? "visible opacity-100" : "invisible opacity-0"
         }`}
       />
 
+      {/* A animação usa `translate` (o Tailwind v4 não usa `transform`): a transição precisa ser em `translate`. */}
       {/* Recorte `fixed` do tamanho da tela: a gaveta fechada fica fora dele e não alarga o layout no celular (ver MobileNavbar). */}
       <div className="pointer-events-none fixed inset-x-0 top-0 z-[9999] h-dvh overflow-hidden">
       <div
-        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-superficie p-5 text-texto-forte shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 ${
+        ref={painelRef}
+        id="menu-acessibilidade"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="acessibilidade-titulo"
+        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] flex-col justify-between overflow-y-auto bg-superficie p-5 text-texto-forte shadow-2xl transition-[translate,visibility] duration-300 ease-in-out motion-reduce:transition-none sm:p-6 ${
           isOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         <div>
           <div className="flex items-center justify-between border-b border-borda-suave pb-4">
-            <h2 className="text-lg font-bold">Acessibilidade</h2>
+            <h2 id="acessibilidade-titulo" className="text-lg font-bold">Acessibilidade</h2>
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Fechar menu de acessibilidade"
@@ -103,8 +112,10 @@ export default function AccessibilityDrawer() {
   return (
     <div className="relative">
       <button
+        ref={gatilhoRef}
         onClick={() => setIsOpen((value) => !value)}
         aria-expanded={isOpen}
+        aria-controls="menu-acessibilidade"
         aria-label={isOpen ? "Fechar menu de acessibilidade" : "Abrir menu de acessibilidade"}
         className="font-bold rounded-xl p-2 border-sobre-marca border-[3px] text-sobre-marca hover:bg-sobre-marca/50 transition-all duration-200 ease-out cursor-pointer"
         
