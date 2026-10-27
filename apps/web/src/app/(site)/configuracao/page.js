@@ -8,8 +8,8 @@ function ConfiguracaoComParametro() {
 	const searchParams = useSearchParams();
 	const codigo = searchParams.get('editar') || undefined;
 	return (
-		<main className="relative min-h-screen bg-[url(/img/Onibus2.png)] bg-cover bg-center">
-			<div className="absolute inset-0 bg-black/40" />
+		<main className="relative min-h-screen bg-[url(/img/Onibus2.png)] bg-cover bg-center contraste:bg-none">
+			<div className="absolute inset-0 bg-black/40 contraste:hidden" />
 			<div className="relative min-h-screen px-2 py-4">
 				<ConfiguracaoForm key={codigo ?? 'nova'} codigo={codigo} />
 			</div>

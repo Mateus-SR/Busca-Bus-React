@@ -8,13 +8,13 @@ import StatusBadge from "@/components/exibicao/StatusBadge";
 export default function ExibicaoCard({ item, detalhesTecnicos = false }) {
 	return (
 		<li className="animate-fadeIn">
-			<div className="flex overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-lg">
-				<div className="flex w-1/4 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-gray-200 bg-gray-100 p-3 text-center">
+			<div className="flex overflow-hidden rounded-2xl border border-borda-suave bg-superficie shadow-lg">
+				<div className="flex w-1/4 shrink-0 flex-col items-center justify-center gap-0.5 border-r border-borda-suave bg-superficie-alt p-3 text-center">
 					<span className="text-xl leading-none font-extrabold">
 						<span className="sr-only">Linha </span>
 						{item.codigoLetreiro}
 					</span>
-					<span className="font-roboto-mono text-xl font-bold text-gray-700">
+					<span className="font-roboto-mono text-xl font-bold text-texto-suave">
 						<span className="sr-only">Previsão </span>
 						{item.previsao}
 					</span>
@@ -30,7 +30,7 @@ export default function ExibicaoCard({ item, detalhesTecnicos = false }) {
 					</span>
 
 					{detalhesTecnicos && (
-						<div className="flex flex-col gap-0.5 border-t border-gray-200 pt-2 text-xs text-gray-500">
+						<div className="flex flex-col gap-0.5 border-t border-borda-suave pt-2 text-xs text-texto-mudo">
 							<p className="truncate font-roboto-mono" title={item.id}>
 								<span className="font-semibold">ID</span> {item.id}
 							</p>

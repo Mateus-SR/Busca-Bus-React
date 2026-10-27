@@ -8,7 +8,7 @@ export default function InfoCard({ titulo, children }) {
     const [aberto, setAberto] = useState(false);
 
 	return (
-		<div className="flex flex-col px-5 p-2.5 m-5 w-2/3 bg-white text-black rounded-2xl">
+		<div className="flex flex-col px-5 p-2.5 m-5 w-2/3 bg-superficie text-texto rounded-2xl">
             <button
                 type="button"
                 onClick={() => setAberto((valorAtual) => !valorAtual)}

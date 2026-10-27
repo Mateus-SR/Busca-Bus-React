@@ -1,7 +1,7 @@
 const ESTILOS = {
-    Normal: { badge: "bg-green-100 text-green-700", ping: "bg-green-400", dot: "bg-green-600" },
-    Atrasado: { badge: "bg-red-100 text-red-700", ping: "bg-red-400", dot: "bg-red-600" },
-    Adiantado: { badge: "bg-blue-100 text-blue-700", ping: "bg-blue-400", dot: "bg-blue-600" },
+    Normal: { badge: "bg-status-ok-fundo text-status-ok-texto", ping: "bg-status-ok-ping", dot: "bg-status-ok-ponto" },
+    Atrasado: { badge: "bg-status-atraso-fundo text-status-atraso-texto", ping: "bg-status-atraso-ping", dot: "bg-status-atraso-ponto" },
+    Adiantado: { badge: "bg-status-adiantado-fundo text-status-adiantado-texto", ping: "bg-status-adiantado-ping", dot: "bg-status-adiantado-ponto" },
 };
 
 export default function StatusBadge({ status }) {
@@ -9,14 +9,14 @@ export default function StatusBadge({ status }) {
 
     return (
         <span
-            className={`status-badge inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold lg:text-lg ${estilo.badge}`}
+            className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold contraste:border-2 contraste:border-borda contraste:font-extrabold lg:text-lg ${estilo.badge}`}
         >
             <span className="relative mr-2 flex h-2 w-2">
                 <span
-                    className={`status-badge-ping absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 ${estilo.ping}`}
+                    className={`absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 contraste:border contraste:border-black ${estilo.ping}`}
                 />
                 <span
-                    className={`status-badge-dot relative inline-flex h-2 w-2 rounded-full ${estilo.dot}`}
+                    className={`relative inline-flex h-2 w-2 rounded-full contraste:border contraste:border-black ${estilo.dot}`}
                 />
             </span>
             {status}

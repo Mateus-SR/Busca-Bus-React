@@ -13,14 +13,14 @@ export default function FiltroOrdenacao({
 				value={busca}
 				onChange={(e) => aoMudarBusca(e.target.value)}
 				placeholder="Pesquisar linha"
-				className="w-full rounded-full border border-gray-300 px-4 py-3 text-center text-base focus:ring-2 focus:ring-sptrans focus:outline-none sm:w-96 sm:py-2 sm:text-left"
+				className="w-full rounded-full border border-borda px-4 py-3 text-center text-base focus:ring-2 focus:ring-acento focus:outline-none sm:w-96 sm:py-2 sm:text-left"
 			/>
 
 			<div className="w-full sm:absolute sm:right-0 sm:w-96">
 				<select
 					value={ordenacao}
 					onChange={(e) => aoMudarOrdenacao(e.target.value)}
-					className="w-full cursor-pointer rounded-full border border-gray-300 bg-white px-4 py-3 text-center text-sm font-bold text-gray-700 focus:ring-2 focus:ring-sptrans focus:outline-none sm:w-auto sm:py-2"
+					className="w-full cursor-pointer rounded-full border border-borda bg-superficie px-4 py-3 text-center text-sm font-bold text-texto-suave focus:ring-2 focus:ring-acento focus:outline-none sm:w-auto sm:py-2"
 				>
 					<option value="padrao">Ordenar: Padrão</option>
 					<option value="nome">Nome (A-Z)</option>

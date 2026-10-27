@@ -87,7 +87,7 @@ export default function ExibicaoLive({ codigo }) {
       setMensagemAcao({
         id: Date.now(),
         texto: "Não foi possível copiar. Tente novamente.",
-        cor: "bg-red-600",
+        cor: "bg-destaque",
       });
     }
   }
@@ -116,7 +116,7 @@ export default function ExibicaoLive({ codigo }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white p-3 shadow-lg sm:p-6">
+    <div className="overflow-x-auto rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
       
       {/* Elemento invisível do leitor de tela */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
@@ -135,7 +135,7 @@ export default function ExibicaoLive({ codigo }) {
             <button
               type="button"
               onClick={copiarCodigo}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-100"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
               aria-label="Copiar código da exibição"
             >
               <Copy size={14} aria-hidden="true" />
@@ -144,7 +144,7 @@ export default function ExibicaoLive({ codigo }) {
             <button
               type="button"
               onClick={compartilhar}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 transition hover:bg-gray-100"
+              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
               aria-label="Compartilhar exibição"
             >
               <Share2 size={14} aria-hidden="true" />
@@ -154,7 +154,7 @@ export default function ExibicaoLive({ codigo }) {
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
         {debugAberto && radar.pontos.length > 0 && (
-          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-gray-500 flex-col">
+          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-texto-mudo flex-col">
             {radar.pontos.map((item, indice) => (
               <span key={item.codigo ?? indice} className="flex flex-wrap justify-center gap-x-2">
                 <span className="font-roboto-mono">
@@ -170,7 +170,7 @@ export default function ExibicaoLive({ codigo }) {
             ))}
           </div>
         )}
-        <button type="button" onClick={() => setDebugAberto((aberto) => !aberto)} className="mt-1 text-xs text-gray-400 underline hover:text-gray-700">Detalhes técnicos</button>
+        <button type="button" onClick={() => setDebugAberto((aberto) => !aberto)} className="mt-1 text-xs text-texto-desabilitado underline hover:text-texto-suave">Detalhes técnicos</button>
       </div>
       <VisaoDesenvolvedor
         aberto={debugAberto}
@@ -199,19 +199,19 @@ export default function ExibicaoLive({ codigo }) {
       />
       
       {mostrarSemParadas && (
-        <p role="status" className="mb-3 text-center text-sm text-red-600">
+        <p role="status" className="mb-3 text-center text-sm text-erro">
           {erroExibicao
             ? `Não foi possível carregar a exibição: ${erroExibicao}`
             : "Esta exibição não tem pontos de parada cadastrados."}
         </p>
       )}
       {radar.erro && (
-        <p role="status" className="mb-3 text-center text-sm text-red-600">
+        <p role="status" className="mb-3 text-center text-sm text-erro">
           Não foi possível atualizar o radar: {radar.erro}
         </p>
       )}
       {!radar.erro && !mostrarSemParadas && (
-        <p role="status" className="mb-3 text-center text-sm text-gray-500">
+        <p role="status" className="mb-3 text-center text-sm text-texto-mudo">
           {radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`}
         </p>
       )}

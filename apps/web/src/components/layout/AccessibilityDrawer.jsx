@@ -27,6 +27,7 @@ export default function AccessibilityDrawer() {
       <button
         type="button"
         aria-label="Fechar menu de acessibilidade"
+        data-contraste-ignorar
         onClick={() => setIsOpen(false)}
         className={`fixed inset-0 z-[9990] bg-black/50 transition-opacity duration-300 ease-in-out ${
           isOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
@@ -34,19 +35,19 @@ export default function AccessibilityDrawer() {
       />
 
       {/* Recorte `fixed` do tamanho da tela: a gaveta fechada fica fora dele e não alarga o layout no celular (ver MobileNavbar). */}
-      <div className="recorte-gaveta pointer-events-none fixed inset-x-0 top-0 z-[9999] h-dvh overflow-hidden">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[9999] h-dvh overflow-hidden">
       <div
-        className={`accessibility-drawer pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-white p-5 text-gray-900 shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 ${
+        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] transform flex-col justify-between overflow-y-auto bg-superficie p-5 text-texto-forte shadow-2xl transition-[transform,visibility] duration-300 ease-in-out sm:p-6 ${
           isOpen ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
         <div>
-          <div className="flex items-center justify-between border-b border-gray-200 pb-4">
+          <div className="flex items-center justify-between border-b border-borda-suave pb-4">
             <h2 className="text-lg font-bold">Acessibilidade</h2>
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Fechar menu de acessibilidade"
-              className="flex cursor-pointer items-center justify-center rounded-full px-3 py-2 font-bold transition-colors hover:bg-gray-200"
+              className="flex cursor-pointer items-center justify-center rounded-full px-3 py-2 font-bold transition-colors hover:bg-superficie-forte"
             >
               <X size={24} strokeWidth={3} />
             </button>
@@ -61,7 +62,7 @@ export default function AccessibilityDrawer() {
                   onClick={decreaseFont}
                   disabled={fontSizeMinimo}
                   aria-label="Diminuir tamanho do texto"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gray-50"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-borda bg-superficie-sutil px-4 py-2.5 text-sm font-bold text-texto transition-all duration-200 hover:bg-superficie-hover cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-superficie-sutil"
                 >
                   Diminuir <AArrowDown size={18} strokeWidth={2.5} />
                 </button>
@@ -70,7 +71,7 @@ export default function AccessibilityDrawer() {
                   onClick={increaseFont}
                   disabled={fontSizeMaximo}
                   aria-label="Aumentar tamanho do texto"
-                  className="flex items-center justify-center gap-2 rounded-xl border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm font-bold text-black transition-all duration-200 hover:bg-gray-300 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gray-50"
+                  className="flex items-center justify-center gap-2 rounded-xl border border-borda bg-superficie-sutil px-4 py-2.5 text-sm font-bold text-texto transition-all duration-200 hover:bg-superficie-hover cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-superficie-sutil"
                 >
                   Aumentar <AArrowUp size={18} strokeWidth={2.5} />
                 </button>
@@ -81,13 +82,13 @@ export default function AccessibilityDrawer() {
             <div>
               <span className="mb-2 block text-sm font-semibold">Esquema de Cores</span>
               <div className="space-y-2">
-                <button onClick={() => setContrast("normal")} className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "normal" ? "border-gray-800 bg-gray-800 text-white shadow-md" : "border-gray-300 bg-gray-100 text-gray-900 hover:border-gray-400 hover:bg-gray-200"}`}>
+                <button onClick={() => setContrast("normal")} aria-pressed={contrastMode === "normal"} className={`w-full cursor-pointer rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "normal" ? "border-gray-800 bg-gray-800 text-white shadow-md" : "border-borda bg-superficie-alt text-texto-forte hover:border-borda-forte hover:bg-superficie-forte"}`}>
                   Padrão (Original)
                 </button>
-                <button onClick={() => setContrast("dark")} className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "dark" ? "border-yellow-500 bg-yellow-400 text-black shadow-md" : "border-black bg-black text-white hover:border-yellow-400 hover:bg-gray-800"}`}>
+                <button onClick={() => setContrast("dark")} aria-pressed={contrastMode === "dark"} data-contraste-ignorar className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "dark" ? "border-yellow-500 bg-yellow-400 text-black shadow-md" : "border-black bg-black text-white hover:border-yellow-400 hover:bg-gray-800"}`}>
                   <Contrast size={16} /> Alto Contraste Escuro
                 </button>
-                <button onClick={() => setContrast("light")} className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "light" ? "border-blue-700 bg-blue-600 text-white shadow-md" : "border-black bg-white text-black shadow-sm hover:border-blue-600 hover:bg-gray-100"}`}>
+                <button onClick={() => setContrast("light")} aria-pressed={contrastMode === "light"} data-contraste-ignorar className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-2.5 font-bold transition-all duration-200 ${contrastMode === "light" ? "border-blue-700 bg-blue-600 text-white shadow-md" : "border-black bg-white text-black shadow-sm hover:border-blue-600 hover:bg-gray-100"}`}>
                   <Contrast size={16} className="rotate-180" /> Alto Contraste Claro
                 </button>
               </div>
@@ -105,7 +106,7 @@ export default function AccessibilityDrawer() {
         onClick={() => setIsOpen((value) => !value)}
         aria-expanded={isOpen}
         aria-label={isOpen ? "Fechar menu de acessibilidade" : "Abrir menu de acessibilidade"}
-        className="font-bold rounded-xl p-2 border-white border-[3px] text-white hover:bg-white/50 transition-all duration-200 ease-out cursor-pointer"
+        className="font-bold rounded-xl p-2 border-sobre-marca border-[3px] text-sobre-marca hover:bg-sobre-marca/50 transition-all duration-200 ease-out cursor-pointer"
         
         title="Acessibilidade"
       >

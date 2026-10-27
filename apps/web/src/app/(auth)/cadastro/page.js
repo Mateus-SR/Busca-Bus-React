@@ -102,13 +102,13 @@ export default function CadastroPage() {
 
   return (
     <AuthBackground>
-      <h1 className="mb-8 text-center text-3xl font-bold text-black">
+      <h1 className="mb-8 text-center text-3xl font-bold text-texto">
         Cadastro
       </h1>
 
       <Link
         href="/"
-        className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-black transition hover:text-red-600"
+        className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-texto transition hover:text-destaque"
       >
         
         ← Voltar
@@ -118,7 +118,7 @@ export default function CadastroPage() {
         <div className="mb-6">
           <label
             htmlFor="nome"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-2 block text-sm font-medium text-texto-suave"
           >
             Nome
           </label>
@@ -131,9 +131,9 @@ export default function CadastroPage() {
               setFormulario({ ...formulario, nome: e.target.value })
             }
             placeholder="exemplo: Luciano Batista"
-            className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+            className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
           />
-          <p id="nome-ajuda" className="mt-1 text-xs text-gray-500">
+          <p id="nome-ajuda" className="mt-1 text-xs text-texto-mudo">
             Até {LIMITE_NOME} caracteres.
           </p>
         </div>
@@ -149,7 +149,7 @@ export default function CadastroPage() {
         <div className="mb-6">
           <label
             htmlFor="email"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-2 block text-sm font-medium text-texto-suave"
           >
             E-mail
           </label>
@@ -161,14 +161,14 @@ export default function CadastroPage() {
               setFormulario({ ...formulario, email: e.target.value })
             }
             placeholder="exemplo: guilherme@calixto.com"
-            className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+            className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
           />
         </div>
 
         <div className="mb-6">
           <label
             htmlFor="password"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-2 block text-sm font-medium text-texto-suave"
           >
             Senha
           </label>
@@ -182,13 +182,13 @@ export default function CadastroPage() {
                 setFormulario({ ...formulario, senha: e.target.value })
               }
               placeholder="senhaSegura123"
-              className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+              className="w-full rounded-md border border-borda px-4 py-3 pr-12 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
             />
 
             <button
               type="button"
               onClick={() => setMostrarSenha(!mostrarSenha)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-texto-mudo hover:text-texto-suave"
             >
               {mostrarSenha ? (
                 <Eye size={22} />
@@ -202,7 +202,7 @@ export default function CadastroPage() {
         <div className="mb-6">
           <label
             htmlFor="confirmarSenha"
-            className="mb-2 block text-sm font-medium text-gray-700"
+            className="mb-2 block text-sm font-medium text-texto-suave"
           >
             Confirmar senha
           </label>
@@ -218,14 +218,14 @@ export default function CadastroPage() {
               })
             }
             placeholder="Digite a senha novamente"
-            className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+            className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
           />
         </div>
 
 
 
         {mensagem && (
-          <p className="mb-5 text-center text-sm font-semibold text-red-600">
+          <p className="mb-5 text-center text-sm font-semibold text-erro">
             {mensagem}
           </p>
         )}
@@ -234,7 +234,7 @@ export default function CadastroPage() {
           <button
             type="submit"
             disabled={cadastrando}
-            className="w-full max-w-md rounded-md bg-red-600 px-4 py-3 text-lg font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full max-w-md rounded-md bg-destaque px-4 py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte disabled:cursor-not-allowed disabled:opacity-60"
           >
             {cadastrando ? "Cadastrando..." : "Cadastrar"}
           </button>

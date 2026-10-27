@@ -16,7 +16,7 @@ export default function MobileNavbar({ links, onLogout }) {
         onClick={() => setAberto((v) => !v)}
         aria-expanded={aberto}
         aria-label={aberto ? "Fechar menu de navegação" : "Abrir menu de navegação"}
-        className={`relative z-[1300] cursor-pointer rounded-lg border border-white/30 bg-white/10 p-2 text-white transition hover:bg-white/20 md:hidden ${
+        className={`relative z-[1300] cursor-pointer rounded-lg border border-sobre-marca/30 bg-sobre-marca/10 p-2 text-sobre-marca transition hover:bg-sobre-marca/20 md:hidden ${
           aberto ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
@@ -27,6 +27,7 @@ export default function MobileNavbar({ links, onLogout }) {
         <button
           type="button"
           aria-label="Fechar menu de navegação"
+          data-contraste-ignorar
           onClick={() => setAberto(false)}
           className="fixed inset-0 z-[1100] bg-black/50 md:hidden"
         />
@@ -37,20 +38,20 @@ export default function MobileNavbar({ links, onLogout }) {
         Por isso o painel é `absolute` dentro de um recorte `fixed` do tamanho da tela: o que sai dele é cortado e
         não conta como largura da página. `invisible` tira o menu fechado da ordem de tabulação e do leitor de tela.
       */}
-      <div className="recorte-gaveta pointer-events-none fixed inset-x-0 top-0 z-[1200] h-dvh overflow-hidden md:hidden">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[1200] h-dvh overflow-hidden md:hidden">
       <nav
         aria-label="Navegação mobile"
-        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] flex-col justify-start bg-sptrans px-5 py-8 text-white shadow-2xl transition-[transform,visibility] duration-300 ${
+        className={`pointer-events-auto absolute top-0 right-0 flex h-full w-[min(80vw,20rem)] flex-col justify-start bg-marca px-5 py-8 text-sobre-marca shadow-2xl transition-[transform,visibility] duration-300 ${
           aberto ? "visible translate-x-0" : "invisible translate-x-full"
         }`}
       >
-        <div className="mb-6 flex items-center justify-between border-b border-white/20 pb-4">
+        <div className="mb-6 flex items-center justify-between border-b border-sobre-marca/20 pb-4">
           <span className="text-lg font-extrabold tracking-wide">Menu</span>
           <button
             type="button"
             aria-label="Fechar menu de navegação"
             onClick={() => setAberto(false)}
-            className="rounded-full border border-white/30 p-2 text-white hover:bg-white/10"
+            className="rounded-full border border-sobre-marca/30 p-2 text-sobre-marca hover:bg-sobre-marca/10"
           >
             <X size={18} />
           </button>
@@ -60,8 +61,8 @@ export default function MobileNavbar({ links, onLogout }) {
           {links.map((grupo) => (
             <div key={grupo.grupo} className="space-y-2">
               {grupo.grupo === "conta" && (
-                <div className="mb-1 border-b border-white/20 pb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+                <div className="mb-1 border-b border-sobre-marca/20 pb-2">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-sobre-marca/70">
                     Minha conta
                   </span>
                 </div>
@@ -77,7 +78,7 @@ export default function MobileNavbar({ links, onLogout }) {
                         setAberto(false);
                         setModalLogoutAberto(true);
                       }}
-                      className="mt-1 w-full rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-left text-base font-bold text-white transition hover:bg-white/20"
+                      className="mt-1 w-full rounded-xl border border-sobre-marca/20 bg-sobre-marca/10 px-4 py-3 text-left text-base font-bold text-sobre-marca transition hover:bg-sobre-marca/20"
                     >
                       {link.label}
                     </button>
@@ -89,7 +90,7 @@ export default function MobileNavbar({ links, onLogout }) {
                     key={link.href}
                     href={link.href}
                     onClick={() => setAberto(false)}
-                    className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-white transition hover:bg-white/10 hover:shadow-inner"
+                    className="block w-full rounded-xl px-4 py-3 text-left text-base font-semibold text-sobre-marca transition hover:bg-sobre-marca/10 hover:shadow-inner"
                   >
                     {link.label}
                   </Link>

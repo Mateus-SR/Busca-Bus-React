@@ -61,19 +61,19 @@ export default function AcessoRapidoForm() {
                     maxLength={6}
                     aria-invalid={erro}
                     aria-describedby={erro ? "codigo-erro" : undefined}
-                    className={`w-full rounded-2xl border border-gray-500 px-5 py-4 text-center text-lg font-roboto-mono font-extrabold sm:px-8 sm:py-5 sm:text-xl ${
-                        erro ? "bg-sptrans/25" : "bg-white"
+                    className={`w-full rounded-2xl border border-borda-enfase px-5 py-4 text-center text-lg font-roboto-mono font-extrabold sm:px-8 sm:py-5 sm:text-xl ${
+                        erro ? "bg-acento/25" : "bg-superficie"
                     }`}
                 />
-                <button type="submit" className="cursor-pointer rounded-2xl bg-sptrans px-5 py-4 text-center text-lg font-bold text-white shadow-lg transition-all duration-200 ease-out hover:bg-red-800 sm:px-8 sm:py-5 sm:text-2xl">
+                <button type="submit" className="cursor-pointer rounded-2xl bg-marca px-5 py-4 text-center text-lg font-bold text-sobre-marca shadow-lg transition-all duration-200 ease-out hover:bg-marca-forte sm:px-8 sm:py-5 sm:text-2xl">
                     Acessar
                 </button>
-                {erro && <p id="codigo-erro" className="text-sm text-red-700">Informe um código com 6 caracteres.</p>}
+                {erro && <p id="codigo-erro" className="text-sm text-erro-forte">Informe um código com 6 caracteres.</p>}
             </form>
             <button
                 type="button"
                 onClick={() => setAjudaAberta(true)}
-                className="mx-auto mt-4 flex cursor-pointer items-center gap-1 text-sm font-semibold text-sptrans underline-offset-2 transition hover:text-red-800 hover:underline"
+                className="mx-auto mt-4 flex cursor-pointer items-center gap-1 text-sm font-semibold text-acento underline-offset-2 transition hover:text-erro-intenso hover:underline"
             >
                 <Info size={16} aria-hidden="true" />
                 O que é esse código?
@@ -86,7 +86,7 @@ export default function AcessoRapidoForm() {
                 role="presentation"
             >
                 <div
-                    className="relative w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-6 text-left text-slate-900 shadow-2xl sm:p-8"
+                    className="relative w-full max-w-lg rounded-2xl border border-borda-suave bg-superficie p-6 text-left text-slate-900 shadow-2xl sm:p-8"
                     onClick={(evento) => evento.stopPropagation()}
                     role="dialog"
                     aria-modal="true"
@@ -97,37 +97,37 @@ export default function AcessoRapidoForm() {
                         type="button"
                         onClick={() => setAjudaAberta(false)}
                         aria-label="Fechar explicação sobre o código"
-                        className="absolute top-4 right-4 cursor-pointer rounded-full p-1 text-gray-600 transition hover:bg-gray-100 hover:text-black"
+                        className="absolute top-4 right-4 cursor-pointer rounded-full p-1 text-texto-secundario transition hover:bg-superficie-alt hover:text-texto"
                     >
                         <X size={22} />
                     </button>
 
                     <div className="pr-8">
-                        <p className="text-sm font-bold tracking-[0.16em] text-sptrans uppercase">
+                        <p className="text-sm font-bold tracking-[0.16em] text-acento uppercase">
                             Acesso rápido
                         </p>
                         <h2 id="ajuda-codigo-titulo" className="mt-1 text-2xl font-extrabold">
                             O que é esse código?
                         </h2>
-                        <p className="mt-3 leading-6 text-gray-700">
+                        <p className="mt-3 leading-6 text-texto-suave">
                             O código é um identificador único de 6 caracteres que abre uma
                             exibição de ônibus configurada por você ou compartilhada por
                             outra pessoa.
                         </p>
                     </div>
 
-                    <ol className="mt-5 space-y-4 text-sm text-gray-700">
+                    <ol className="mt-5 space-y-4 text-sm text-texto-suave">
                         <li className="flex gap-3">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sptrans font-bold text-white">1</span>
-                            <span><strong className="text-gray-900">Recebeu um código?</strong> Digite-o no campo da página inicial para acessar os horários, atrasos e ônibus monitorados.</span>
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca font-bold text-sobre-marca">1</span>
+                            <span><strong className="text-texto-forte">Recebeu um código?</strong> Digite-o no campo da página inicial para acessar os horários, atrasos e ônibus monitorados.</span>
                         </li>
                         <li className="flex gap-3">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sptrans font-bold text-white">2</span>
-                            <span><strong className="text-gray-900">Ainda não tem um?</strong> Crie sua própria exibição informando os pontos de ônibus que deseja acompanhar.</span>
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca font-bold text-sobre-marca">2</span>
+                            <span><strong className="text-texto-forte">Ainda não tem um?</strong> Crie sua própria exibição informando os pontos de ônibus que deseja acompanhar.</span>
                         </li>
                         <li className="flex gap-3">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sptrans font-bold text-white">3</span>
-                            <span><strong className="text-gray-900">Quer compartilhar?</strong> Envie o código da sua exibição para que outras pessoas também possam acessá-la.</span>
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-marca font-bold text-sobre-marca">3</span>
+                            <span><strong className="text-texto-forte">Quer compartilhar?</strong> Envie o código da sua exibição para que outras pessoas também possam acessá-la.</span>
                         </li>
                     </ol>
 
@@ -135,14 +135,14 @@ export default function AcessoRapidoForm() {
                         <button
                             type="button"
                             onClick={() => setAjudaAberta(false)}
-                            className="rounded-xl border border-gray-300 px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50"
+                            className="rounded-xl border border-borda px-4 py-3 text-sm font-bold text-texto-suave transition hover:bg-superficie-sutil"
                         >
                             Entendi
                         </button>
                         <button
                             type="button"
                             onClick={() => router.push("/configuracao")}
-                            className="rounded-xl bg-sptrans px-4 py-3 text-sm font-bold text-white transition hover:bg-red-800"
+                            className="rounded-xl bg-marca px-4 py-3 text-sm font-bold text-sobre-destaque transition hover:bg-marca-forte"
                         >
                             Criar minha exibição
                         </button>
