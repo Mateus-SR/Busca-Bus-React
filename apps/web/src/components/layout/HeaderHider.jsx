@@ -28,7 +28,7 @@ export default function HeaderHider({ header }) {
 				transform: headerOculto ? "translateY(-100%)" : "translateY(0)",
 				transition: "transform 500ms ease-in-out, margin-bottom 500ms ease-in-out",
 			}}
-			className="relative z-[1200]"
+			className="sticky top-0 z-[1200]"
 		>
 			{header}
 			{conteudoExtra}
