@@ -44,7 +44,12 @@ export default function LoginPage() {
     <AuthBackground>
       <h1 className="mb-8 text-center text-3xl font-bold text-black">Login</h1>
       <Link href="/" className="absolute top-12 left-6 text-sm text-black">Voltar</Link>
-      <button type="button" onClick={() => setMensagem("Nesta versão demonstrativa, o reset de senha é simulado.")} className="absolute top-12 right-6 text-sm text-black">Esqueci a senha...</button>
+      <Link
+        href="/reset-senha"
+        className="absolute top-12 right-6 text-sm text-black underline-offset-2 transition hover:text-red-600 hover:underline"
+      >
+        Esqueci minha senha
+      </Link>
       <form onSubmit={entrar}>
         <div className="mb-6">
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-700">E-mail</label>
