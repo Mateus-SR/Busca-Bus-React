@@ -33,19 +33,15 @@ export function AccessibilityProvider({ children }) {
     // Antes da leitura, o estado ainda é o padrão: aplicar/gravar agora apagaria a preferência salva.
     if (!preferenciasLidas.current) return;
 
+    // Sem atributo = normal. O mesmo mapeamento roda no script do layout.js, antes da primeira pintura.
     const root = document.documentElement;
 
-    // Gerenciar tamanhos de fonte
-    root.classList.remove('text-normal', 'text-large', 'text-xlarge');
-    root.classList.add(`text-${fontSize}`);
+    if (fontSize === 'normal') delete root.dataset.fonte;
+    else root.dataset.fonte = fontSize;
 
-    // Gerenciar modos de contraste
-    root.classList.remove('high-contrast-dark', 'high-contrast-light');
-    if (contrastMode === 'dark') {
-      root.classList.add('high-contrast-dark');
-    } else if (contrastMode === 'light') {
-      root.classList.add('high-contrast-light');
-    }
+    if (contrastMode === 'dark') root.dataset.contraste = 'escuro';
+    else if (contrastMode === 'light') root.dataset.contraste = 'claro';
+    else delete root.dataset.contraste;
     localStorage.setItem('accessibilityPreferences', JSON.stringify({ fontSize, contrastMode }));
   }, [fontSize, contrastMode]);
 

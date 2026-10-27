@@ -4,6 +4,10 @@
 
 @import "tailwindcss";
 
+/* Variante `contraste:` — vale quando o <html> tem data-contraste (alto contraste escuro ou claro).
+   Ex.: `contraste:hidden` esconde a foto de fundo no alto contraste. */
+@custom-variant contraste (&:where([data-contraste] *));
+
 @theme {
   --color-sptrans: oklch(0.6284 0.257 28.22);
   /* As fontes vêm do next/font (layout.js), que define --fonte-inter e --fonte-roboto-mono no <html>. */
@@ -70,9 +74,88 @@
   }
 }
 
+/* ============================================================
+   TOKENS SEMÂNTICOS
+   Os componentes usam papéis (bg-superficie, text-texto-suave, border-borda...) e não cores fixas.
+   Os valores abaixo são os do modo normal e equivalem exatamente às cores usadas antes (paleta do
+   Tailwind). O alto contraste só redefine estas variáveis (blocos html[data-contraste] mais abaixo).
+   `static`: as variáveis são sempre emitidas, mesmo as lidas só por CSS (var(--color-...)).
+   ============================================================ */
+@theme static {
+  /* Superfícies */
+  --color-superficie: #fff;
+  --color-superficie-sutil: oklch(98.5% 0.002 247.839);
+  --color-superficie-alt: oklch(96.7% 0.003 264.542);
+  --color-superficie-forte: oklch(92.8% 0.006 264.531);
+  --color-superficie-hover: oklch(87.2% 0.01 258.338);
+  --color-superficie-ativa: oklch(70.7% 0.022 261.325);
+
+  /* Texto */
+  --color-texto-base: #171717;
+  --color-texto: #000;
+  --color-texto-maximo: oklch(13% 0.028 261.692);
+  --color-texto-forte: oklch(21% 0.034 264.665);
+  --color-texto-suave: oklch(37.3% 0.034 259.733);
+  --color-texto-secundario: oklch(44.6% 0.03 256.802);
+  --color-texto-mudo: oklch(55.1% 0.027 264.364);
+  --color-texto-desabilitado: oklch(70.7% 0.022 261.325);
+
+  /* Bordas */
+  --color-borda: oklch(87.2% 0.01 258.338);
+  --color-borda-suave: oklch(92.8% 0.006 264.531);
+  --color-borda-forte: oklch(70.7% 0.022 261.325);
+  --color-borda-enfase: oklch(55.1% 0.027 264.364);
+
+  /* Marca (superfícies na cor da marca: cabeçalho, menu mobile, rodapé fixo, botões de marca) */
+  --color-marca: oklch(0.6284 0.257 28.22);
+  --color-marca-forte: oklch(44.4% 0.177 26.899);
+  --color-sobre-marca: #fff;
+
+  /* Acento (texto, bordas, anéis e tons decorativos na cor da marca; no alto contraste vira a cor de links) */
+  --color-acento: oklch(0.6284 0.257 28.22);
+  --color-acento-forte: oklch(44.4% 0.177 26.899);
+  --color-foco: oklch(63.7% 0.237 25.331);
+
+  /* Destaque (botão de ação principal) */
+  --color-destaque: oklch(57.7% 0.245 27.325);
+  --color-destaque-forte: oklch(50.5% 0.213 27.518);
+  --color-sobre-destaque: #fff;
+
+  /* Feedback */
+  --color-erro: oklch(57.7% 0.245 27.325);
+  --color-erro-forte: oklch(50.5% 0.213 27.518);
+  --color-erro-suave: oklch(63.7% 0.237 25.331);
+  --color-erro-intenso: oklch(44.4% 0.177 26.899);
+  --color-sucesso: oklch(62.7% 0.194 149.214);
+  --color-sobre-sucesso: #fff;
+  --color-info: oklch(54.6% 0.245 262.881);
+  --color-info-forte: oklch(42.4% 0.199 265.638);
+
+  /* Selo de status (StatusBadge): no alto contraste o fundo fica mais forte e o texto preto */
+  --color-status-ok-fundo: oklch(96.2% 0.044 156.743);
+  --color-status-ok-texto: oklch(52.7% 0.154 150.069);
+  --color-status-ok-ping: oklch(79.2% 0.209 151.711);
+  --color-status-ok-ponto: oklch(62.7% 0.194 149.214);
+  --color-status-atraso-fundo: oklch(93.6% 0.032 17.717);
+  --color-status-atraso-texto: oklch(50.5% 0.213 27.518);
+  --color-status-atraso-ping: oklch(70.4% 0.191 22.216);
+  --color-status-atraso-ponto: oklch(57.7% 0.245 27.325);
+  --color-status-adiantado-fundo: oklch(93.2% 0.032 255.585);
+  --color-status-adiantado-texto: oklch(48.8% 0.243 264.376);
+  --color-status-adiantado-ping: oklch(70.7% 0.165 254.624);
+  --color-status-adiantado-ponto: oklch(54.6% 0.245 262.881);
+
+  /* Mapa: balão do ônibus e tooltips */
+  --color-balao-fundo: #fff;
+  --color-balao-borda: #b91c1c;
+  --color-balao-texto: #b91c1c;
+  --color-tooltip-fundo: #fff;
+  --color-tooltip-texto: #111827;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-superficie);
+  --foreground: var(--color-texto-base);
   --black: #000000;
   --white: #ffffff;
   --bg: #ffffff;
@@ -87,95 +170,221 @@ body {
   overflow-x: hidden;
 }
 
-/* -- COMPONENTES CUSTOMIZADOS -- */
-.bus-marker-wrap {
-  background: transparent;
+/* ============================================================
+   ACESSIBILIDADE
+   O AccessibilityContext (e o script do layout.js, antes da pintura) grava data-fonte e data-contraste
+   no <html>. Sem atributo = normal.
+   ============================================================ */
+
+/* Tamanho do texto */
+html[data-fonte="large"] { --accessibility-font-size: 18px; }
+html[data-fonte="xlarge"] { --accessibility-font-size: 20px; }
+
+/* Alto contraste escuro: preto, branco e amarelo */
+html[data-contraste="escuro"] {
+  /* Superfícies */
+  --color-superficie: #000;
+  --color-superficie-sutil: #000;
+  --color-superficie-alt: #000;
+  --color-superficie-forte: #000;
+  --color-superficie-hover: #000;
+  --color-superficie-ativa: #000;
+
+  /* Texto */
+  --color-texto-base: #fff;
+  --color-texto: #fff;
+  --color-texto-maximo: #fff;
+  --color-texto-forte: #fff;
+  --color-texto-suave: #fff;
+  --color-texto-secundario: #e5e7eb;
+  --color-texto-mudo: #d1d5db;
+  --color-texto-desabilitado: #9ca3af;
+
+  /* Bordas */
+  --color-borda: #fff;
+  --color-borda-suave: #fff;
+  --color-borda-forte: #fff;
+  --color-borda-enfase: #fff;
+
+  /* Marca (superfícies na cor da marca: cabeçalho, menu mobile, rodapé fixo, botões de marca) */
+  --color-marca: #000;
+  --color-marca-forte: #000;
+  --color-sobre-marca: #fff;
+
+  /* Acento (texto, bordas, anéis e tons decorativos na cor da marca; no alto contraste vira a cor de links) */
+  --color-acento: #fbbf24;
+  --color-acento-forte: #fde047;
+  --color-foco: #fbbf24;
+
+  /* Destaque (botão de ação principal) */
+  --color-destaque: #dc2626;
+  --color-destaque-forte: #b91c1c;
+  --color-sobre-destaque: #fff;
+
+  /* Feedback */
+  --color-erro: #fca5a5;
+  --color-erro-forte: #fca5a5;
+  --color-erro-suave: #fca5a5;
+  --color-erro-intenso: #fca5a5;
+  --color-sucesso: #86efac;
+  --color-sobre-sucesso: #000;
+  --color-info: #93c5fd;
+  --color-info-forte: #bfdbfe;
+
+  /* Selo de status (StatusBadge): no alto contraste o fundo fica mais forte e o texto preto */
+  --color-status-ok-fundo: #86efac;
+  --color-status-ok-texto: #000;
+  --color-status-ok-ping: #166534;
+  --color-status-ok-ponto: #14532d;
+  --color-status-atraso-fundo: #fca5a5;
+  --color-status-atraso-texto: #000;
+  --color-status-atraso-ping: #7f1d1d;
+  --color-status-atraso-ponto: #450a0a;
+  --color-status-adiantado-fundo: #93c5fd;
+  --color-status-adiantado-texto: #000;
+  --color-status-adiantado-ping: #1e40af;
+  --color-status-adiantado-ponto: #1e3a8a;
+
+  /* Mapa: balão do ônibus e tooltips */
+  --color-balao-fundo: #000;
+  --color-balao-borda: #fff;
+  --color-balao-texto: #fff;
+  --color-tooltip-fundo: #000;
+  --color-tooltip-texto: #fff;
+}
+
+/* Alto contraste claro: branco, preto e azul */
+html[data-contraste="claro"] {
+  /* Superfícies */
+  --color-superficie: #fff;
+  --color-superficie-sutil: #fff;
+  --color-superficie-alt: #fff;
+  --color-superficie-forte: #fff;
+  --color-superficie-hover: #fff;
+  --color-superficie-ativa: #fff;
+
+  /* Texto */
+  --color-texto-base: #000;
+  --color-texto: #000;
+  --color-texto-maximo: #000;
+  --color-texto-forte: #000;
+  --color-texto-suave: #000;
+  --color-texto-secundario: #1f2937;
+  --color-texto-mudo: #374151;
+  --color-texto-desabilitado: #6b7280;
+
+  /* Bordas */
+  --color-borda: #000;
+  --color-borda-suave: #000;
+  --color-borda-forte: #000;
+  --color-borda-enfase: #000;
+
+  /* Marca (superfícies na cor da marca: cabeçalho, menu mobile, rodapé fixo, botões de marca) */
+  --color-marca: #fff;
+  --color-marca-forte: #fff;
+  --color-sobre-marca: #000;
+
+  /* Acento (texto, bordas, anéis e tons decorativos na cor da marca; no alto contraste vira a cor de links) */
+  --color-acento: #0000ff;
+  --color-acento-forte: #00008b;
+  --color-foco: #0000ff;
+
+  /* Destaque (botão de ação principal) */
+  --color-destaque: #b91c1c;
+  --color-destaque-forte: #7f1d1d;
+  --color-sobre-destaque: #fff;
+
+  /* Feedback */
+  --color-erro: #b91c1c;
+  --color-erro-forte: #991b1b;
+  --color-erro-suave: #b91c1c;
+  --color-erro-intenso: #7f1d1d;
+  --color-sucesso: #166534;
+  --color-sobre-sucesso: #fff;
+  --color-info: #1e40af;
+  --color-info-forte: #1e3a8a;
+
+  /* Selo de status (StatusBadge): no alto contraste o fundo fica mais forte e o texto preto */
+  --color-status-ok-texto: #000;
+  --color-status-atraso-texto: #000;
+  --color-status-adiantado-texto: #000;
+
+  /* Mapa: balão do ônibus e tooltips */
+  --color-balao-fundo: #fff;
+  --color-balao-borda: #000;
+  --color-balao-texto: #000;
+  --color-tooltip-fundo: #fff;
+  --color-tooltip-texto: #000;
+}
+
+html[data-contraste="claro"] body {
+  font-weight: 600;
+}
+
+/* Visual uniforme de links, botões e campos no alto contraste (os demais papéis vêm dos tokens).
+   Tudo dentro de :where() tem especificidade zero; mesmo assim, por ficarem fora de qualquer @layer,
+   estas regras vencem os utilitários do Tailwind, que é o que garante o visual uniforme.
+   Ficam de fora: o botão de ação (bg-destaque, tratado abaixo) e o que tiver data-contraste-ignorar
+   (cortinas de fundo dos menus, logo e amostras de cor do drawer). */
+:where(html[data-contraste]) :where(a, button, input, select, textarea):where(:not(.bg-destaque, [data-contraste-ignorar], .leaflet-control-attribution a)) {
+  background-color: var(--color-superficie);
+  color: var(--color-acento);
+  border: 2px solid var(--color-acento);
+}
+
+:where(html[data-contraste]) :where(a, button):where(:not(.bg-destaque, [data-contraste-ignorar], .leaflet-control-attribution a)):hover {
+  background-color: var(--color-acento);
+  color: var(--color-superficie);
+}
+
+/* Opção escolhida (aria-pressed) continua distinguível */
+html[data-contraste] button[aria-pressed="true"]:not([data-contraste-ignorar]) {
+  background-color: var(--color-acento);
+  color: var(--color-superficie);
+}
+
+/* Botão de ação: continua vermelho, só ganha borda */
+html[data-contraste] :is(a, button).bg-destaque {
+  border: 2px solid var(--color-borda);
+}
+
+/* Link no meio de texto: cor de destaque e sublinhado grosso, sem caixa */
+html[data-contraste] p a {
+  background-color: transparent;
   border: 0;
+  color: var(--color-acento);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 
-.bus-marker-icone {
-  display: block;
-  position: absolute;
-  right: 50%;
-  bottom: 0;
-  transform: translateX(50%);
-  object-fit: contain;
+html[data-contraste] ::placeholder {
+  color: var(--color-texto-mudo);
+  opacity: 1;
 }
 
-/* Balão do ônibus: branco com borda vermelha fixa; a cor do ponto aparece só no ícone e na bolinha numerada. */
-.bus-marker-card {
-  position: absolute;
-  bottom: calc(100% + 5px);
-  left: 50%;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  transform: translateX(-50%);
-  border: 2px solid #b91c1c;
-  border-radius: 999px;
-  background: #ffffff;
-  color: #b91c1c;
-  padding: 2px 7px;
-  font: 700 13px var(--font-roboto-mono);
-  white-space: nowrap;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
+/* Tabelas: cabeçalho e linha sob o mouse em destaque */
+html[data-contraste] thead tr,
+html[data-contraste] tbody tr:hover {
+  background-color: var(--color-acento);
+  color: var(--color-superficie);
 }
 
-.bus-marker-card:has(.bus-marker-ponto) {
-  padding-left: 2px;
+html[data-contraste] thead th,
+html[data-contraste] tbody tr:hover td {
+  color: var(--color-superficie);
 }
 
-/* Ponta do balão apontando para o ônibus; herda fundo e borda do balão. */
-.bus-marker-card::after {
-  content: "";
-  position: absolute;
-  bottom: -5px;
-  left: 50%;
-  width: 7px;
-  height: 7px;
-  transform: translateX(-50%) rotate(45deg);
-  border: solid;
-  border-width: 0 2px 2px 0;
-  border-color: inherit;
-  background: inherit;
-}
-
-.bus-marker-ponto {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 15px;
-  min-height: 15px;
-  padding: 0 4px; 
-  border-radius: 999px; 
-  color: #ffffff;
-  font: 700 16px var(--font-roboto-mono);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.stop-marker-wrap {
-  background: transparent;
-  border: 0;
-}
-
-.stop-marker-pin {
-  display: block;
-  width: 26px;
-  height: 26px;
-  border: 3px solid;
-  border-radius: 50% 50% 50% 0;
-  background: #ffffff;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 6px rgb(0 0 0 / 30%);
-}
-
+/* ============================================================
+   MAPA: regras que estilizam DOM criado pelo Leaflet (não dá para pôr classes nesses elementos).
+   Os marcadores que nós montamos (balão do ônibus, pino da parada) usam classes do Tailwind em BusMap.jsx.
+   ============================================================ */
 .bus-tooltip,
 .leaflet-tooltip {
-  border: 3px solid #111827;
+  border: 3px solid var(--color-tooltip-texto);
   border-radius: 999px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--color-tooltip-fundo);
+  color: var(--color-tooltip-texto);
   font: 700 13px var(--font-roboto-mono);
   box-shadow: 0 2px 6px rgb(0 0 0 / 25%);
 }
@@ -186,17 +395,6 @@ body {
   line-height: 1.35;
 }
 
-.stop-tooltip-conteudo {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 150px;
-  max-width: 200px;
-  white-space: normal;
-  text-align: center;
-}
-
 .leaflet-control-zoom {
   position: absolute !important;
   top: 4.75rem !important;
@@ -205,206 +403,4 @@ body {
   margin: 0 !important;
   border: 0 !important;
   box-shadow: 0 6px 18px rgb(0 0 0 / 18%) !important;
-}
-
-/* -- REGRAS DE ACESSIBILIDADE -- */
-
-/* Tamanho da Fonte */
-html.text-normal { --accessibility-font-size: 16px; }
-html.text-large { --accessibility-font-size: 18px; }
-html.text-xlarge { --accessibility-font-size: 20px; }
-
-/* 1. ALTO CONTRASTE ESCURO */
-html.high-contrast-dark,
-html.high-contrast-dark body,
-html.high-contrast-dark main,
-html.high-contrast-dark section,
-html.high-contrast-dark div,
-html.high-contrast-dark header,
-html.high-contrast-dark nav,
-html.high-contrast-dark footer {
-  background-color: #000000 !important;
-  background-image: none !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-  border-color: #ffffff !important;
-}
-
-html.high-contrast-dark p, html.high-contrast-dark span, html.high-contrast-dark h1, html.high-contrast-dark h2, html.high-contrast-dark h3, html.high-contrast-dark h4, html.high-contrast-dark h5, html.high-contrast-dark h6, html.high-contrast-dark label, html.high-contrast-dark li, html.high-contrast-dark td, html.high-contrast-dark th {
-  color: #ffffff !important;
-}
-
-html.high-contrast-dark a,
-html.high-contrast-dark button:not([class*="bg-red"]), 
-html.high-contrast-dark input,
-html.high-contrast-dark select,
-html.high-contrast-dark textarea {
-  background-color: #000000 !important;
-  color: #fbbf24 !important;
-  border: 2px solid #fbbf24 !important;
-}
-
-html.high-contrast-dark button[class*="bg-red"] {
-  background-color: #dc2626 !important;
-  color: #ffffff !important;
-  border: 2px solid #ffffff !important;
-}
-
-html.high-contrast-dark a:hover,
-html.high-contrast-dark button:not([class*="bg-red"]):hover {
-  background-color: #fbbf24 !important;
-  color: #000000 !important;
-}
-
-html.high-contrast-dark .status-badge {
-  color: #000000 !important;
-  border: 2px solid #ffffff !important;
-  font-weight: 800 !important;
-}
-
-html.high-contrast-dark .status-badge-ping,
-html.high-contrast-dark .status-badge-dot {
-  border: 1px solid #000000 !important;
-}
-
-html.high-contrast-dark .status-badge.bg-green-100 {
-  background-color: #86efac !important;
-}
-
-html.high-contrast-dark .status-badge.bg-yellow-100 {
-  background-color: #fde047 !important;
-}
-
-html.high-contrast-dark .status-badge.bg-blue-100 {
-  background-color: #93c5fd !important;
-}
-
-html.high-contrast-dark .status-badge-ping.bg-green-400 {
-  background-color: #166534 !important;
-}
-
-html.high-contrast-dark .status-badge-ping.bg-yellow-400 {
-  background-color: #854d0e !important;
-}
-
-html.high-contrast-dark .status-badge-ping.bg-blue-400 {
-  background-color: #1e40af !important;
-}
-
-html.high-contrast-dark .status-badge-dot.bg-green-600 {
-  background-color: #14532d !important;
-}
-
-html.high-contrast-dark .status-badge-dot.bg-yellow-600 {
-  background-color: #713f12 !important;
-}
-
-html.high-contrast-dark .status-badge-dot.bg-blue-600 {
-  background-color: #1e3a8a !important;
-}
-
-html.high-contrast-dark table thead tr {
-  background-color: #fbbf24 !important;
-  color: #000000 !important;
-}
-
-html.high-contrast-dark table thead th {
-  color: #000000 !important;
-  border-color: #000000 !important;
-}
-
-html.high-contrast-dark table tbody tr:hover {
-  background-color: #fbbf24 !important;
-  color: #000000 !important;
-}
-
-html.high-contrast-dark table tbody tr:hover td {
-  color: #000000 !important;
-  border-color: #000000 !important;
-}
-
-html.high-contrast-dark .bus-marker-card {
-  background-color: #000000 !important;
-  border-color: #ffffff !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-}
-
-html.high-contrast-dark .bus-marker-ponto {
-  color: #ffffff !important;
-  border: 1px solid #ffffff;
-}
-
-/* 2. ALTO CONTRASTE CLARO */
-html.high-contrast-light,
-html.high-contrast-light body,
-html.high-contrast-light main,
-html.high-contrast-light section,
-html.high-contrast-light div,
-html.high-contrast-light header,
-html.high-contrast-light nav,
-html.high-contrast-light footer {
-  background-color: #ffffff !important;
-  background-image: none !important;
-  color: #000000 !important;
-  box-shadow: none !important;
-  border-color: #000000 !important;
-}
-
-html.high-contrast-light p, html.high-contrast-light span, html.high-contrast-light h1, html.high-contrast-light h2, html.high-contrast-light h3, html.high-contrast-light h4, html.high-contrast-light h5, html.high-contrast-light h6, html.high-contrast-light label, html.high-contrast-light li, html.high-contrast-light td, html.high-contrast-light th {
-  color: #000000 !important;
-  font-weight: 600 !important;
-}
-
-html.high-contrast-light a,
-html.high-contrast-light button:not([class*="bg-red"]), 
-html.high-contrast-light input,
-html.high-contrast-light select,
-html.high-contrast-light textarea {
-  background-color: #ffffff !important;
-  color: #0000ff !important;
-  border: 2px solid #000000 !important;
-  font-weight: bold !important;
-}
-
-html.high-contrast-light button[class*="bg-red"] {
-  background-color: #b91c1c !important;
-  color: #ffffff !important;
-  border: 2px solid #000000 !important;
-}
-
-html.high-contrast-light a:hover,
-html.high-contrast-light button:not([class*="bg-red"]):hover {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-/* Recorte das gavetas (menu e acessibilidade): só contém o painel, não pode virar uma cortina de tela cheia */
-html.high-contrast-dark .recorte-gaveta,
-html.high-contrast-light .recorte-gaveta {
-  background-color: transparent !important;
-}
-
-html.high-contrast-dark .accessibility-drawer button:hover {
-  background-color: #fbbf24 !important;
-  color: #000000 !important;
-  border-color: #fbbf24 !important;
-}
-
-html.high-contrast-light .accessibility-drawer button:hover {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-  border-color: #000000 !important;
-}
-
-html.high-contrast-light .bus-marker-card {
-  background-color: #ffffff !important;
-  border-color: #000000 !important;
-  color: #000000 !important;
-  box-shadow: none !important;
-}
-
-html.high-contrast-light .bus-marker-ponto {
-  color: #ffffff !important;
-  border: 1px solid #000000;
 }
