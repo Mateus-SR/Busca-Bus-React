@@ -17,7 +17,6 @@ export const CORES_EVENTO = {
 // Datas
 
 export function inicioDaSemana(data) {
-	// getDay(): 0 = domingo ... 6 = sábado. Voltar getDay() dias cai no domingo.
 	return new Date(
 		data.getFullYear(),
 		data.getMonth(),
@@ -121,4 +120,43 @@ export function distribuirColunas(eventosOrdenados) {
 	if (grupo.length > 0) fecharGrupo();
 
 	return resultado;
+}
+
+// Calendário mensal
+
+export const primeiroDiaDoMes = (data) =>
+	new Date(data.getFullYear(), data.getMonth(), 1);
+
+export const mesDaSemana = (inicioSemana) =>
+	primeiroDiaDoMes(adicionarDias(inicioSemana, 3));
+
+export function diasDoMes(mes) {
+	const inicio = inicioDaSemana(primeiroDiaDoMes(mes));
+	return Array.from({ length: 42 }, (_, i) => adicionarDias(inicio, i));
+}
+
+export const mesExtenso = (data) =>
+	capitalizar(
+		data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+	);
+
+export const dataLonga = (data) =>
+	data.toLocaleDateString('pt-BR', {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	});
+
+export const chaveDoDia = (data) =>
+	`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+
+export function coresPorDia(eventos) {
+	const mapa = new Map();
+	for (const evento of eventos) {
+		const chave = chaveDoDia(evento.inicio);
+		const cores = mapa.get(chave) ?? [];
+		if (!cores.includes(evento.cor)) cores.push(evento.cor);
+		mapa.set(chave, cores);
+	}
+	return mapa;
 }
