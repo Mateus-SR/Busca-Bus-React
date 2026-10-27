@@ -43,7 +43,7 @@ function RelogioAba() {
 	}, []);
 
 	return (
-		<section className="absolute left-3 top-16 z-40 hidden flex-col items-start gap-2 sm:left-6 lg:flex">
+		<section className="absolute top-16 left-0 z-40 hidden flex-col items-start gap-0 lg:flex">
 			<button
 				type="button"
 				onClick={() => setHeaderOculto((v) => !v)}

@@ -16,6 +16,6 @@
     "start:server": "npm run start --workspace apps/server"
   },
   "dependencies": {
-    "mongoose": "^9.11.3"
+    "mongoose": "^9.11.4"
   }
 }

@@ -10,6 +10,7 @@ const LINKS_NAV = [
   { href: "/", label: "Início" },
   { href: "/mapa", label: "Acessar Mapa" },
   { href: "/exibicao", label: "Acessar Exibição" },
+  { href: "/calendario", label: "Calendário" },
   { href: "/sobre", label: "Sobre" },
 ];
 
@@ -37,33 +38,48 @@ export default function Header() {
 
   return (
     <header className="relative z-[1200] bg-sptrans text-white">
-      <div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2.5 sm:px-4 md:grid-cols-[1fr_2fr_1fr]">
-        
+      <div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-4 px-3 py-2.5 sm:px-5 md:grid-cols-[minmax(160px,1fr)_auto_minmax(220px,1fr)] md:gap-6">
         {/* Logo */}
-        <Link href="/" className="text-sm font-extrabold leading-tight tracking-[0.2px] sm:text-base" aria-label="Página inicial Busca Bus">
+        <Link
+          href="/"
+          className="justify-self-start text-sm font-extrabold leading-tight tracking-[0.2px] sm:text-base"
+          aria-label="Página inicial Busca Bus"
+        >
           Busca Bus
-          <br/> Monitoramento
+          <br /> Monitoramento
         </Link>
 
         {/* Navegação principal */}
-        <nav aria-label="Navegação principal" className="hidden md:flex justify-self-center gap-3.5">
+        <nav
+          aria-label="Navegação principal"
+          className="hidden items-center justify-self-center gap-1 md:flex lg:gap-2"
+        >
           {LINKS_NAV.map((link) => (
-            <Link key={link.href} href={link.href} className="font-semibold text-base py-2.5 px-3 rounded-lg opacity-90 hover:opacity-100 transition-all duration-200 ease-out">
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-lg px-2.5 py-2.5 text-center text-sm font-semibold whitespace-nowrap opacity-90 transition-all duration-200 ease-out hover:bg-white/10 hover:opacity-100 lg:px-3 lg:text-base"
+            >
               {link.label}
             </Link>
           ))}
         </nav>
 
         {/* Ações à direita */}
-        <div className="justify-self-end flex items-center gap-2.5">
-          
+        <div className="flex items-center justify-self-end gap-2">
           {/* Autenticação ou Menu do Usuário */}
           {carregando ? null : !estaLogado ? (
-            <div className="hidden md:flex gap-2.5 items-center">
-              <Link href="/login" className="border-white border-[3px] font-bold rounded-xl px-3.5 py-2 bg-white text-black hover:bg-white/80 transition-all duration-200 ease-out">
+            <div className="hidden items-center gap-2 md:flex">
+              <Link
+                href="/login"
+                className="rounded-xl border-[3px] border-white bg-white px-3 py-2 text-sm font-bold text-black transition-all duration-200 ease-out hover:bg-white/80 lg:px-3.5 lg:text-base"
+              >
                 Entrar
               </Link>
-              <Link href="/cadastro" className="font-bold rounded-xl px-3.5 py-2 border-white border-[3px] text-white hover:bg-white/50 transition-all duration-200 ease-out">
+              <Link
+                href="/cadastro"
+                className="rounded-xl border-[3px] border-white px-3 py-2 text-sm font-bold text-white transition-all duration-200 ease-out hover:bg-white/50 lg:px-3.5 lg:text-base"
+              >
                 Criar conta
               </Link>
             </div>
@@ -71,9 +87,8 @@ export default function Header() {
             <UserMenu />
           )}
 
-          {/* Gaveta de Acessibilidade posicionada logo após o fluxo de login/conta */}
           <AccessibilityDrawer />
-          
+
           <MobileNavbar links={linksMobile} onLogout={logout} />
         </div>
       </div>
