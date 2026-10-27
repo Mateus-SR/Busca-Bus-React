@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import useMontado from "@/hooks/useMontado";
 
 export default function ConfirmLogoutModal({ aberto, onClose, onConfirm }) {
+  const montado = useMontado();
+
   useEffect(() => {
     if (!aberto) return;
 
@@ -22,9 +26,10 @@ export default function ConfirmLogoutModal({ aberto, onClose, onConfirm }) {
     };
   }, [aberto, onClose]);
 
-  if (!aberto) return null;
+  if (!aberto || !montado) return null;
 
-  return (
+  // Portal para o <body>: dentro do header (que tem `transform`), o `fixed` ficava preso ao header e o modal saía cortado.
+  return createPortal(
     <div
       className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-[1px]"
       onClick={onClose}
@@ -73,6 +78,7 @@ export default function ConfirmLogoutModal({ aberto, onClose, onConfirm }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
