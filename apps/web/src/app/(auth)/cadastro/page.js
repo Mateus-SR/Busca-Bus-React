@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
+import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { validarEmail, validarSenha } from "@busca-bus/core";
-import { ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 const LIMITE_NOME = 25;
 
@@ -16,6 +17,8 @@ export default function CadastroPage() {
 
   const [formulario, setFormulario] = useState({
     nome: "",
+    instituicao: "",
+    semInstituicao: false,
     email: "",
     senha: "",
     confirmarSenha: "",
@@ -134,6 +137,14 @@ export default function CadastroPage() {
             Até {LIMITE_NOME} caracteres.
           </p>
         </div>
+
+        <InstituicaoSelect
+          instituicao={formulario.instituicao}
+          semInstituicao={formulario.semInstituicao}
+          onChange={(alteracoes) =>
+            setFormulario((atual) => ({ ...atual, ...alteracoes }))
+          }
+        />
 
         <div className="mb-6">
           <label

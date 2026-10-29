@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { Minus, Plus, Save, ChevronDown } from "lucide-react";
-import { INSTITUICOES_MOCK } from "@/lib/fixtures/instituicoesFixture";
+import { Minus, Plus, Save } from "lucide-react";
+import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { EXIBICOES_MOCK } from "@/lib/fixtures/exibicoesFixture";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -17,7 +17,6 @@ export default function ConfiguracaoForm({ codigo }) {
   const { confirm } = useLoading();
   const existente = useMemo(() => EXIBICOES_MOCK.find((item) => item.codigo_exib === codigo), [codigo]);
   const [formulario, setFormulario] = useState(() => existente ? { nome: existente.nome_exibicao, instituicao: existente.instituicao, semInstituicao: false, atraso: existente.config.tempo_atraso, adiantado: existente.config.tempo_adiantado, distancia: existente.config.distanciaMinOnibus, permitirMultiplosPorLinha: existente.config.permitirMultiplosPorLinha ?? false, token: "mock-sptrans-token", paradas: existente.codigos_parada } : PADRAO);
-  const [dropdownAberto, setDropdownAberto] = useState(false);
   const [mensagem, setMensagem] = useState("");
 
   if (carregando) return null;
@@ -44,7 +43,11 @@ export default function ConfiguracaoForm({ codigo }) {
 
   return <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-gray-300 bg-white p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10"><h1 className="mb-8 text-center text-2xl font-bold text-black sm:text-3xl">Configuração</h1><Link href="/" className="absolute top-4 left-4 text-sm text-black sm:top-12 sm:left-6">Voltar</Link><form onSubmit={salvar}>
     <div className="mb-6"><label htmlFor="nomeExib" className="mb-2 block text-sm font-medium text-gray-700">Nome da exibição (Opcional)</label><input id="nomeExib" value={formulario.nome} onChange={(e) => atualizar("nome", e.target.value)} placeholder="exemplo: Fatec-ZL" className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none" /></div>
-    <div className="mb-6"><label className="mb-2 block text-sm font-medium text-gray-700">Instituição</label><div className="relative"><button type="button" onClick={() => !formulario.semInstituicao && setDropdownAberto(!dropdownAberto)} className={`w-full rounded-md border border-gray-300 px-4 py-3 text-left ${formulario.semInstituicao ? "cursor-not-allowed bg-gray-100 text-gray-400" : "bg-white"}`}>{formulario.semInstituicao ? "Nenhuma instituição selecionada" : INSTITUICOES_MOCK.find((item) => item.id_fac === formulario.instituicao)?.nome_fac ?? "Selecione uma instituição"}<ChevronDown className="float-right" /></button>{dropdownAberto && <div className="absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-300 bg-white shadow-lg">{INSTITUICOES_MOCK.map((item) => <button type="button" key={item.id_fac} onClick={() => { atualizar("instituicao", item.id_fac); setDropdownAberto(false); }} className="block w-full px-4 py-2 text-left text-black hover:bg-gray-100">{item.nome_fac}</button>)}</div>}</div><label className="mt-3 flex items-center text-sm text-gray-700"><input type="checkbox" checked={formulario.semInstituicao} onChange={(e) => atualizar("semInstituicao", e.target.checked)} className="mr-2" />Não faço parte de uma instituição / Prefiro não informar</label></div>
+    <InstituicaoSelect
+      instituicao={formulario.instituicao}
+      semInstituicao={formulario.semInstituicao}
+      onChange={(alteracoes) => setFormulario((atual) => ({ ...atual, ...alteracoes }))}
+    />
     <div className="flex flex-wrap justify-center gap-3.5"><NumberField label="Tolerância atraso (1–5 min)" value={formulario.atraso} min={1} max={5} onChange={(valor) => atualizar("atraso", valor)} /><NumberField label="Tolerância adiantado (1–5 min)" value={formulario.adiantado} min={1} max={5} onChange={(valor) => atualizar("adiantado", valor)} /><NumberField label="Distância máxima (5-60 min)" value={formulario.distancia} min={5} max={60} onChange={(valor) => atualizar("distancia", valor)} /></div>
     <label className="mb-8 flex items-start gap-3 border-t border-gray-200 pt-6 text-sm text-gray-700"><input type="checkbox" checked={formulario.permitirMultiplosPorLinha} onChange={(e) => atualizar("permitirMultiplosPorLinha", e.target.checked)} className="mt-1" /><span><strong>Exibir vários ônibus da mesma linha</strong><br /><span className="text-xs text-gray-500">Desativado por padrão: mostra no máximo um ônibus por código de linha.</span></span></label>
     <div className="mb-8 border-t border-gray-200 pt-6"><label htmlFor="tokenApi" className="mb-2 block text-sm font-bold text-red-700">🔑 Token da API Olho Vivo (SPTrans)</label><input id="tokenApi" value={formulario.token} onChange={(e) => atualizar("token", e.target.value)} placeholder="Cole seu token aqui..." className="w-full rounded-md border border-gray-300 px-4 py-3 font-mono text-sm focus:ring-2 focus:ring-red-500 focus:outline-none" /><p className="mt-2 text-xs text-gray-500">Obrigatório. Valor mockado nesta fase.</p></div>
