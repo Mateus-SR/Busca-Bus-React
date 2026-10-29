@@ -41,7 +41,7 @@ export default function ConfiguracaoForm({ codigo }) {
   function adicionar() { if (formulario.paradas.length < 5) atualizar("paradas", [...formulario.paradas, ""]); }
   function remover() { if (formulario.paradas.length > 1) atualizar("paradas", formulario.paradas.slice(0, -1)); }
 
-  return <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-gray-300 bg-white p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10"><h1 className="mb-8 text-center text-2xl font-bold text-black sm:text-3xl">Configuração</h1><Link href="/" className="absolute top-4 left-4 text-sm text-black sm:top-12 sm:left-6">Voltar</Link><form onSubmit={salvar}>
+  return <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-gray-300 bg-white p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10"><h1 className="mb-8 text-center text-2xl font-bold text-black sm:text-3xl">Configuração</h1><Link href="/" className="absolute top-4 left-4 text-sm text-black transition hover:text-red-600 sm:top-12 sm:left-6">← Voltar</Link><form onSubmit={salvar}>
     <div className="mb-6"><label htmlFor="nomeExib" className="mb-2 block text-sm font-medium text-gray-700">Nome da exibição (Opcional)</label><input id="nomeExib" value={formulario.nome} onChange={(e) => atualizar("nome", e.target.value)} placeholder="exemplo: Fatec-ZL" className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none" /></div>
     <InstituicaoSelect
       instituicao={formulario.instituicao}
