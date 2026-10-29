@@ -7,38 +7,40 @@ import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { useAuth } from "@/contexts/AuthContext";
 import { validarEmail } from "@busca-bus/core";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [formulario, setFormulario] = useState({ email: "", senha: "", lembrar: false });
   const [mensagem, setMensagem] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   function atualizar(campo, valor) {
     setFormulario((atual) => ({ ...atual, [campo]: valor }));
   }
 
- async function entrar(evento) {
-  evento.preventDefault();
-  setMensagem("");
+  async function entrar(evento) {
+    evento.preventDefault();
+    setMensagem("");
 
-  if (!formulario.email || !formulario.senha) {
-    setMensagem("Por favor, preencha todos os campos.");
-    return;
-  }
+    if (!formulario.email || !formulario.senha) {
+      setMensagem("Por favor, preencha todos os campos.");
+      return;
+    }
 
-  if (!validarEmail(formulario.email)) {
-    setMensagem("Informe um e-mail válido.");
-    return;
-  }
+    if (!validarEmail(formulario.email)) {
+      setMensagem("Informe um e-mail válido.");
+      return;
+    }
 
-  try {
-    await login(formulario);
-    router.push("/");
-  } catch (erro) {
-    setMensagem(erro.message || "Não foi possível realizar o login.");
+    try {
+      await login(formulario);
+      router.push("/");
+    } catch (erro) {
+      setMensagem(erro.message || "Não foi possível realizar o login.");
+    }
   }
-}
 
   return (
     <AuthBackground>
@@ -56,8 +58,32 @@ export default function LoginPage() {
           <input id="email" type="email" value={formulario.email} onChange={(e) => atualizar("email", e.target.value)} placeholder="exemplo: erick@neo.com" className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none" />
         </div>
         <div className="mb-6">
-          <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">Senha</label>
-          <input id="password" type="password" value={formulario.senha} onChange={(e) => atualizar("senha", e.target.value)} placeholder="senhaSegura123" className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none" />
+          <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-700">
+            Senha
+          </label>
+
+          <div className="relative">
+            <input
+              id="password"
+              type={mostrarSenha ? "text" : "password"}
+              value={formulario.senha}
+              onChange={(e) => atualizar("senha", e.target.value)}
+              placeholder="senhaSegura123"
+              className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+            />
+
+            <button
+              type="button"
+              onClick={() => setMostrarSenha(!mostrarSenha)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {mostrarSenha ? (
+                <Eye size={22} />
+              ) : (
+                <EyeOff size={22} />
+              )}
+            </button>
+          </div>
         </div>
         <label className="mb-6 flex items-center text-sm text-gray-700">
           <input type="checkbox" checked={formulario.lembrar} onChange={(e) => atualizar("lembrar", e.target.checked)} className="mr-2" />

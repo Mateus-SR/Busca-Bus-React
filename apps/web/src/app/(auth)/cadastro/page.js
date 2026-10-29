@@ -7,6 +7,7 @@ import { useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { validarEmail, validarSenha } from "@busca-bus/core";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function CadastroPage() {
   const router = useRouter();
@@ -15,18 +16,20 @@ export default function CadastroPage() {
     nome: "",
     email: "",
     senha: "",
+    confirmarSenha: "",
   });
 
   const [mensagem, setMensagem] = useState("");
   const [cadastrando, setCadastrando] = useState(false);
+  const [mostrarSenha, setMostrarSenha] = useState(false);
 
   async function cadastrar(evento) {
     evento.preventDefault();
     setMensagem("");
 
-    const { nome, email, senha } = formulario;
+    const { nome, email, senha, confirmarSenha } = formulario;
 
-    if (!nome.trim() || !email.trim() || !senha) {
+    if (!nome.trim() || !email.trim() || !senha || !confirmarSenha) {
       setMensagem("Por favor, preencha todos os campos.");
       return;
     }
@@ -40,6 +43,11 @@ export default function CadastroPage() {
       setMensagem(
         "A senha precisa ter letras e números, e no mínimo 6 caracteres."
       );
+      return;
+    }
+
+    if (senha !== confirmarSenha) {
+      setMensagem("As senhas estão diferentes.");
       return;
     }
 
@@ -66,8 +74,8 @@ export default function CadastroPage() {
       if (!resposta.ok) {
         setMensagem(
           dados.erro ||
-            dados.mensagem ||
-            "Não foi possível realizar o cadastro."
+          dados.mensagem ||
+          "Não foi possível realizar o cadastro."
         );
         return;
       }
@@ -140,17 +148,57 @@ export default function CadastroPage() {
           >
             Senha
           </label>
+
+          <div className="relative">
+            <input
+              id="password"
+              type={mostrarSenha ? "text" : "password"}
+              value={formulario.senha}
+              onChange={(e) =>
+                setFormulario({ ...formulario, senha: e.target.value })
+              }
+              placeholder="senhaSegura123"
+              className="w-full rounded-md border border-gray-300 px-4 py-3 pr-12 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+            />
+
+            <button
+              type="button"
+              onClick={() => setMostrarSenha(!mostrarSenha)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {mostrarSenha ? (
+                <Eye size={22} />
+              ) : (
+                <EyeOff size={22} />
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <label
+            htmlFor="confirmarSenha"
+            className="mb-2 block text-sm font-medium text-gray-700"
+          >
+            Confirmar senha
+          </label>
+
           <input
-            id="password"
+            id="confirmarSenha"
             type="password"
-            value={formulario.senha}
+            value={formulario.confirmarSenha}
             onChange={(e) =>
-              setFormulario({ ...formulario, senha: e.target.value })
+              setFormulario({
+                ...formulario,
+                confirmarSenha: e.target.value,
+              })
             }
-            placeholder="senhaSegura123"
+            placeholder="Digite a senha novamente"
             className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
           />
         </div>
+
+
 
         {mensagem && (
           <p className="mb-5 text-center text-sm font-semibold text-red-600">
