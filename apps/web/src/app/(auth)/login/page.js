@@ -45,7 +45,12 @@ export default function LoginPage() {
   return (
     <AuthBackground>
       <h1 className="mb-8 text-center text-3xl font-bold text-black">Login</h1>
-      <Link href="/" className="absolute top-12 left-6 text-sm text-black">Voltar</Link>
+      <Link
+        href="/"
+        className="absolute top-12 left-6 z-30 text-sm text-black transition hover:text-red-600"
+      >
+        ← Voltar
+      </Link>
       <Link
         href="/reset-senha"
         className="absolute top-12 right-6 text-sm text-black underline-offset-2 transition hover:text-red-600 hover:underline"

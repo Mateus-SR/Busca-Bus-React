@@ -7,7 +7,7 @@ import { useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { validarEmail, validarSenha } from "@busca-bus/core";
-import { Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 
 const LIMITE_NOME = 25;
 
@@ -105,9 +105,10 @@ export default function CadastroPage() {
 
       <Link
         href="/"
-        className="absolute top-12 left-6 text-sm text-black"
+        className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-black transition hover:text-red-600"
       >
-        Voltar
+        
+        ← Voltar
       </Link>
 
       <form onSubmit={cadastrar}>
