@@ -18,7 +18,9 @@ export default function InlineToast({ mensagem }) {
 
 	return (
 		<div
-			className={`fixed top-16 left-1/2 z-[1100] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 rounded-lg px-4 py-2 text-center text-sm font-semibold text-white shadow-lg transition-opacity duration-300 ${mensagem.cor} ${
+			role="status"
+			aria-live="polite"
+			className={`fixed top-4 right-4 z-[2200] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-gray-200 bg-white px-4 py-3 text-left text-sm font-semibold text-gray-800 shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${
 				visivel ? "opacity-100" : "pointer-events-none opacity-0"
 			}`}
 		>

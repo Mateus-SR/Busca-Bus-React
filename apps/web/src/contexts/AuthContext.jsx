@@ -13,8 +13,20 @@ export function AuthProvider({ children }) {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    // Por enquanto, não recuperamos uma sessão automaticamente.
-    setCarregando(false);
+    try {
+      const usuarioSalvo =
+        localStorage.getItem("usuario") ||
+        sessionStorage.getItem("usuario");
+
+      if (usuarioSalvo) {
+        setUsuario(JSON.parse(usuarioSalvo));
+      }
+    } catch {
+      localStorage.removeItem("usuario");
+      sessionStorage.removeItem("usuario");
+    } finally {
+      setCarregando(false);
+    }
   }, []);
 
   async function login({ email, senha, lembrar } = {}) {
@@ -33,15 +45,20 @@ export function AuthProvider({ children }) {
     const dados = await resposta.json().catch(() => ({}));
 
     if (!resposta.ok) {
-      throw new Error(dados.erro || dados.mensagem || "E-mail ou senha inválidos.");
+      throw new Error(
+        dados.erro || dados.mensagem || "E-mail ou senha inválidos."
+      );
     }
 
     setUsuario(dados.usuario);
 
+    localStorage.removeItem("usuario");
+    sessionStorage.removeItem("usuario");
+
     if (lembrar) {
       localStorage.setItem("usuario", JSON.stringify(dados.usuario));
     } else {
-      localStorage.removeItem("usuario");
+      sessionStorage.setItem("usuario", JSON.stringify(dados.usuario));
     }
 
     return dados;
@@ -50,6 +67,7 @@ export function AuthProvider({ children }) {
   function logout() {
     setUsuario(null);
     localStorage.removeItem("usuario");
+    sessionStorage.removeItem("usuario");
   }
 
   return (
