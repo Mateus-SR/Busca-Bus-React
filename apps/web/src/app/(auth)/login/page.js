@@ -91,8 +91,8 @@ export default function LoginPage() {
         </label>
         {mensagem && <p className="mb-5 text-center text-sm font-semibold text-red-600">{mensagem}</p>}
         <div className="flex flex-col items-center space-y-6">
-          <AuthLinks href="/cadastro">Não tenho uma conta</AuthLinks>
           <button type="submit" className="w-full max-w-md rounded-md bg-red-600 px-4 py-3 text-lg font-semibold text-white transition hover:bg-red-700">Entrar</button>
+          <AuthLinks href="/cadastro">Não tenho uma conta</AuthLinks>
         </div>
       </form>
     </AuthBackground>

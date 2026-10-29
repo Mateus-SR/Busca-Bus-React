@@ -219,8 +219,6 @@ export default function CadastroPage() {
         )}
 
         <div className="flex flex-col items-center space-y-6">
-          <AuthLinks href="/login">Já tenho uma conta</AuthLinks>
-
           <button
             type="submit"
             disabled={cadastrando}
@@ -228,6 +226,7 @@ export default function CadastroPage() {
           >
             {cadastrando ? "Cadastrando..." : "Cadastrar"}
           </button>
+          <AuthLinks href="/login">Já tenho uma conta</AuthLinks>
         </div>
       </form>
     </AuthBackground>
