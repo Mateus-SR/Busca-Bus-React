@@ -9,6 +9,8 @@ import AuthLinks from "@/components/auth/AuthLinks";
 import { validarEmail, validarSenha } from "@busca-bus/core";
 import { Eye, EyeOff } from "lucide-react";
 
+const LIMITE_NOME = 25;
+
 export default function CadastroPage() {
   const router = useRouter();
 
@@ -31,6 +33,11 @@ export default function CadastroPage() {
 
     if (!nome.trim() || !email.trim() || !senha || !confirmarSenha) {
       setMensagem("Por favor, preencha todos os campos.");
+      return;
+    }
+
+    if (nome.trim().length > LIMITE_NOME) {
+      setMensagem(`O nome deve ter no máximo ${LIMITE_NOME} caracteres.`);
       return;
     }
 
@@ -114,12 +121,17 @@ export default function CadastroPage() {
           <input
             id="nome"
             value={formulario.nome}
+            maxLength={LIMITE_NOME}
+            aria-describedby="nome-ajuda"
             onChange={(e) =>
               setFormulario({ ...formulario, nome: e.target.value })
             }
             placeholder="exemplo: Luciano Batista"
             className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
           />
+          <p id="nome-ajuda" className="mt-1 text-xs text-gray-500">
+            Até {LIMITE_NOME} caracteres.
+          </p>
         </div>
 
         <div className="mb-6">
