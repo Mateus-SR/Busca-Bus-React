@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,10 +16,43 @@ export default function LoginPage() {
   const [mensagem, setMensagem] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
 
+  useEffect(() => {
+    const lembrar = localStorage.getItem("lembrarUsuario") === "true";
+    const email = localStorage.getItem("emailLembrado") || "";
+
+    setFormulario((atual) => ({
+      ...atual,
+      lembrar,
+      email: lembrar ? email : "",
+    }));
+  }, []);
+
   function atualizar(campo, valor) {
-    setFormulario((atual) => ({ ...atual, [campo]: valor }));
+    setFormulario((atual) => {
+      const atualizado = { ...atual, [campo]: valor };
+
+      if (campo === "email" && atualizado.lembrar) {
+        localStorage.setItem("emailLembrado", valor);
+      }
+
+      return atualizado;
+    });
   }
 
+  function alterarLembrar(marcado) {
+    setFormulario((atual) => ({
+      ...atual,
+      lembrar: marcado,
+    }));
+
+    localStorage.setItem("lembrarUsuario", String(marcado));
+
+    if (marcado) {
+      localStorage.setItem("emailLembrado", formulario.email);
+    } else {
+      localStorage.removeItem("emailLembrado");
+    }
+  }
   async function entrar(evento) {
     evento.preventDefault();
     setMensagem("");
@@ -91,7 +124,12 @@ export default function LoginPage() {
           </div>
         </div>
         <label className="mb-6 flex items-center text-sm text-gray-700">
-          <input type="checkbox" checked={formulario.lembrar} onChange={(e) => atualizar("lembrar", e.target.checked)} className="mr-2" />
+          <input
+            type="checkbox"
+            checked={formulario.lembrar}
+            onChange={(e) => alterarLembrar(e.target.checked)}
+            className="mr-2"
+          />
           Lembre de mim
         </label>
         {mensagem && <p className="mb-5 text-center text-sm font-semibold text-red-600">{mensagem}</p>}
