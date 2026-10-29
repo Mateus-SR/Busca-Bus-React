@@ -26,7 +26,7 @@ export default function ConfirmLogoutModal({ aberto, onClose, onConfirm }) {
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-[1px]"
+      className="fixed inset-0 z-[2100] flex items-center justify-center bg-black/35 px-4 py-6 backdrop-blur-[1px]"
       onClick={onClose}
       role="presentation"
     >
