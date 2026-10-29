@@ -5,6 +5,8 @@ import jwt from "jsonwebtoken";
 import { Usuario } from "../../../models/Usuario.js";
 import { validarEmail, validarSenha } from "@busca-bus/core";
 
+const LIMITE_NOME = 25;
+
 const publicUser = (user) => ({
   id: user._id?.toString(),
   nome: user.nome,
@@ -28,15 +30,19 @@ export function authRoutes({ config, db }) {
 
     try {
       const { nome, email, senha } = req.body || {};
+      const nomeNormalizado = String(nome || "").trim();
       const normalized = String(email || "").trim().toLowerCase();
 
       if (
-        !String(nome || "").trim() ||
+        !nomeNormalizado ||
+        nomeNormalizado.length > LIMITE_NOME ||
         !validarEmail(normalized) ||
         !validarSenha(senha)
       ) {
         return res.status(400).json({
-          erro: "Dados de cadastro inválidos.",
+          erro: nomeNormalizado.length > LIMITE_NOME
+            ? `O nome deve ter no máximo ${LIMITE_NOME} caracteres.`
+            : "Dados de cadastro inválidos.",
         });
       }
 
@@ -49,7 +55,7 @@ export function authRoutes({ config, db }) {
       }
 
       const user = await Usuario.create({
-        nome: String(nome).trim(),
+        nome: nomeNormalizado,
         email: normalized,
         senhaHash: await bcrypt.hash(senha, 12),
         role: "usuario",
