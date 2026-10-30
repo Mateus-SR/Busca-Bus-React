@@ -17,6 +17,9 @@ export function loadConfig(env = process.env) {
     version: env.npm_package_version || "0.1.0",
     jwtSecret: env.JWT_SECRET || "",
     mongodbUri: env.MONGODB_URI || "",
+    // Nome do banco. Tem prioridade sobre o nome presente na MONGODB_URI; se ficar vazio e a URI também não
+    // trouxer um banco, o MongoDB usa o padrão "test".
+    mongodbDb: (env.MONGODB_DB || "").trim(),
     allowedOrigins: split(env.ALLOWED_ORIGINS),
     appUrl: env.APP_URL || "",
     encryptionKey: env.ENCRYPTION_KEY || "",
