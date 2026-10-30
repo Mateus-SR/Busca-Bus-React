@@ -33,7 +33,7 @@ export default function ResetSenhaPage() {
       {!enviado && (
         <Link
           href="/login"
-          className="absolute top-4 left-2 px-4 py-2 text-sm text-black transition hover:text-red-600"
+          className="absolute top-4 left-2 px-4 py-2 text-sm text-texto transition hover:text-destaque"
         >
           ← Voltar
         </Link>
@@ -41,7 +41,7 @@ export default function ResetSenhaPage() {
 
       {enviado ? (
         <div className="flex flex-col items-center gap-6">
-          <p className="text-center text-sm font-semibold text-green-600">
+          <p className="text-center text-sm font-semibold text-sucesso">
             Se houver uma conta com este e-mail, você receberá as instruções
             para redefinir sua senha.
           </p>
@@ -49,10 +49,10 @@ export default function ResetSenhaPage() {
         </div>
       ) : (
         <>
-          <h1 className="mb-4 text-center text-3xl font-bold text-black">
+          <h1 className="mb-4 text-center text-3xl font-bold text-texto">
             Esqueci minha senha
           </h1>
-          <p className="mb-8 text-center text-sm text-gray-600">
+          <p className="mb-8 text-center text-sm text-texto-secundario">
             Informe seu e-mail e enviaremos as instruções para redefinir sua
             senha.
           </p>
@@ -60,7 +60,7 @@ export default function ResetSenhaPage() {
             <div className="mb-6">
               <label
                 htmlFor="email"
-                className="mb-2 block text-sm font-medium text-gray-700"
+                className="mb-2 block text-sm font-medium text-texto-suave"
               >
                 E-mail
               </label>
@@ -71,19 +71,19 @@ export default function ResetSenhaPage() {
                 onChange={(evento) => setEmail(evento.target.value)}
                 placeholder="exemplo: erick@neo.com"
                 autoComplete="email"
-                className="w-full rounded-md border border-gray-300 px-4 py-3 text-lg focus:ring-2 focus:ring-red-500 focus:outline-none"
+                className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
               />
             </div>
 
             {mensagem && (
-              <p className="mb-5 text-center text-sm font-semibold text-red-600">
+              <p className="mb-5 text-center text-sm font-semibold text-erro">
                 {mensagem}
               </p>
             )}
 
             <button
               type="submit"
-              className="w-full rounded-md bg-red-600 py-3 text-lg font-semibold text-white transition hover:bg-red-700"
+              className="w-full rounded-md bg-destaque py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte"
             >
               Enviar instruções
             </button>

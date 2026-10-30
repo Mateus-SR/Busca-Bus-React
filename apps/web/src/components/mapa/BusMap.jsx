@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import "./leaflet.css";
 import { criarSvgOnibus } from "@/components/mapa/iconeOnibus";
-import { corDoPonto, escaparHtml, infoPontoDoOnibus } from "@/components/mapa/pontosMapa";
+import {
+  CLASSE_BALAO,
+  CLASSE_MARCADOR,
+  CLASSE_PINO_PARADA,
+  CLASSE_PONTO,
+  CLASSE_TOOLTIP_PARADA,
+  corDoPonto,
+  escaparHtml,
+  infoPontoDoOnibus,
+} from "@/components/mapa/pontosMapa";
 
 function obterPosicao(onibus) {
   if (onibus.posicao) return [onibus.posicao.lat, onibus.posicao.lng];
@@ -22,10 +32,10 @@ function chaveIcone(onibus, info, zoom) {
 function criarIcone(L, onibus, info, zoom = 16) {
   const codigo = escaparHtml(onibus.codigoLetreiro ?? onibus.codigo ?? "Ônibus");
   const tamanho = tamanhoIcone(zoom);
-  const numero = info.numero ? `<span class="bus-marker-ponto" style="background:${info.cor}">${info.numero}</span>` : "";
+  const numero = info.numero ? `<span class="${CLASSE_PONTO}" data-ponto style="background:${info.cor}">${info.numero}</span>` : "";
   return L.divIcon({
-    className: "bus-marker-wrap",
-    html: `<span class="bus-marker-card">${numero}<span class="bus-marker-codigo">${codigo}</span></span>${criarSvgOnibus(info.cor, tamanho)}`,
+    className: CLASSE_MARCADOR,
+    html: `<span class="${CLASSE_BALAO}">${numero}<span>${codigo}</span></span>${criarSvgOnibus(info.cor, tamanho)}`,
     iconSize: [Math.max(80, tamanho), tamanho],
     iconAnchor: [Math.max(80, tamanho) / 2, tamanho],
     // O detalhe (sentido) abre ao lado do ônibus, sem cobrir o balão.
@@ -41,8 +51,8 @@ function conteudoTooltip(onibus) {
 
 function criarIconeParada(L, cor) {
   return L.divIcon({
-    className: "stop-marker-wrap",
-    html: `<span class="stop-marker-pin" style="background:${cor};border-color:${cor}" aria-hidden="true"></span>`,
+    className: CLASSE_MARCADOR,
+    html: `<span class="${CLASSE_PINO_PARADA}" style="background:${cor};border-color:${cor}" aria-hidden="true"></span>`,
     iconSize: [30, 38],
     iconAnchor: [15, 38],
   });
@@ -162,7 +172,7 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
           .addTo(mapaRef.current)
           .bindTooltip(
-            `<span class="stop-tooltip-conteudo"><span class="bus-marker-ponto" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
+            `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
             { permanent: true, direction: "top", offset: [0, -34] },
           );
         pontosRef.current.set(String(item.codigo), marcador);

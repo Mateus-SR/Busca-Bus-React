@@ -16,7 +16,7 @@ export default function FavoriteStar() {
 			texto: novoValor
 				? "Exibição adicionada aos favoritos"
 				: "Exibição removida dos favoritos",
-			cor: novoValor ? "bg-green-600" : "bg-red-600",
+			cor: novoValor ? "bg-sucesso text-sobre-sucesso" : "bg-destaque text-sobre-destaque",
 		});
 	}
 

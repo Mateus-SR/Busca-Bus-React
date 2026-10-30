@@ -39,11 +39,12 @@ export default function Header() {
 	];
 
 	return (
-		<header className="bg-sptrans relative z-[1200] text-white">
+		<header className="bg-marca relative z-[1200] text-sobre-marca">
 			<div className="mx-auto grid w-full max-w-300 grid-cols-[auto_1fr_auto] items-center gap-3 px-3 py-2.5 sm:px-4 md:grid-cols-[1fr_2fr_1fr]">
 				{/* Logo */}
 				<Link
 					href="/"
+					data-contraste-ignorar
 					className="text-sm leading-tight font-extrabold tracking-[0.2px] sm:text-base"
 					aria-label="Página inicial Busca Bus"
 				>
@@ -74,13 +75,13 @@ export default function Header() {
 						<div className="hidden items-center gap-2.5 md:flex">
 							<Link
 								href="/login"
-								className="rounded-xl border-[3px] border-white bg-white px-3.5 py-2 font-bold text-black transition-all duration-200 ease-out hover:bg-white/80"
+								className="rounded-xl border-[3px] border-sobre-marca bg-superficie px-3.5 py-2 font-bold text-texto transition-all duration-200 ease-out hover:bg-superficie/80"
 							>
 								Entrar
 							</Link>
 							<Link
 								href="/cadastro"
-								className="rounded-xl border-[3px] border-white px-3.5 py-2 font-bold text-white transition-all duration-200 ease-out hover:bg-white/50"
+								className="rounded-xl border-[3px] border-sobre-marca px-3.5 py-2 font-bold text-sobre-marca transition-all duration-200 ease-out hover:bg-sobre-marca/50"
 							>
 								Criar conta
 							</Link>
