@@ -31,13 +31,13 @@ export default function ZoomControls() {
 
 	return (
 		<>
-			<div className="flex flex-row text-center text-gray-900">
+			<div className="flex flex-row text-center text-texto-forte">
 				<button
 					type="button"
 					onClick={() => podeDiminuir && aplicarZoom(zoomAtual - 1, "minus")}
 					disabled={!podeDiminuir}
 					aria-label="Diminuir zoom"
-					className="cursor-pointer rounded-bl-[14px] border-2 border-gray-400 bg-gray-100 px-[15px] py-3 text-[10px] shadow-xl transition-all duration-300 ease-out hover:bg-gray-400 hover:text-sptrans disabled:cursor-not-allowed disabled:opacity-40"
+					className="cursor-pointer rounded-bl-[14px] border-2 border-borda-forte bg-superficie-alt px-[15px] py-3 text-[10px] shadow-xl transition-all duration-300 ease-out hover:bg-superficie-ativa hover:text-acento disabled:cursor-not-allowed disabled:opacity-40"
 				>
 					<Minus size={14} />
 				</button>
@@ -46,7 +46,7 @@ export default function ZoomControls() {
 					onClick={() => podeAumentar && aplicarZoom(zoomAtual + 1, "plus")}
 					disabled={!podeAumentar}
 					aria-label="Aumentar zoom"
-					className="cursor-pointer rounded-br-[14px] border-2 border-gray-400 bg-gray-100 px-[15px] py-3 text-[10px] shadow-xl transition-all duration-300 ease-out hover:bg-gray-400 hover:text-sptrans disabled:cursor-not-allowed disabled:opacity-40"
+					className="cursor-pointer rounded-br-[14px] border-2 border-borda-forte bg-superficie-alt px-[15px] py-3 text-[10px] shadow-xl transition-all duration-300 ease-out hover:bg-superficie-ativa hover:text-acento disabled:cursor-not-allowed disabled:opacity-40"
 				>
 					<Plus size={14} />
 				</button>
@@ -58,7 +58,7 @@ export default function ZoomControls() {
 					<div
 						key={popup.id}
 						onAnimationEnd={() => setPopup(null)}
-						className="fixed top-4 left-1/2 z-9999 mt-[32px] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-gray-400 bg-white px-3 py-2 text-center font-roboto-mono text-xl font-bold text-sptrans shadow-xl sm:px-[14px] sm:py-[10px] sm:text-3xl"
+						className="fixed top-4 left-1/2 z-9999 mt-[32px] w-[calc(100vw-2rem)] max-w-md -translate-x-1/2 animate-fadeOutHold rounded-2xl border-2 border-borda-forte bg-superficie px-3 py-2 text-center font-roboto-mono text-xl font-bold text-acento shadow-xl sm:px-[14px] sm:py-[10px] sm:text-3xl"
 					>
 						{popup.tipo === "plus" ? (
 							<ZoomIn className="inline align-middle" />

@@ -59,7 +59,7 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 
 			<table className="mx-auto hidden min-w-full table-auto border-collapse lg:table lg:text-3xl">
 				<thead>
-					<tr className="bg-gray-100 font-extrabold">
+					<tr className="bg-superficie-alt font-extrabold">
 						{detalhesTecnicos && <th className="hidden px-2 py-3 text-center text-xs sm:table-cell sm:px-3 sm:text-sm lg:text-base">ID</th>}
 						<th className="px-3 py-3 text-center sm:px-6">Código</th>
 						<th className="px-3 py-3 text-center sm:px-6">Nome</th>
@@ -73,7 +73,7 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 					{linhasExibidas.map((item) => (
 						<tr
 							key={item.id}
-							className="animate-fadeIn border-b hover:bg-gray-50"
+							className="animate-fadeIn border-b hover:bg-superficie-sutil"
 						>
 							{detalhesTecnicos && <td className="hidden max-w-32 truncate px-2 py-3 text-center font-roboto-mono text-xs sm:table-cell sm:px-3 lg:text-sm" title={item.id}>
 								{item.id}
@@ -84,7 +84,7 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 							<td className="px-3 py-3 text-center sm:px-6">{item.sentidoLinha}</td>
 							<td className="px-3 py-3 text-center sm:px-6">
 								<div>{item.previsao}</div>
-								{detalhesTecnicos && <div className="text-xs font-normal text-gray-500">Promessa: {item.promessa ?? "—"}</div>}
+								{detalhesTecnicos && <div className="text-xs font-normal text-texto-mudo">Promessa: {item.promessa ?? "—"}</div>}
 							</td>
 							<td className="px-3 py-3 text-center sm:px-6">
 								<StatusBadge status={item.status} />
@@ -101,7 +101,7 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 			</table>
 
 			{linhasExibidas.length === 0 && (
-				<p className="py-6 text-center text-gray-500">
+				<p className="py-6 text-center text-texto-mudo">
 					Nenhum ônibus encontrado para essa busca.
 				</p>
 			)}

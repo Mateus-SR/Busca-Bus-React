@@ -1,13 +1,13 @@
 export default function SobrePage() {
 	return (
-		<main className="relative min-h-screen bg-[url(/img/Onibus2.png)] bg-cover bg-center">
-			<div className="absolute inset-0 bg-black/40" />
+		<main className="relative min-h-screen bg-[url(/img/Onibus2.png)] bg-cover bg-center contraste:bg-none">
+			<div className="absolute inset-0 bg-black/40 contraste:hidden" />
 			<div className="relative flex min-h-screen items-center justify-center px-4 py-6">
-				<article className="w-full max-w-4xl rounded-xl border border-gray-300 bg-white p-6 shadow-2xl sm:p-10">
-					<h1 className="mb-6 text-center text-3xl font-extrabold text-black">
+				<article className="w-full max-w-4xl rounded-xl border border-borda bg-superficie p-6 shadow-2xl sm:p-10">
+					<h1 className="mb-6 text-center text-3xl font-extrabold text-texto">
 						Sobre o projeto
 					</h1>
-					<div className="text-justify text-sm break-words text-gray-700">
+					<div className="text-justify text-sm break-words text-texto-suave">
 						<p className="mb-4">
 							O Busca Bus surgiu como uma proposta para o Projeto Interdisciplinar
 							(PI) da FATEC Zona Leste, a partir de ideias apresentadas em uma feira
@@ -21,7 +21,7 @@ export default function SobrePage() {
 						<p className="mb-4">
 							O desenvolvimento do projeto teve como referência a pesquisa sobre {' '}
 							<a
-								className="text-sptrans hover:text-red-800"
+								className="text-acento hover:text-erro-intenso"
 								href="https://pos.cps.sp.gov.br/dissertacoes-pos/propostas-de-melhoria-de-mobilidade-para-o-deslocamento-de-estudantes-de-uma-ies-de-tecnologia/"
 							>
 								propostas de melhoria da mobilidade para o
@@ -31,7 +31,7 @@ export default function SobrePage() {
 							, de Edson Company, coordenador do nosso curso. Para viabilizar suas
 							funcionalidades, o Busca Bus utiliza a{' '}
 							<a
-								className="text-sptrans hover:text-red-800"
+								className="text-acento hover:text-erro-intenso"
 								href="https://www.sptrans.com.br/desenvolvedores/api-do-olho-vivo-guia-de-referencia"
 							>
 								API Olho Vivo

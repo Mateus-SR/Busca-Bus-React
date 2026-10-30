@@ -13,7 +13,7 @@ function MapaComParametro() {
 
 export default function MapaPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-gray-100" />}>
+    <Suspense fallback={<main className="min-h-screen bg-superficie-alt" />}>
       <MapaComParametro />
     </Suspense>
   );
