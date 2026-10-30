@@ -84,7 +84,7 @@ export function authRoutes({ config, db }) {
 
       if (existente) {
         return res.status(409).json({
-          erro: "Não foi possível criar a conta.",
+          erro: "Este email já está cadastrado.",
         });
       }
 
@@ -103,7 +103,7 @@ export function authRoutes({ config, db }) {
     } catch (error) {
       if (error.code === 11000) {
         return res.status(409).json({
-          erro: "Não foi possível criar a conta.",
+          erro: "Este e-mail já está cadastrado.",
         });
       }
 
