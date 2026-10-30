@@ -14,6 +14,8 @@ export default function LoginPage() {
   const { login } = useAuth();
   const [formulario, setFormulario] = useState({ email: "", senha: "", lembrar: false });
   const [mensagem, setMensagem] = useState("");
+  const [mensagemVisivel, setMensagemVisivel] = useState(false);
+  const [contadorMensagem, setContadorMensagem] = useState(0);
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [entrando, setEntrando] = useState(false);
   const [loginConcluido, setLoginConcluido] = useState(false);
@@ -28,6 +30,25 @@ export default function LoginPage() {
       email: lembrar ? email : "",
     }));
   }, []);
+
+  useEffect(() => {
+    if (!mensagem) return;
+
+    setMensagemVisivel(true);
+
+    const fade = setTimeout(() => {
+      setMensagemVisivel(false);
+    }, 3500);
+
+    const limpar = setTimeout(() => {
+      setMensagem("");
+    }, 4000);
+
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(limpar);
+    };
+  }, [mensagem, contadorMensagem]);
 
   function atualizar(campo, valor) {
     setFormulario((atual) => {
@@ -58,7 +79,11 @@ export default function LoginPage() {
 
   async function entrar(evento) {
     evento.preventDefault();
+
+    if (entrando) return;
+
     setMensagem("");
+    setMensagemVisivel(false);
 
     if (!formulario.email || !formulario.senha) {
       setMensagem("Por favor, preencha todos os campos.");
@@ -82,6 +107,8 @@ export default function LoginPage() {
       router.replace("/");
     } catch (erro) {
       setMensagem(erro.message || "Não foi possível realizar o login.");
+      setMensagemVisivel(true);
+      setContadorMensagem((contador) => contador + 1);
       setEntrando(false);
     }
   }
@@ -164,7 +191,14 @@ export default function LoginPage() {
           />
           Lembre de mim
         </label>
-        {mensagem && <p className="mb-5 text-center text-sm font-semibold text-erro">{mensagem}</p>}
+        {mensagem && (
+          <p
+            className={`mb-5 text-center text-sm font-semibold text-erro transition-opacity duration-500 ${mensagemVisivel ? "opacity-100" : "opacity-0"
+              }`}
+          >
+            {mensagem}
+          </p>
+        )}
         <div className="flex flex-col items-center space-y-6">
           <button
             type="submit"

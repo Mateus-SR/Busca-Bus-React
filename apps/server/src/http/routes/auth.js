@@ -124,15 +124,20 @@ export function authRoutes({ config, db }) {
       const email = String(req.body?.email || "").trim().toLowerCase();
       const user = await Usuario.findOne({ email });
 
-      if (
-        !user ||
-        !(await bcrypt.compare(
-          String(req.body?.senha || ""),
-          user.senhaHash
-        ))
-      ) {
+      if (!user) {
         return res.status(401).json({
-          erro: "E-mail ou senha inválidos.",
+          erro: "E-mail não cadastrado.",
+        });
+      }
+
+      const senhaCorreta = await bcrypt.compare(
+        String(req.body?.senha || ""),
+        user.senhaHash
+      );
+
+      if (!senhaCorreta) {
+        return res.status(401).json({
+          erro: "Senha incorreta.",
         });
       }
 
