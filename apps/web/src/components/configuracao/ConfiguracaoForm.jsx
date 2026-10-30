@@ -13,10 +13,26 @@ const PADRAO = { nome: "", instituicao: "", semInstituicao: false, atraso: 1, ad
 
 export default function ConfiguracaoForm({ codigo }) {
   const router = useRouter();
-  const { estaLogado, carregando } = useAuth();
+  const { usuario, estaLogado, carregando } = useAuth();
   const { confirm } = useLoading();
   const existente = useMemo(() => EXIBICOES_MOCK.find((item) => item.codigo_exib === codigo), [codigo]);
-  const [formulario, setFormulario] = useState(() => existente ? { nome: existente.nome_exibicao, instituicao: existente.instituicao, semInstituicao: false, atraso: existente.config.tempo_atraso, adiantado: existente.config.tempo_adiantado, distancia: existente.config.distanciaMinOnibus, permitirMultiplosPorLinha: existente.config.permitirMultiplosPorLinha ?? false, token: "mock-sptrans-token", paradas: existente.codigos_parada } : PADRAO);
+  const [formulario, setFormulario] = useState(() => ({
+    ...PADRAO,
+    ...(existente
+      ? {
+        nome: existente.nome_exibicao,
+        atraso: existente.config.tempo_atraso,
+        adiantado: existente.config.tempo_adiantado,
+        distancia: existente.config.distanciaMinOnibus,
+        permitirMultiplosPorLinha:
+          existente.config.permitirMultiplosPorLinha ?? false,
+        token: "mock-sptrans-token",
+        paradas: existente.codigos_parada,
+      }
+      : {}),
+    instituicao: usuario?.fac_id || "",
+    semInstituicao: !usuario?.fac_id,
+  }));
   const [mensagem, setMensagem] = useState("");
 
   if (carregando) return null;

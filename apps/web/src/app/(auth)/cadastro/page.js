@@ -76,6 +76,9 @@ export default function CadastroPage() {
           nome: nome.trim(),
           email: email.trim(),
           senha,
+          fac_id: formulario.semInstituicao
+            ? null
+            : formulario.instituicao || null,
         }),
       });
 
@@ -110,7 +113,7 @@ export default function CadastroPage() {
         href="/"
         className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-texto transition hover:text-destaque"
       >
-        
+
         ← Voltar
       </Link>
 

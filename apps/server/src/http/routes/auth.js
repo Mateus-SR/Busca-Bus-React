@@ -4,6 +4,7 @@ import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import { Usuario } from "../../../models/Usuario.js";
 import { validarEmail, validarSenha } from "@busca-bus/core";
+import mongoose from "mongoose";
 
 const LIMITE_NOME = 25;
 
@@ -12,6 +13,7 @@ const publicUser = (user) => ({
   nome: user.nome,
   email: user.email,
   role: user.role,
+  fac_id: user.fac_id?.toString() || null,
 });
 
 const unavailable = (res) =>
@@ -22,6 +24,7 @@ const unavailable = (res) =>
 export function authRoutes({ config, db }) {
   const router = Router();
   const sessoes = db?.collection("sessoes");
+  const fatecs = db?.collection("Fatec");
 
   router.post("/cadastro", async (req, res, next) => {
     if (Usuario.db.readyState !== 1 || !config.jwtSecret) {
@@ -29,7 +32,7 @@ export function authRoutes({ config, db }) {
     }
 
     try {
-      const { nome, email, senha } = req.body || {};
+      const { nome, email, senha, fac_id } = req.body || {};
       const nomeNormalizado = String(nome || "").trim();
       const normalized = String(email || "").trim().toLowerCase();
 
@@ -46,6 +49,37 @@ export function authRoutes({ config, db }) {
         });
       }
 
+      const facIdNormalizado = fac_id
+        ? String(fac_id).trim()
+        : null;
+
+      if (
+        facIdNormalizado &&
+        !/^[a-fA-F0-9]{24}$/.test(facIdNormalizado)
+      ) {
+        return res.status(400).json({
+          erro: "Instituição inválida.",
+        });
+      }
+
+      let fatecSelecionada = null;
+
+      if (facIdNormalizado) {
+        if (!fatecs) {
+          return unavailable(res);
+        }
+
+        fatecSelecionada = await fatecs.findOne({
+          _id: new mongoose.Types.ObjectId(facIdNormalizado),
+        });
+
+        if (!fatecSelecionada) {
+          return res.status(400).json({
+            erro: "A instituição selecionada não existe.",
+          });
+        }
+      }
+
       const existente = await Usuario.findOne({ email: normalized });
 
       if (existente) {
@@ -60,6 +94,7 @@ export function authRoutes({ config, db }) {
         senhaHash: await bcrypt.hash(senha, 12),
         role: "usuario",
         created_at: new Date(),
+        fac_id: fatecSelecionada?._id || null,
       });
 
       return res.status(201).json({
