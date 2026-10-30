@@ -7,7 +7,7 @@ import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { useAuth } from "@/contexts/AuthContext";
 import { validarEmail } from "@busca-bus/core";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,6 +15,8 @@ export default function LoginPage() {
   const [formulario, setFormulario] = useState({ email: "", senha: "", lembrar: false });
   const [mensagem, setMensagem] = useState("");
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [entrando, setEntrando] = useState(false);
+  const [loginConcluido, setLoginConcluido] = useState(false);
 
   useEffect(() => {
     const lembrar = localStorage.getItem("lembrarUsuario") === "true";
@@ -53,6 +55,7 @@ export default function LoginPage() {
       localStorage.removeItem("emailLembrado");
     }
   }
+
   async function entrar(evento) {
     evento.preventDefault();
     setMensagem("");
@@ -67,12 +70,41 @@ export default function LoginPage() {
       return;
     }
 
+    setEntrando(true);
+
     try {
       await login(formulario);
-      router.push("/");
+
+      setLoginConcluido(true);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      router.replace("/");
     } catch (erro) {
       setMensagem(erro.message || "Não foi possível realizar o login.");
+      setEntrando(false);
     }
+  }
+
+  if (entrando) {
+    return (
+      <AuthBackground largura="max-w-md">
+        <div className="flex flex-col items-center py-10 text-center">
+          <LoaderCircle
+            size={64}
+            className="mb-6 animate-spin text-destaque"
+          />
+
+          <h1 className="text-2xl font-bold text-texto">
+            Entrando na sua conta...
+          </h1>
+
+          <p className="mt-3 text-texto-suave">
+            Estamos preparando seu acesso. Aguarde um momento.
+          </p>
+        </div>
+      </AuthBackground>
+    );
   }
 
   return (
@@ -134,7 +166,13 @@ export default function LoginPage() {
         </label>
         {mensagem && <p className="mb-5 text-center text-sm font-semibold text-erro">{mensagem}</p>}
         <div className="flex flex-col items-center space-y-6">
-          <button type="submit" className="w-full max-w-md rounded-md bg-destaque px-4 py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte">Entrar</button>
+          <button
+            type="submit"
+            disabled={entrando}
+            className="w-full max-w-md rounded-md bg-destaque px-4 py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Entrar
+          </button>
           <AuthLinks href="/cadastro">Não tenho uma conta</AuthLinks>
         </div>
       </form>

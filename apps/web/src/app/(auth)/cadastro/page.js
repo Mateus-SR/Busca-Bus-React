@@ -3,12 +3,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { validarEmail, validarSenha } from "@busca-bus/core";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, CheckCircle2, LoaderCircle } from "lucide-react";
 
 const LIMITE_NOME = 25;
 
@@ -35,6 +35,25 @@ export default function CadastroPage() {
   const [mensagem, setMensagem] = useState("");
   const [cadastrando, setCadastrando] = useState(false);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [statusCadastro, setStatusCadastro] = useState("formulario");
+
+  useEffect(() => {
+    if (statusCadastro === "sucesso") {
+      const tempo = setTimeout(() => {
+        setStatusCadastro("redirecionando");
+      }, 3000);
+
+      return () => clearTimeout(tempo);
+    }
+
+    if (statusCadastro === "redirecionando") {
+      const tempo = setTimeout(() => {
+        router.replace("/login");
+      }, 1000);
+
+      return () => clearTimeout(tempo);
+    }
+  }, [statusCadastro, router]);
 
   async function cadastrar(evento) {
     evento.preventDefault();
@@ -101,7 +120,7 @@ export default function CadastroPage() {
         return;
       }
 
-      router.push("/login");
+      setStatusCadastro("sucesso");
     } catch (erro) {
       setMensagem(
         "Não foi possível conectar ao servidor. Verifique se o backend está rodando."
@@ -109,6 +128,45 @@ export default function CadastroPage() {
     } finally {
       setCadastrando(false);
     }
+  }
+
+  if (statusCadastro === "sucesso") {
+    return (
+      <AuthBackground>
+        <div className="flex flex-col items-center py-10 text-center">
+          <CheckCircle2 size={76} className="mb-6 text-green-500" />
+
+          <h1 className="mb-3 text-2xl font-bold text-texto">
+            Conta criada com sucesso!
+          </h1>
+
+          <p className="text-texto-suave">
+            Seu cadastro foi realizado. Você será encaminhado para a tela de login.
+          </p>
+        </div>
+      </AuthBackground>
+    );
+  }
+
+  if (statusCadastro === "redirecionando") {
+    return (
+      <AuthBackground largura="max-w-md">
+        <div className="flex flex-col items-center py-10 text-center">
+          <LoaderCircle
+            size={64}
+            className="mb-6 animate-spin text-destaque"
+          />
+
+          <h1 className="text-2xl font-bold text-texto">
+            Preparando seu acesso...
+          </h1>
+
+          <p className="mt-3 text-texto-suave">
+            Redirecionando para o login.
+          </p>
+        </div>
+      </AuthBackground>
+    );
   }
 
   return (
