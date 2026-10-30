@@ -15,6 +15,14 @@ const LIMITE_NOME = 25;
 export default function CadastroPage() {
   const router = useRouter();
 
+  function voltar() {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/");
+    }
+  }
+
   const [formulario, setFormulario] = useState({
     nome: "",
     instituicao: "",
@@ -109,13 +117,14 @@ export default function CadastroPage() {
         Cadastro
       </h1>
 
-      <Link
-        href="/"
+      <button
+        type="button"
+        onClick={voltar}
         className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-texto transition hover:text-destaque"
       >
 
         ← Voltar
-      </Link>
+      </button>
 
       <form onSubmit={cadastrar}>
         <div className="mb-6">
