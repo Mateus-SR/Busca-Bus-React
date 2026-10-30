@@ -80,7 +80,7 @@ export default function LoginPage() {
       <h1 className="mb-8 text-center text-3xl font-bold text-texto">Login</h1>
       <Link
         href="/"
-        className="absolute top-12 left-6 z-30 text-sm text-texto transition hover:text-destaque"
+        className="absolute top-12 left-6 inline-flex cursor-pointer items-center gap-1 text-sm text-texto transition hover:text-destaque hover:underline"
       >
         ← Voltar
       </Link>

@@ -120,7 +120,7 @@ export default function CadastroPage() {
       <button
         type="button"
         onClick={voltar}
-        className="absolute top-12 left-6 inline-flex items-center gap-1 text-sm text-texto transition hover:text-destaque"
+        className="absolute top-12 left-6 inline-flex cursor-pointer items-center gap-1 text-sm text-texto transition hover:text-destaque hover:underline"
       >
 
         ← Voltar
