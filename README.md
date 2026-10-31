@@ -147,6 +147,7 @@ Regra de organização: código de navegador/Next.js fica em `apps/web`, código
 Para ter exibições próprias e contas de usuário, acrescente ao `.env` da raiz:
 ```env
 MONGODB_URI="<sua string de conexão do MongoDB>"
+MONGODB_DB="<nome do banco, ex.: Bus>"
 JWT_SECRET="<um segredo longo e aleatório>"
 ```
 O servidor cria os índices necessários ao iniciar. Veja o [formato das exibições](#exibições-no-mongodb).
@@ -158,6 +159,7 @@ O servidor cria os índices necessários ao iniciar. Veja o [formato das exibiç
 |---|---|---|---|
 | `SPTRANS_DEFAULT_TOKEN` | Para ônibus reais | — | Token da API Olho Vivo. Usado só pelo servidor. |
 | `MONGODB_URI` | **Sim, em produção** | — | String de conexão do MongoDB. Sem ela, as rotas de banco respondem 503 e só a exibição de teste local funciona. |
+| `MONGODB_DB` | Recomendada | _(banco da `MONGODB_URI`; se não houver, `test`)_ | Nome do banco. Tem prioridade sobre o nome na `MONGODB_URI`. **Sem ela e sem banco na URI, tudo é gravado no banco padrão `test`** (o servidor avisa no log). O nome diferencia maiúsculas de minúsculas. |
 | `JWT_SECRET` | **Sim, em produção** | — | Segredo de assinatura dos tokens de login. Sem ele, a autenticação fica desabilitada. |
 | `ALLOWED_ORIGINS` | **Sim, em produção** | _(qualquer origem)_ | Origens permitidas pelo CORS, separadas por vírgula, **sem barra final** (ex.: `https://meu-site.onrender.com`). |
 | `NODE_ENV` | Não | `development` | Em `production`, as três variáveis acima passam a ser obrigatórias. |
@@ -201,7 +203,8 @@ O repositório já traz um **Blueprint do Render** (`render.yaml`, na raiz) com 
 1. Crie um banco gratuito no [MongoDB Atlas](https://www.mongodb.com/atlas) e copie a string de conexão (`MONGODB_URI`). Em **Network Access**, permita a conexão do Render: no plano gratuito os IPs de saída mudam, então costuma-se liberar `0.0.0.0/0`. Nesse caso, use um usuário de banco com senha forte.
 2. No [Render](https://render.com/): **New → Blueprint**, conecte este repositório e confirme. Os dois serviços são criados a partir do `render.yaml`.
 3. No serviço **busca-bus-server**, preencha as variáveis marcadas como `sync: false`:
-   - `MONGODB_URI`: a string do passo 1.
+   - `MONGODB_URI`: a string do passo 1, **sem aspas**.
+   - `MONGODB_DB`: já vem com o valor `Bus` pelo Blueprint; altere se o seu banco tiver outro nome (diferencia maiúsculas de minúsculas).
    - `SPTRANS_DEFAULT_TOKEN`: seu token do Olho Vivo.
    - `ALLOWED_ORIGINS`: a URL do site estático (ex.: `https://busca-bus-web.onrender.com`, sem barra final).
    - `ENCRYPTION_KEY`, `APP_URL`, `EMAIL_API_KEY`: podem ficar em branco por enquanto (reservadas).
@@ -246,7 +249,7 @@ Convenções (mais detalhes em [CLAUDE.md](CLAUDE.md)):
 - Fixtures são dados fictícios e temporários: nunca coloque credenciais ou tokens reais nelas.
 
 ### Exibições no MongoDB
-As exibições ficam na coleção `exibicoes` (o banco é o definido na `MONGODB_URI`). **Ainda não existe rota para criá-las**: por enquanto, insira o documento manualmente (mongosh, Compass ou Atlas):
+As exibições ficam na coleção `exibicoes` (o banco é o definido em `MONGODB_DB` ou, se ela estiver vazia, na `MONGODB_URI`). **Ainda não existe rota para criá-las**: por enquanto, insira o documento manualmente (mongosh, Compass ou Atlas):
 
 ```json
 {
