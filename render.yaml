@@ -64,6 +64,9 @@ services:
         sync: false
       - key: MONGODB_URI
         sync: false
+      # Nome do banco no Atlas. Sem ele (e sem banco na MONGODB_URI) o MongoDB usa o banco "test".
+      - key: MONGODB_DB
+        value: Bus
       - key: SPTRANS_DEFAULT_TOKEN
         sync: false
       - key: EMAIL_API_KEY
