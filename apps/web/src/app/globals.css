@@ -50,9 +50,9 @@
 
   --animate-fullRightLeft: fullRightLeft 3s linear 2;
   @keyframes fullRightLeft {
-    0% { transform: translateX(300%); opacity: 0%; }
+    0% { left: 100%; transform: translateX(0); opacity: 0%; }
     25%, 75% { opacity: 80%; }
-    100% { transform: translateX(-300%); opacity: 0%; }
+    100% { left: -100px; transform: translateX(0); opacity: 0%; }
   }
 
   --animate-LTRfadeIn: LTRfadeIn 0.2s ease-in-out normal;

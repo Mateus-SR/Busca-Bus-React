@@ -2,6 +2,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useLoading } from "@/contexts/LoadingContext";
+import { aguardarDisponibilidadeApi, ehFalhaTransitoriaApi, ehStatusTransitorioApi } from "@busca-bus/core";
 
 const AuthContext = createContext(null);
 
@@ -9,10 +11,12 @@ const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
 export function AuthProvider({ children }) {
+  const { startLoading, stopLoading } = useLoading();
   const [usuario, setUsuario] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
+    const tokenCarregamento = startLoading("Verificando sessão...", "Por favor, aguarde.");
     try {
       const usuarioSalvo =
         localStorage.getItem("usuario") ||
@@ -26,22 +30,58 @@ export function AuthProvider({ children }) {
       sessionStorage.removeItem("usuario");
     } finally {
       setCarregando(false);
+      stopLoading(tokenCarregamento);
     }
-  }, []);
+  }, [startLoading, stopLoading]);
 
   async function login({ email, senha, lembrar } = {}) {
     if (!email || !senha) {
       throw new Error("Preencha o e-mail e a senha.");
     }
 
-    const resposta = await fetch(`${API_URL}/v1/auth/login`, {
+    const opcoes = {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, senha }),
-    });
+    };
+    let resposta;
+    try {
+      resposta = await fetch(`${API_URL}/v1/auth/login`, opcoes);
+    } catch (erroRede) {
+      if (!ehFalhaTransitoriaApi({ ...erroRede, codigo: "REDE" })) throw erroRede;
+      const tokenInicializacao = startLoading(
+        "Os serviços estão sendo iniciados.",
+        "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+      );
+      try {
+        await aguardarDisponibilidadeApi(API_URL);
+        resposta = await fetch(`${API_URL}/v1/auth/login`, opcoes);
+      } finally {
+        stopLoading(tokenInicializacao);
+      }
+    }
 
+    if (ehStatusTransitorioApi(resposta.status)) {
+      let healthDisponivel = false;
+      try {
+        const health = await fetch(`${API_URL}/v1/health`);
+        healthDisponivel = health.ok;
+      } catch {
+        healthDisponivel = false;
+      }
+      if (!healthDisponivel) {
+        const tokenInicializacao = startLoading(
+          "Os serviços estão sendo iniciados.",
+          "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+        );
+        try {
+          await aguardarDisponibilidadeApi(API_URL);
+          resposta = await fetch(`${API_URL}/v1/auth/login`, opcoes);
+        } finally {
+          stopLoading(tokenInicializacao);
+        }
+      }
+    }
     const dados = await resposta.json().catch(() => ({}));
 
     if (!resposta.ok) {

@@ -7,7 +7,8 @@ import { useEffect, useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
-import { validarEmail, validarSenha } from "@busca-bus/core";
+import { aguardarDisponibilidadeApi, ehFalhaTransitoriaApi, ehStatusTransitorioApi, validarEmail, validarSenha } from "@busca-bus/core";
+import { useLoading } from "@/contexts/LoadingContext";
 import { Eye, EyeOff, CheckCircle2, LoaderCircle } from "lucide-react";
 
 const LIMITE_NOME = 25;
@@ -70,6 +71,7 @@ function validarDominioEmail(email) {
 }
 
 export default function CadastroPage() {
+  const { startLoading, stopLoading } = useLoading();
   const router = useRouter();
 
   function voltar() {
@@ -201,11 +203,9 @@ export default function CadastroPage() {
       const API_URL =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-      const resposta = await fetch(`${API_URL}/v1/auth/cadastro`, {
+      const opcoes = {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nome: nome.trim(),
           email: email.trim(),
@@ -214,7 +214,44 @@ export default function CadastroPage() {
             ? null
             : formulario.instituicao || null,
         }),
-      });
+      };
+      let resposta;
+      try {
+        resposta = await fetch(`${API_URL}/v1/auth/cadastro`, opcoes);
+      } catch (erroRede) {
+        if (!ehFalhaTransitoriaApi({ ...erroRede, codigo: "REDE" })) throw erroRede;
+        const tokenInicializacao = startLoading(
+          "Os serviços estão sendo iniciados.",
+          "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+        );
+        try {
+          await aguardarDisponibilidadeApi(API_URL);
+          resposta = await fetch(`${API_URL}/v1/auth/cadastro`, opcoes);
+        } finally {
+          stopLoading(tokenInicializacao);
+        }
+      }
+      if (ehStatusTransitorioApi(resposta.status)) {
+        let healthDisponivel = false;
+        try {
+          const health = await fetch(`${API_URL}/v1/health`);
+          healthDisponivel = health.ok;
+        } catch {
+          healthDisponivel = false;
+        }
+        if (!healthDisponivel) {
+          const tokenInicializacao = startLoading(
+            "Os serviços estão sendo iniciados.",
+            "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+          );
+          try {
+            await aguardarDisponibilidadeApi(API_URL);
+            resposta = await fetch(`${API_URL}/v1/auth/cadastro`, opcoes);
+          } finally {
+            stopLoading(tokenInicializacao);
+          }
+        }
+      }
 
       const dados = await resposta.json().catch(() => ({}));
 
