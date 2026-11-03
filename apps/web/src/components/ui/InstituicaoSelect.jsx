@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLoading } from "@/contexts/LoadingContext";
+import { aguardarDisponibilidadeApi, ehFalhaTransitoriaApi, ehStatusTransitorioApi } from "@busca-bus/core";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
@@ -15,19 +17,56 @@ export default function InstituicaoSelect({
   const [instituicoes, setInstituicoes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const [erroTecnico, setErroTecnico] = useState("");
+  const { startLoading, stopLoading, showError } = useLoading();
 
   useEffect(() => {
     const controller = new AbortController();
 
     async function carregarInstituicoes() {
+      let tokenCarregamento;
+      let falhou = false;
       try {
         setCarregando(true);
         setErro("");
+        setErroTecnico("");
+        tokenCarregamento = startLoading("Carregando instituições...", "Por favor, aguarde.");
 
-        const resposta = await fetch(`${API_URL}/v1/fatecs`, {
-          signal: controller.signal,
-        });
-
+        let resposta;
+        try {
+          resposta = await fetch(`${API_URL}/v1/fatecs`, {
+            signal: controller.signal,
+          });
+          if (!resposta.ok && ehStatusTransitorioApi(resposta.status)) {
+            throw Object.assign(new Error(`Falha na API: ${resposta.status}`), { status: resposta.status });
+          }
+        } catch (erroApi) {
+          const falhaTransitoria = erroApi?.status
+            ? erroApi
+            : { ...erroApi, codigo: "REDE" };
+          if (!ehFalhaTransitoriaApi(falhaTransitoria)) throw erroApi;
+          let healthDisponivel = false;
+          try {
+            const health = await fetch(`${API_URL}/v1/health`, { signal: controller.signal });
+            healthDisponivel = health.ok;
+          } catch (healthError) {
+            if (healthError.name === "AbortError") throw healthError;
+          }
+          if (healthDisponivel) throw erroApi;
+          stopLoading(tokenCarregamento);
+          const tokenInicializacao = startLoading(
+            "Os serviços estão sendo iniciados.",
+            "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+          );
+          try {
+            await aguardarDisponibilidadeApi(API_URL, { sinal: controller.signal });
+          } finally {
+            stopLoading(tokenInicializacao);
+          }
+          resposta = await fetch(`${API_URL}/v1/fatecs`, {
+            signal: controller.signal,
+          });
+        }
         if (!resposta.ok) {
           throw new Error("Não foi possível carregar as instituições.");
         }
@@ -39,19 +78,24 @@ export default function InstituicaoSelect({
         );
       } catch (error) {
         if (error.name !== "AbortError") {
-          setErro(error.message || "Erro ao carregar instituições.");
+          falhou = true;
+          const detalhe = error.message || "Erro ao carregar instituições.";
+          setErro("Não foi possível carregar as instituições.");
+          setErroTecnico(detalhe);
+          showError("Não foi possível carregar as instituições.", "Você pode tentar novamente mais tarde.", detalhe);
         }
       } finally {
         if (!controller.signal.aborted) {
           setCarregando(false);
         }
+        if (!falhou) stopLoading(tokenCarregamento);
       }
     }
 
     carregarInstituicoes();
 
     return () => controller.abort();
-  }, []);
+  }, [showError, startLoading, stopLoading]);
 
   const instituicaoSelecionada = instituicoes.find(
     (item) => item.id_fac === instituicao
@@ -107,9 +151,13 @@ export default function InstituicaoSelect({
             )}
 
             {!carregando && erro && (
-              <p className="px-4 py-3 text-sm text-red-500">
-                {erro}
-              </p>
+              <div className="px-4 py-3 text-sm text-erro-forte">
+                <p>{erro}</p>
+                <details className="mt-2 text-xs text-texto-secundario">
+                  <summary className="cursor-pointer">Detalhes técnicos</summary>
+                  <p className="mt-1">{erroTecnico}</p>
+                </details>
+              </div>
             )}
 
             {!carregando && !erro && instituicoes.length === 0 && (

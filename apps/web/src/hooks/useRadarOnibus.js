@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { normalizarOnibus } from "@busca-bus/core";
+import { aguardarDisponibilidadeApi, ehFalhaTransitoriaApi, normalizarOnibus } from "@busca-bus/core";
 import { criarClienteApi } from "@busca-bus/core/cliente";
 import { EVENTOS_SOCKET } from "@busca-bus/core";
+import { useLoading } from "@/contexts/LoadingContext";
 
 function normalizarLista(onibus) {
   const unicos = new Map();
@@ -24,6 +25,7 @@ function tamanhoSemDiagnostico(resposta) {
 }
 
 export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoAtivo = false, atualizacaoSolicitada = 0, opcoes = OPCOES_PADRAO) {
+  const { startLoading, stopLoading, showError } = useLoading();
   const [onibus, setOnibus] = useState(() => normalizarLista(onibusIniciais));
   const [atualizadoEm, setAtualizadoEm] = useState(null);
   const [ponto, setPonto] = useState(null);
@@ -74,6 +76,8 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
     let fallbackAtivo = false;
     let intervaloFallback = null;
     let jaConectou = false;
+    let verificandoInicializacao = false;
+    const controlador = new AbortController();
     const registrarConexao = (tipo, detalhe = null) => {
       setEventosConexao((historico) => [{ tipo, detalhe, em: new Date().toISOString() }, ...historico].slice(0, 30));
     };
@@ -228,6 +232,32 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       setErro(erroSocket.message);
       setEstadoConexao("reconectando");
       ativarFallback();
+      if (!jaConectou && !verificandoInicializacao && ehFalhaTransitoriaApi({ ...erroSocket, codigo: "REDE" })) {
+        verificandoInicializacao = true;
+        const tokenInicializacao = startLoading(
+          "Os serviços estão sendo iniciados.",
+          "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+        );
+        aguardarDisponibilidadeApi(process.env.NEXT_PUBLIC_API_URL, {
+          sinal: controlador.signal,
+        })
+          .then(() => {
+            if (!ativo) return;
+            socket.connect();
+          })
+          .catch((erroHealth) => {
+            if (!ativo || erroHealth.name === "AbortError") return;
+            showError(
+              "Não foi possível conectar aos serviços.",
+              "Tente novamente mais tarde.",
+              erroHealth.message,
+            );
+          })
+          .finally(() => {
+            stopLoading(tokenInicializacao);
+            verificandoInicializacao = false;
+          });
+      }
     });
     socket.on("disconnect", (motivo) => {
       if (!ativo) return;
@@ -240,6 +270,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
     socket.connect();
     return () => {
       ativo = false;
+      controlador.abort();
       cicloOnibusRef.current = { idsConhecidos: new Set(), idsAusentes: new Set(), inicializado: false };
       desativarFallback();
       // Sem isto, o `disconnect` disparado por socket.disconnect() abaixo reativaria o fallback e ele nunca mais seria limpo.
