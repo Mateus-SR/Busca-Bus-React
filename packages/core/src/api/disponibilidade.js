@@ -26,6 +26,9 @@ function esperar(ms, signal) {
 }
 
 async function consultarHealth(url, sinal, timeoutMs) {
+  if (sinal?.aborted) {
+    throw sinal.reason ?? new DOMException("Operação cancelada.", "AbortError");
+  }
   const controlador = new AbortController();
   const cancelar = () => controlador.abort(sinal?.reason);
   sinal?.addEventListener("abort", cancelar, { once: true });
@@ -49,9 +52,11 @@ export async function aguardarDisponibilidadeApi(baseUrl, {
   let intervalo = intervaloInicialMs;
 
   while (Date.now() - inicio < limiteMs) {
+    const restanteTentativa = limiteMs - (Date.now() - inicio);
+    if (restanteTentativa <= 0) break;
     aoTentar?.();
     try {
-      const resposta = await consultarHealth(url, sinal, Math.min(10_000, limiteMs));
+      const resposta = await consultarHealth(url, sinal, Math.min(10_000, restanteTentativa));
       if (resposta.ok) return await resposta.json();
     } catch (error) {
       if (error?.name === "AbortError") throw error;

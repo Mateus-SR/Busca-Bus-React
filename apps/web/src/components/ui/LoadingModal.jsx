@@ -145,7 +145,7 @@ export default function LoadingModal({
 
   return (
     <div
-      className="fixed top-0 left-0 z-[800] flex h-full w-full items-center justify-center overflow-hidden bg-black/20 font-roboto-mono backdrop-blur-xs"
+      className="fixed top-0 left-0 z-[2000] flex h-full w-full items-center justify-center overflow-hidden bg-black/20 font-roboto-mono backdrop-blur-xs"
       role="dialog"
       aria-modal="true"
       aria-labelledby="loading-status"

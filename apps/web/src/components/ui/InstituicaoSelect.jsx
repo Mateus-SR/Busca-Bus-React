@@ -24,20 +24,27 @@ export default function InstituicaoSelect({
     const controller = new AbortController();
 
     async function carregarInstituicoes() {
+      let tokenCarregamento;
+      let falhou = false;
       try {
         setCarregando(true);
         setErro("");
         setErroTecnico("");
-        const tokenCarregamento = startLoading("Carregando instituições...", "Por favor, aguarde.");
-        let falhou = false;
+        tokenCarregamento = startLoading("Carregando instituições...", "Por favor, aguarde.");
 
         let resposta;
         try {
           resposta = await fetch(`${API_URL}/v1/fatecs`, {
             signal: controller.signal,
           });
-        } catch (erroRede) {
-          if (!ehFalhaTransitoriaApi({ ...erroRede, codigo: "REDE" })) throw erroRede;
+          if (!resposta.ok && ehStatusTransitorioApi(resposta.status)) {
+            throw Object.assign(new Error(`Falha na API: ${resposta.status}`), { status: resposta.status });
+          }
+        } catch (erroApi) {
+          const falhaTransitoria = erroApi?.status
+            ? erroApi
+            : { ...erroApi, codigo: "REDE" };
+          if (!ehFalhaTransitoriaApi(falhaTransitoria)) throw erroApi;
           let healthDisponivel = false;
           try {
             const health = await fetch(`${API_URL}/v1/health`, { signal: controller.signal });
@@ -45,21 +52,20 @@ export default function InstituicaoSelect({
           } catch (healthError) {
             if (healthError.name === "AbortError") throw healthError;
           }
-          if (healthDisponivel) throw erroRede;
+          if (healthDisponivel) throw erroApi;
           stopLoading(tokenCarregamento);
           const tokenInicializacao = startLoading(
             "Os serviços estão sendo iniciados.",
             "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
           );
-          await aguardarDisponibilidadeApi(API_URL, { sinal: controller.signal });
-          stopLoading(tokenInicializacao);
+          try {
+            await aguardarDisponibilidadeApi(API_URL, { sinal: controller.signal });
+          } finally {
+            stopLoading(tokenInicializacao);
+          }
           resposta = await fetch(`${API_URL}/v1/fatecs`, {
             signal: controller.signal,
           });
-        }
-
-        if (!resposta.ok && ehStatusTransitorioApi(resposta.status)) {
-          throw Object.assign(new Error(`Falha na API: ${resposta.status}`), { status: resposta.status });
         }
         if (!resposta.ok) {
           throw new Error("Não foi possível carregar as instituições.");
@@ -81,8 +87,8 @@ export default function InstituicaoSelect({
       } finally {
         if (!controller.signal.aborted) {
           setCarregando(false);
-          if (!falhou) stopLoading(tokenCarregamento);
         }
+        if (!falhou) stopLoading(tokenCarregamento);
       }
     }
 

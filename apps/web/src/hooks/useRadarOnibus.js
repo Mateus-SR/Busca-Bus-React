@@ -243,7 +243,6 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
         })
           .then(() => {
             if (!ativo) return;
-            stopLoading(tokenInicializacao);
             socket.connect();
           })
           .catch((erroHealth) => {
@@ -255,6 +254,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
             );
           })
           .finally(() => {
+            stopLoading(tokenInicializacao);
             verificandoInicializacao = false;
           });
       }

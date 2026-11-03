@@ -45,10 +45,13 @@ export default function useExibicao(codigo) {
             "Os serviços estão sendo iniciados.",
             "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
           );
-          await aguardarDisponibilidadeApi(process.env.NEXT_PUBLIC_API_URL, {
-            sinal: controlador.signal,
-          });
-          stopLoading(tokenInicializacao);
+          try {
+            await aguardarDisponibilidadeApi(process.env.NEXT_PUBLIC_API_URL, {
+              sinal: controlador.signal,
+            });
+          } finally {
+            stopLoading(tokenInicializacao);
+          }
           resposta = await cliente.obterExibicao(codigo);
         }
         if (!cancelado) setExibicao(normalizarExibicao(resposta.exibicao));
