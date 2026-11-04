@@ -35,6 +35,10 @@ const usuarioSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       default: null,
     },
+    avatarId: {
+      type: String,
+      default: "avatar-01",
+    },
   },
   {
     collection: "Users",
