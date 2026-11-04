@@ -18,6 +18,8 @@ export default function UserMenu() {
   const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
   const menuRef = useRef(null);
   const { usuario, logout } = useAuth();
+  const nomeCompleto = typeof usuario?.nome === "string" ? usuario.nome.trim() : "";
+  const primeiroNome = nomeCompleto.split(/\s+/)[0] || "Visitante";
 
   useEffect(() => {
     function handleClickFora(evento) {
@@ -44,7 +46,7 @@ export default function UserMenu() {
           border-sobre-marca border-[3px]
           text-sobre-marca
           transition-all duration-200 ease-out
-          flex items-center gap-2
+          flex min-w-0 items-center gap-2
           rounded-xl
           cursor-pointer
           hover:bg-sobre-marca/20
@@ -53,8 +55,11 @@ export default function UserMenu() {
       >
         <CircleUser className="size-6" />
 
-        <span className="font-semibold">
-          Olá, {usuario?.nome ?? "Visitante"}!
+        <span
+          className="min-w-0 max-w-[8rem] truncate whitespace-nowrap font-semibold sm:max-w-[12rem] lg:max-w-[16rem]"
+          title={nomeCompleto || "Visitante"}
+        >
+          Olá, {primeiroNome}!
         </span>
 
         <ChevronDown
