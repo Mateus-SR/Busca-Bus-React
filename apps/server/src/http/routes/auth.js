@@ -14,6 +14,7 @@ const publicUser = (user) => ({
   email: user.email,
   role: user.role,
   fac_id: user.fac_id?.toString() || null,
+  avatarId: user.avatarId || "avatar-01",
 });
 
 const unavailable = (res) =>
@@ -148,7 +149,6 @@ export function authRoutes({ config, db }) {
       );
 
       const refreshToken = crypto.randomBytes(32).toString("base64url");
-
       await sessoes.insertOne({
         usuarioId: user._id,
         refreshHash: crypto

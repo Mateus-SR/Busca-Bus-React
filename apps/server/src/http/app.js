@@ -18,7 +18,7 @@ export function createApp(config, db, poller, io = null) {
   app.use("/v1/health", healthRoute(config, db));
   app.use("/v1/auth", rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRoutes({ config, db }));
   app.use("/v1/exibicoes", exibicoesRoutes(db, config, poller, io));
-  app.use("/v1/me", meRoutes());
+  app.use("/v1/me", meRoutes(config));
   app.use("/v1/fatecs", fatecsRoutes(db));
   app.get("/v1/paradas/:codigo/validar", async (req, res, next) => {
     try {
