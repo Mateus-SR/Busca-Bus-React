@@ -6,18 +6,22 @@ import {
   CircleUser,
   ChevronDown,
   LayoutGrid,
+  UserCircle,
   Star,
   PenLine,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmLogoutModal from "@/components/ui/ConfirmLogoutModal";
+import Avatar from "@/components/ui/Avatar";
 
 export default function UserMenu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
   const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
   const menuRef = useRef(null);
   const { usuario, logout } = useAuth();
+  const nomeCompleto = typeof usuario?.nome === "string" ? usuario.nome.trim() : "";
+  const primeiroNome = nomeCompleto.split(/\s+/)[0] || "Visitante";
 
   useEffect(() => {
     function handleClickFora(evento) {
@@ -44,17 +48,24 @@ export default function UserMenu() {
           border-sobre-marca border-[3px]
           text-sobre-marca
           transition-all duration-200 ease-out
-          flex items-center gap-2
+          flex min-w-0 items-center gap-2
           rounded-xl
           cursor-pointer
           hover:bg-sobre-marca/20
           ${dropdownAberto ? "bg-sobre-marca/20" : ""}
         `}
       >
-        <CircleUser className="size-6" />
+        {usuario?.avatarId ? (
+          <Avatar avatarId={usuario.avatarId} alt="" className="size-6" />
+        ) : (
+          <CircleUser className="size-6" />
+        )}
 
-        <span className="font-semibold">
-          Olá, {usuario?.nome ?? "Visitante"}!
+        <span
+          className="min-w-0 max-w-[8rem] truncate whitespace-nowrap font-semibold sm:max-w-[12rem] lg:max-w-[16rem]"
+          title={nomeCompleto || "Visitante"}
+        >
+          Olá, {primeiroNome}!
         </span>
 
         <ChevronDown
@@ -67,6 +78,15 @@ export default function UserMenu() {
       {dropdownAberto && (
         <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-64 overflow-hidden rounded-2xl border border-borda-suave bg-superficie shadow-lg z-50">
           <div className="p-2">
+            <Link
+              href="/perfil"
+              onClick={() => setDropdownAberto(false)}
+              className="flex items-center gap-3 rounded-xl px-3 py-3 text-texto-suave transition-all duration-200 hover:bg-superficie-alt"
+            >
+              <UserCircle className="size-5 text-texto-secundario" />
+              <span className="text-sm font-semibold">Meu perfil</span>
+            </Link>
+
             <Link
               href="/minhas-exibicoes"
               onClick={() => setDropdownAberto(false)}

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Avatar Busca Bus — Cacheada longa ruiva</title>
+<desc id="desc">Personagem cartoon 2D com cabelo cacheado longo, retrato de busto e fundo transparente.</desc>
+<!-- cabelo longo atrás dos ombros -->
+<path d="M139 188 Q112 105 184 77 Q209 42 256 66 Q307 37 345 82 Q408 112 374 215
+L395 397 Q380 443 351 408 L342 287 L170 287 L161 408 Q132 443 117 397 Z" fill="#A94F32"/>
+<!-- cachos laterais longos -->
+<circle cx="145" cy="142" r="29" fill="#A94F32"/><circle cx="126" cy="190" r="27" fill="#A94F32"/><circle cx="139" cy="244" r="29" fill="#A94F32"/><circle cx="126" cy="300" r="28" fill="#A94F32"/><circle cx="145" cy="353" r="27" fill="#A94F32"/><circle cx="367" cy="142" r="29" fill="#A94F32"/><circle cx="386" cy="190" r="27" fill="#A94F32"/><circle cx="373" cy="244" r="29" fill="#A94F32"/><circle cx="386" cy="300" r="28" fill="#A94F32"/><circle cx="367" cy="353" r="27" fill="#A94F32"/><circle cx="178" cy="91" r="23" fill="#A94F32"/><circle cx="218" cy="68" r="23" fill="#A94F32"/><circle cx="260" cy="65" r="24" fill="#A94F32"/><circle cx="304" cy="69" r="23" fill="#A94F32"/><circle cx="340" cy="96" r="24" fill="#A94F32"/>
+<!-- pescoço e roupa -->
+<path d="M216 326 L216 383 Q256 411 296 383 L296 326 Z" fill="#F0C6A5"/>
+<path d="M91 512 Q103 405 183 378 Q218 365 256 365 Q294 365 329 378 Q409 405 421 512 Z" fill="#4B9A83"/>
+<path d="M190 389 Q256 438 322 389" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" opacity=".42"/>
+<!-- orelhas -->
+<ellipse cx="164" cy="246" rx="25" ry="37" fill="#F0C6A5"/><ellipse cx="348" cy="246" rx="25" ry="37" fill="#F0C6A5"/>
+<!-- rosto -->
+<path d="M166 174 Q166 105 256 105 Q346 105 346 174 L340 268 Q331 347 256 354 Q181 347 172 268 Z" fill="#F0C6A5"/>
+<ellipse cx="198" cy="280" rx="22" ry="11" fill="#D97972" opacity=".22"/><ellipse cx="314" cy="280" rx="22" ry="11" fill="#D97972" opacity=".22"/>
+<!-- sobrancelhas, olhos e sorriso -->
+<path d="M199 218 Q218 207 237 218 M275 218 Q294 207 313 218" fill="none" stroke="#4A3029" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="220" cy="243" rx="8" ry="11" fill="#332722"/><ellipse cx="292" cy="243" rx="8" ry="11" fill="#332722"/>
+<circle cx="223" cy="239" r="3" fill="#FFFFFF"/><circle cx="295" cy="239" r="3" fill="#FFFFFF"/>
+<path d="M256 247 Q247 267 258 269" fill="none" stroke="#9B654E" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<path d="M230 294 Q256 315 282 294" fill="none" stroke="#8F3F42" stroke-width="7" stroke-linecap="round"/>
+<!-- franja cacheada e volume no topo -->
+<path d="M153 207 Q133 158 160 126 Q158 91 194 101 Q211 65 241 94 Q263 58 291 91 Q327 74 345 119 Q377 149 354 211
+Q335 181 314 166 Q289 190 267 163 Q245 192 222 164 Q194 188 174 171 Z" fill="#A94F32"/>
+<circle cx="174" cy="135" r="19" fill="#A94F32"/><circle cx="207" cy="105" r="19" fill="#A94F32"/><circle cx="245" cy="101" r="19" fill="#A94F32"/><circle cx="285" cy="103" r="19" fill="#A94F32"/><circle cx="326" cy="137" r="19" fill="#A94F32"/>
+<path d="M323 135 l8 16 17 2 -13 12 3 17 -15 -9 -15 9 3 -17 -13 -12 17 -2 Z" fill="#F2C56B" stroke="#FFFFFF" stroke-width="3"/>
+<!-- brilho discreto no cabelo -->
+<path d="M160 175 Q160 124 195 112" fill="none" stroke="#FFFFFF" stroke-width="6" opacity=".10" stroke-linecap="round"/>
+</svg>

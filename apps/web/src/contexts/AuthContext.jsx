@@ -13,6 +13,7 @@ const API_URL =
 export function AuthProvider({ children }) {
   const { startLoading, stopLoading } = useLoading();
   const [usuario, setUsuario] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
@@ -21,10 +22,14 @@ export function AuthProvider({ children }) {
       const usuarioSalvo =
         localStorage.getItem("usuario") ||
         sessionStorage.getItem("usuario");
+      const tokenSalvo =
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken");
 
       if (usuarioSalvo) {
         setUsuario(JSON.parse(usuarioSalvo));
       }
+      if (tokenSalvo) setAccessToken(tokenSalvo);
     } catch {
       localStorage.removeItem("usuario");
       sessionStorage.removeItem("usuario");
@@ -94,20 +99,53 @@ export function AuthProvider({ children }) {
 
     localStorage.removeItem("usuario");
     sessionStorage.removeItem("usuario");
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
 
     if (lembrar) {
       localStorage.setItem("usuario", JSON.stringify(dados.usuario));
+      localStorage.setItem("accessToken", dados.accessToken);
     } else {
       sessionStorage.setItem("usuario", JSON.stringify(dados.usuario));
+      sessionStorage.setItem("accessToken", dados.accessToken);
     }
 
+    setAccessToken(dados.accessToken);
     return dados;
   }
 
   function logout() {
     setUsuario(null);
+    setAccessToken(null);
     localStorage.removeItem("usuario");
     sessionStorage.removeItem("usuario");
+    localStorage.removeItem("accessToken");
+    sessionStorage.removeItem("accessToken");
+  }
+
+  async function atualizarAvatar(avatarId) {
+    if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+    const resposta = await fetch(`${API_URL}/v1/me/avatar`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ avatarId }),
+    });
+    const dados = await resposta.json().catch(() => ({}));
+
+    if (!resposta.ok) {
+      throw new Error(dados.erro || "Não foi possível salvar o avatar.");
+    }
+
+    setUsuario(dados.usuario);
+    const armazenamento = localStorage.getItem("accessToken")
+      ? localStorage
+      : sessionStorage;
+    armazenamento.setItem("usuario", JSON.stringify(dados.usuario));
+    return dados.usuario;
   }
 
   return (
@@ -116,6 +154,7 @@ export function AuthProvider({ children }) {
         usuario,
         login,
         logout,
+        atualizarAvatar,
         estaLogado: !!usuario,
         carregando,
       }}

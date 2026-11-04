@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Avatar Busca Bus — Cachos</title>
+<desc id="desc">Personagem cartoon 2D original, retrato de busto, fundo transparente.</desc>
+<defs>
+  <clipPath id="faceClip"><path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z"/></clipPath>
+</defs>
+<!-- Neck and clothing -->
+<path d="M210 328 L210 372 Q256 402 302 372 L302 328 Z" fill="#F1D0B1"/>
+<path d="M108 512 Q116 405 190 374 Q222 360 256 360 Q290 360 322 374 Q396 405 404 512 Z" fill="#D65B4A"/>
+<path d="M202 377 Q256 420 310 377 L292 512 L220 512 Z" fill="#FFFFFF" opacity=".14"/>
+<path d="M190 390 Q256 435 322 390" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity=".45"/>
+<!-- Ears -->
+<ellipse cx="166" cy="246" rx="27" ry="39" fill="#F1D0B1"/>
+<ellipse cx="346" cy="246" rx="27" ry="39" fill="#F1D0B1"/>
+<path d="M165 239 Q178 226 183 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<path d="M347 239 Q334 226 329 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<!-- Hair back -->
+
+<path d="M151 199 Q146 99 256 91 Q366 99 361 199 Z" fill="#6C4935"/>
+<path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z" fill="#F1D0B1"/>
+<ellipse cx="198" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/><ellipse cx="314" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/>
+<path d="M201 222 Q219 210 237 221 M275 221 Q293 210 311 222" fill="none" stroke="#4A3029" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="220" cy="244" rx="8" ry="11" fill="#332722"/><ellipse cx="292" cy="244" rx="8" ry="11" fill="#332722"/>
+<circle cx="223" cy="240" r="3" fill="#FFFFFF"/><circle cx="295" cy="240" r="3" fill="#FFFFFF"/>
+<path d="M256 247 Q247 267 258 269" fill="none" stroke="#9B654E" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<path d="M230 294 Q256 315 282 294" fill="none" stroke="#8F3F42" stroke-width="7" stroke-linecap="round"/>
+<circle cx="190" cy="267" r="3.5" fill="#985D48" opacity=".75"/>
+<circle cx="204" cy="273" r="3.5" fill="#985D48" opacity=".75"/>
+<circle cx="216" cy="268" r="3.5" fill="#985D48" opacity=".75"/>
+<circle cx="296" cy="268" r="3.5" fill="#985D48" opacity=".75"/>
+<circle cx="308" cy="273" r="3.5" fill="#985D48" opacity=".75"/>
+<circle cx="322" cy="267" r="3.5" fill="#985D48" opacity=".75"/>
+<path d="M160 205 Q139 166 164 137 Q161 101 198 112 Q211 77 244 103 Q266 73 291 105 Q330 87 343 126 Q371 146 350 203 Q331 173 315 171 Q291 194 269 166 Q246 193 224 166 Q195 192 178 174 Z" fill="#6C4935"/>
+<circle cx="175" cy="145" r="18" fill="#6C4935"/>
+<circle cx="207" cy="119" r="18" fill="#6C4935"/>
+<circle cx="245" cy="112" r="18" fill="#6C4935"/>
+<circle cx="285" cy="119" r="18" fill="#6C4935"/>
+<circle cx="326" cy="145" r="18" fill="#6C4935"/>
+<path d="M108 512 Q116 405 190 374" fill="none" stroke="#3A2A28" stroke-width="5" opacity=".12"/>
+</svg>

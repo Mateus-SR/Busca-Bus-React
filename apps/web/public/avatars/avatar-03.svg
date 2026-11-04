@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Avatar Busca Bus — Tranças</title>
+<desc id="desc">Personagem cartoon 2D original, retrato de busto, fundo transparente.</desc>
+<defs>
+  <clipPath id="faceClip"><path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z"/></clipPath>
+</defs>
+<!-- Neck and clothing -->
+<path d="M210 328 L210 372 Q256 402 302 372 L302 328 Z" fill="#75452F"/>
+<path d="M108 512 Q116 405 190 374 Q222 360 256 360 Q290 360 322 374 Q396 405 404 512 Z" fill="#D78B36"/>
+<path d="M202 377 Q256 420 310 377 L292 512 L220 512 Z" fill="#FFFFFF" opacity=".14"/>
+<path d="M190 390 Q256 435 322 390" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity=".45"/>
+<!-- Ears -->
+<ellipse cx="166" cy="246" rx="27" ry="39" fill="#75452F"/>
+<ellipse cx="346" cy="246" rx="27" ry="39" fill="#75452F"/>
+<path d="M165 239 Q178 226 183 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<path d="M347 239 Q334 226 329 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<!-- Hair back -->
+
+<path d="M151 188 Q143 91 256 87 Q369 91 361 188 L350 345 Q336 374 319 344 L323 205 L189 205 L193 344 Q176 374 162 345 Z" fill="#211916"/>
+<path d="M163 210 Q132 280 151 390 M349 210 Q380 280 361 390" fill="none" stroke="#211916" stroke-width="22" stroke-linecap="round"/>
+<path d="M145 248 l20 14 M367 248 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M145 276 l20 14 M367 276 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M145 304 l20 14 M367 304 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M145 332 l20 14 M367 332 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M145 360 l20 14 M367 360 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M145 388 l20 14 M367 388 l-20 14" stroke="#A97953" stroke-width="5" stroke-linecap="round"/>
+<path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z" fill="#75452F"/>
+<ellipse cx="198" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/><ellipse cx="314" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/>
+<path d="M201 222 Q219 210 237 221 M275 221 Q293 210 311 222" fill="none" stroke="#4A3029" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="220" cy="244" rx="8" ry="11" fill="#332722"/><ellipse cx="292" cy="244" rx="8" ry="11" fill="#332722"/>
+<circle cx="223" cy="240" r="3" fill="#FFFFFF"/><circle cx="295" cy="240" r="3" fill="#FFFFFF"/>
+<path d="M256 247 Q247 267 258 269" fill="none" stroke="#9B654E" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<path d="M230 294 Q256 315 282 294" fill="none" stroke="#8F3F42" stroke-width="7" stroke-linecap="round"/>
+<circle cx="164" cy="286" r="8" fill="#F4C65E"/><circle cx="348" cy="286" r="8" fill="#F4C65E"/>
+<path d="M108 512 Q116 405 190 374" fill="none" stroke="#3A2A28" stroke-width="5" opacity=".12"/>
+</svg>

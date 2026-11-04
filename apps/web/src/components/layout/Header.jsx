@@ -15,6 +15,7 @@ const LINKS_NAV = [
 ];
 
 const LINKS_USUARIO = [
+	{ href: '/perfil', label: 'Meu Perfil' },
 	{ href: '/minhas-exibicoes', label: 'Minhas Exibições' },
 	{ href: '/favoritos', label: 'Meus Favoritos' },
 	{ href: '/configuracao', label: 'Criar Exibição' },
