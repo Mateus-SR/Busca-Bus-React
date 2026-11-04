@@ -12,12 +12,14 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmLogoutModal from "@/components/ui/ConfirmLogoutModal";
+import { useRouter } from "next/navigation";
 
 export default function UserMenu() {
   const [dropdownAberto, setDropdownAberto] = useState(false);
   const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
   const menuRef = useRef(null);
   const { usuario, logout } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     function handleClickFora(evento) {
@@ -58,9 +60,8 @@ export default function UserMenu() {
         </span>
 
         <ChevronDown
-          className={`size-5 transition-transform duration-200 ${
-            dropdownAberto ? "rotate-180" : ""
-          }`}
+          className={`size-5 transition-transform duration-200 ${dropdownAberto ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -126,6 +127,7 @@ export default function UserMenu() {
         onConfirm={() => {
           setModalLogoutAberto(false);
           logout();
+          router.replace("/login");
         }}
       />
     </div>
