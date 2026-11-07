@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmLogoutModal from "@/components/ui/ConfirmLogoutModal";
+import { useRouter } from "next/navigation";
 import Avatar from "@/components/ui/Avatar";
 
 export default function UserMenu() {
@@ -20,6 +21,7 @@ export default function UserMenu() {
   const [modalLogoutAberto, setModalLogoutAberto] = useState(false);
   const menuRef = useRef(null);
   const { usuario, logout } = useAuth();
+  const router = useRouter();
   const nomeCompleto = typeof usuario?.nome === "string" ? usuario.nome.trim() : "";
   const primeiroNome = nomeCompleto.split(/\s+/)[0] || "Visitante";
 
@@ -69,9 +71,8 @@ export default function UserMenu() {
         </span>
 
         <ChevronDown
-          className={`size-5 transition-transform duration-200 ${
-            dropdownAberto ? "rotate-180" : ""
-          }`}
+          className={`size-5 transition-transform duration-200 ${dropdownAberto ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -146,6 +147,7 @@ export default function UserMenu() {
         onConfirm={() => {
           setModalLogoutAberto(false);
           logout();
+          router.replace("/login");
         }}
       />
     </div>
