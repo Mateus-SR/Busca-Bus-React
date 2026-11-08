@@ -17,26 +17,40 @@ export function AuthProvider({ children }) {
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    const tokenCarregamento = startLoading("Verificando sessão...", "Por favor, aguarde.");
-    try {
-      const usuarioSalvo =
-        localStorage.getItem("usuario") ||
-        sessionStorage.getItem("usuario");
-      const tokenSalvo =
-        localStorage.getItem("accessToken") ||
-        sessionStorage.getItem("accessToken");
+    async function carregarSessao() {
+      const tokenCarregamento = startLoading(
+        "Verificando sessão...",
+        "Por favor, aguarde."
+      );
 
-      if (usuarioSalvo) {
-        setUsuario(JSON.parse(usuarioSalvo));
+      try {
+        const usuarioSalvo =
+          localStorage.getItem("usuario") ||
+          sessionStorage.getItem("usuario");
+
+        const tokenSalvo =
+          localStorage.getItem("accessToken") ||
+          sessionStorage.getItem("accessToken");
+
+        if (usuarioSalvo && tokenSalvo) {
+          const usuarioInicial = JSON.parse(usuarioSalvo);
+
+          setUsuario(usuarioInicial);
+          setAccessToken(tokenSalvo);
+
+          await verificarSessao(tokenSalvo);
+        } else {
+          logout();
+        }
+      } catch {
+        logout();
+      } finally {
+        setCarregando(false);
+        stopLoading(tokenCarregamento);
       }
-      if (tokenSalvo) setAccessToken(tokenSalvo);
-    } catch {
-      localStorage.removeItem("usuario");
-      sessionStorage.removeItem("usuario");
-    } finally {
-      setCarregando(false);
-      stopLoading(tokenCarregamento);
     }
+
+    carregarSessao();
   }, [startLoading, stopLoading]);
 
   async function login({ email, senha, lembrar } = {}) {
@@ -121,6 +135,28 @@ export function AuthProvider({ children }) {
     sessionStorage.removeItem("usuario");
     localStorage.removeItem("accessToken");
     sessionStorage.removeItem("accessToken");
+  }
+
+
+  async function verificarSessao(token = accessToken) {
+    if (!token) return false;
+
+    try {
+      const resposta = await fetch(`${API_URL}/v1/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (resposta.status === 401) {
+        logout();
+        return false;
+      }
+
+      return resposta.ok;
+    } catch {
+      return false;
+    }
   }
 
   async function atualizarAvatar(avatarId) {

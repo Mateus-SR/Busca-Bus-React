@@ -22,6 +22,14 @@ export function loadConfig(env = process.env) {
     mongodbDb: (env.MONGODB_DB || "").trim(),
     allowedOrigins: split(env.ALLOWED_ORIGINS),
     appUrl: env.APP_URL || "",
+
+    smtpHost: env.SMTP_HOST || "",
+    smtpPort: Number(env.SMTP_PORT || 465),
+    smtpSecure: env.SMTP_SECURE === "true",
+    smtpUser: env.SMTP_USER || "",
+    smtpPass: env.SMTP_PASS || "",
+    emailFrom: env.EMAIL_FROM || env.SMTP_USER || "",
+
     encryptionKey: env.ENCRYPTION_KEY || "",
     sptransToken: env.SPTRANS_DEFAULT_TOKEN || "",
     sptransBaseUrl: env.SPTRANS_BASE_URL || "https://api.olhovivo.sptrans.com.br/v2.1",
