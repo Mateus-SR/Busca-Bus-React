@@ -2,13 +2,13 @@
 
 import { Eye, EyeOff } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
-import { useState, useEffect } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export default function RedefinirSenhaPage() {
+function RedefinirSenhaComParametro() {
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
     const [senha, setSenha] = useState("");
@@ -179,5 +179,13 @@ export default function RedefinirSenhaPage() {
             )}
 
         </AuthBackground>
+    );
+}
+
+export default function RedefinirSenhaPage() {
+    return (
+        <Suspense fallback={<main className="min-h-screen" />}>
+            <RedefinirSenhaComParametro />
+        </Suspense>
     );
 }
