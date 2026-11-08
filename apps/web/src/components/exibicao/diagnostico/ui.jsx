@@ -1,8 +1,8 @@
 export function Metric({ label, value, className = '' }) {
 	return (
-		<div className={`rounded border bg-gray-50 p-2 text-gray-900 ${className}`}>
-			<dt className="text-xs text-gray-600">{label}</dt>
-			<dd className="font-roboto-mono text-sm font-bold text-gray-950">
+		<div className={`rounded border bg-superficie-sutil p-2 text-texto-forte ${className}`}>
+			<dt className="text-xs text-texto-secundario">{label}</dt>
+			<dd className="font-roboto-mono text-sm font-bold text-texto-maximo">
 				{value ?? '—'}
 			</dd>
 		</div>
@@ -17,14 +17,14 @@ export function Destaque({ rotulo, valor, detalhe, titulo, alerta = false }) {
 			className={`min-w-0 rounded border p-2 ${
 				alerta
 					? 'border-amber-400 bg-amber-100 text-amber-950'
-					: 'bg-gray-50 text-gray-900'
+					: 'bg-superficie-sutil text-texto-forte'
 			}`}
 		>
-			<dt className="text-xs text-gray-600">{rotulo}</dt>
+			<dt className="text-xs text-texto-secundario">{rotulo}</dt>
 			<dd className="font-roboto-mono text-lg leading-tight font-bold">
 				{valor ?? '—'}
 			</dd>
-			{detalhe && <dd className="truncate text-xs text-gray-600">{detalhe}</dd>}
+			{detalhe && <dd className="truncate text-xs text-texto-secundario">{detalhe}</dd>}
 		</div>
 	);
 }

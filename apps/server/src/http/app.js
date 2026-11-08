@@ -6,8 +6,9 @@ import { healthRoute } from "./routes/health.js";
 import { authRoutes } from "./routes/auth.js";
 import { exibicoesRoutes } from "./routes/exibicoes.js";
 import { meRoutes } from "./routes/me.js";
+import { fatecsRoutes } from "./routes/fatecs.js";
 
-export function createApp(config, db, poller, io = null) {
+export function createApp(config, db, poller, io = null, servicoEmail = null) {
   const app = express();
   app.set("trust proxy", 1);
   app.use(helmet());
@@ -15,9 +16,10 @@ export function createApp(config, db, poller, io = null) {
   app.use(express.json({ limit: "64kb" }));
   app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: "draft-8", legacyHeaders: false }));
   app.use("/v1/health", healthRoute(config, db));
-  app.use("/v1/auth", rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRoutes({ config, db }));
+  app.use("/v1/auth", rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRoutes({ config, db, servicoEmail }));
   app.use("/v1/exibicoes", exibicoesRoutes(db, config, poller, io));
-  app.use("/v1/me", meRoutes());
+  app.use("/v1/me", meRoutes(config, db));
+  app.use("/v1/fatecs", fatecsRoutes(db));
   app.get("/v1/paradas/:codigo/validar", async (req, res, next) => {
     try {
       const snapshot = await poller.consultar(req.params.codigo);

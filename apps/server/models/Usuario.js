@@ -31,6 +31,14 @@ const usuarioSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    fac_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      default: null,
+    },
+    avatarId: {
+      type: String,
+      default: "avatar-01",
+    },
   },
   {
     collection: "Users",

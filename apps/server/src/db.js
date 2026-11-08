@@ -5,7 +5,18 @@ export async function connectDatabase(config) {
   if (!config.mongodbUri) return null;
 
   try {
-    await mongoose.connect(config.mongodbUri);
+    await mongoose.connect(
+      config.mongodbUri,
+      config.mongodbDb ? { dbName: config.mongodbDb } : {}
+    );
+
+    // Sem banco na URI e sem MONGODB_DB, o MongoDB cai no banco padrão "test".
+    // Avisamos antes de criar os índices para não espalhar coleções no banco errado sem ninguém notar.
+    if (mongoose.connection.name === "test" && config.mongodbDb !== "test") {
+      console.warn(
+        '[db] Conectado ao banco padrão "test". Defina MONGODB_DB ou inclua o nome do banco na MONGODB_URI (ex.: .../MeuBanco?retryWrites=true).'
+      );
+    }
 
     const database = mongoose.connection.db;
 

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Avatar Busca Bus — Moicano</title>
+<desc id="desc">Personagem cartoon 2D original, retrato de busto, fundo transparente.</desc>
+<defs>
+  <clipPath id="faceClip"><path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z"/></clipPath>
+</defs>
+<!-- Neck and clothing -->
+<path d="M210 328 L210 372 Q256 402 302 372 L302 328 Z" fill="#9B6249"/>
+<path d="M108 512 Q116 405 190 374 Q222 360 256 360 Q290 360 322 374 Q396 405 404 512 Z" fill="#568D9E"/>
+<path d="M202 377 Q256 420 310 377 L292 512 L220 512 Z" fill="#FFFFFF" opacity=".14"/>
+<path d="M190 390 Q256 435 322 390" fill="none" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round" opacity=".45"/>
+<!-- Ears -->
+<ellipse cx="166" cy="246" rx="27" ry="39" fill="#9B6249"/>
+<ellipse cx="346" cy="246" rx="27" ry="39" fill="#9B6249"/>
+<path d="M165 239 Q178 226 183 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<path d="M347 239 Q334 226 329 248" fill="none" stroke="#8D5945" stroke-width="6" stroke-linecap="round" opacity=".55"/>
+<!-- Hair back -->
+
+<path d="M153 198 Q148 116 206 111 Q223 44 256 48 Q289 44 306 111 Q364 116 359 198 Z" fill="#201B1A"/>
+<path d="M166 178 Q166 112 256 112 Q346 112 346 178 L340 270 Q331 348 256 354 Q181 348 172 270 Z" fill="#9B6249"/>
+<ellipse cx="198" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/><ellipse cx="314" cy="278" rx="23" ry="12" fill="#D97972" opacity=".22"/>
+<path d="M201 222 Q219 210 237 221 M275 221 Q293 210 311 222" fill="none" stroke="#4A3029" stroke-width="7" stroke-linecap="round"/>
+<ellipse cx="220" cy="244" rx="8" ry="11" fill="#332722"/><ellipse cx="292" cy="244" rx="8" ry="11" fill="#332722"/>
+<circle cx="223" cy="240" r="3" fill="#FFFFFF"/><circle cx="295" cy="240" r="3" fill="#FFFFFF"/>
+<path d="M256 247 Q247 267 258 269" fill="none" stroke="#9B654E" stroke-width="5" stroke-linecap="round" opacity=".65"/>
+<path d="M230 294 Q256 315 282 294" fill="none" stroke="#8F3F42" stroke-width="7" stroke-linecap="round"/>
+<path d="M180 189 Q186 111 225 103 Q240 51 256 49 Q278 60 287 105 Q327 114 332 189 Q300 169 283 166 Q258 181 239 163 Q208 181 180 189 Z" fill="#201B1A"/>
+<circle cx="164" cy="286" r="8" fill="#F4C65E"/><circle cx="348" cy="286" r="8" fill="#F4C65E"/>
+<path d="M108 512 Q116 405 190 374" fill="none" stroke="#3A2A28" stroke-width="5" opacity=".12"/>
+</svg>

@@ -2,7 +2,7 @@ import packageJson from "../../../package.json"; // Ajuste o caminho conforme a 
 
 export default function Footer({ fixo = false }) {
   return (
-    <footer className={`${fixo ? "fixed inset-x-0 bottom-0 z-50 bg-sptrans py-1 text-white" : "py-4 text-gray-500"} text-center text-sm`}>
+    <footer className={`${fixo ? "fixed inset-x-0 bottom-0 z-50 bg-marca py-1 text-sobre-marca" : "py-4 text-texto-mudo"} text-center text-sm`}>
       BuscaBus • Versão {packageJson.version}
     </footer>
   );

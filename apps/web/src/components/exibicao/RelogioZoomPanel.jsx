@@ -48,12 +48,12 @@ function RelogioAba() {
 				type="button"
 				onClick={() => setHeaderOculto((v) => !v)}
 				aria-label={headerOculto ? "Mostrar cabeçalho" : "Esconder cabeçalho"}
-				className="flex h-24 w-96 cursor-pointer items-center justify-center rounded-br-3xl bg-sptrans font-roboto-mono font-extrabold text-white shadow-xl"
+				className="flex h-24 w-96 cursor-pointer items-center justify-center rounded-br-3xl bg-marca font-roboto-mono font-extrabold text-sobre-marca shadow-xl"
 			>
 				{headerOculto ? (
-					<ChevronDown className="mr-2.5 text-white/85" size={28} />
+					<ChevronDown className="mr-2.5 text-sobre-marca/85" size={28} />
 				) : (
-					<ChevronUp className="mr-2.5 text-white/85" size={28} />
+					<ChevronUp className="mr-2.5 text-sobre-marca/85" size={28} />
 				)}
 				<p className="text-6xl">{hora}</p>
 			</button>

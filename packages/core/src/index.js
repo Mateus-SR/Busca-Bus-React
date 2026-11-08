@@ -5,3 +5,4 @@ export { EVENTOS, EVENTOS_SOCKET } from "./eventos.js";
 export { INTERVALO_COLETA_MS } from "./intervalos.js";
 export { validarEmail, validarSenha } from "./schemas.js";
 export { normalizarExibicao, normalizarOnibus } from "./dto.js";
+export { ehFalhaTransitoriaApi, ehStatusTransitorioApi, aguardarDisponibilidadeApi } from "./api/disponibilidade.js";

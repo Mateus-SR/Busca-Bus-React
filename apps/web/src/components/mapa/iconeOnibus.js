@@ -6,5 +6,5 @@ const CAMINHO_ONIBUS =
 // Devolve o <svg> do ônibus como string, para uso no `html` do L.divIcon.
 // O contorno branco (pintado atrás do preenchimento) separa o ícone do mapa em qualquer cor.
 export function criarSvgOnibus(cor, tamanho) {
-	return `<svg class="bus-marker-icone" width="${tamanho}" height="${tamanho}" viewBox="-2 -2 54 54" aria-hidden="true" focusable="false"><path d="${CAMINHO_ONIBUS}" fill="${cor}" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke" /></svg>`;
+	return `<svg class="block absolute right-1/2 bottom-0 translate-x-1/2 object-contain" width="${tamanho}" height="${tamanho}" viewBox="-2 -2 54 54" aria-hidden="true" focusable="false"><path d="${CAMINHO_ONIBUS}" fill="${cor}" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" paint-order="stroke" /></svg>`;
 }

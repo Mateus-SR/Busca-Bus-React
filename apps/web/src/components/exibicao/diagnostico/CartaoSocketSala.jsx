@@ -17,14 +17,14 @@ export default function CartaoSocketSala({
 					value={`${soma('referenciasAtivas')} (${maior('referenciasAtivas') ?? 0}x${paradas.length})`}
 					className="col-span-1"
 				/>
-				<div className="col-span-1 rounded border bg-gray-50 p-2 text-gray-900">
-					<dt className="flex items-center justify-between gap-1 text-xs text-gray-600">
+				<div className="col-span-1 rounded border bg-superficie-sutil p-2 text-texto-forte">
+					<dt className="flex items-center justify-between gap-1 text-xs text-texto-secundario">
 						Snapshot atual / total (sala)
 						<select
 							value={unidadeSnapshot}
 							onChange={(evento) => setUnidadeSnapshot(evento.target.value)}
 							aria-label="Unidade do tamanho do snapshot"
-							className="rounded border bg-white px-1 text-xs text-gray-900"
+							className="rounded border bg-superficie px-1 text-xs text-texto-forte"
 						>
 							<option value="auto">Auto</option>
 							<option value="KB">KB</option>
@@ -32,7 +32,7 @@ export default function CartaoSocketSala({
 							<option value="GB">GB</option>
 						</select>
 					</dt>
-					<dd className="font-roboto-mono text-sm font-bold text-gray-950">{`${formatarBytes(socket?.snapshotBytesAtual ?? frontend?.snapshotBytesAtual, unidadeSnapshot) ?? '—'} / ${formatarBytes(socket?.snapshotBytesTotal ?? frontend?.snapshotBytesTotal, unidadeSnapshot) ?? '—'}`}</dd>
+					<dd className="font-roboto-mono text-sm font-bold text-texto-maximo">{`${formatarBytes(socket?.snapshotBytesAtual ?? frontend?.snapshotBytesAtual, unidadeSnapshot) ?? '—'} / ${formatarBytes(socket?.snapshotBytesTotal ?? frontend?.snapshotBytesTotal, unidadeSnapshot) ?? '—'}`}</dd>
 				</div>
 			</dl>
 		</Cartao>

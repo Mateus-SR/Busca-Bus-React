@@ -1,0 +1,196 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { ChevronDown } from "lucide-react";
+import { useLoading } from "@/contexts/LoadingContext";
+import { aguardarDisponibilidadeApi, ehFalhaTransitoriaApi, ehStatusTransitorioApi } from "@busca-bus/core";
+
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+export default function InstituicaoSelect({
+  instituicao,
+  semInstituicao,
+  onChange,
+}) {
+  const [dropdownAberto, setDropdownAberto] = useState(false);
+  const [instituicoes, setInstituicoes] = useState([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState("");
+  const [erroTecnico, setErroTecnico] = useState("");
+  const { startLoading, stopLoading, showError } = useLoading();
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function carregarInstituicoes() {
+      let tokenCarregamento;
+      let falhou = false;
+      try {
+        setCarregando(true);
+        setErro("");
+        setErroTecnico("");
+        tokenCarregamento = startLoading("Carregando instituições...", "Por favor, aguarde.");
+
+        let resposta;
+        try {
+          resposta = await fetch(`${API_URL}/v1/fatecs`, {
+            signal: controller.signal,
+          });
+          if (!resposta.ok && ehStatusTransitorioApi(resposta.status)) {
+            throw Object.assign(new Error(`Falha na API: ${resposta.status}`), { status: resposta.status });
+          }
+        } catch (erroApi) {
+          const falhaTransitoria = erroApi?.status
+            ? erroApi
+            : { ...erroApi, codigo: "REDE" };
+          if (!ehFalhaTransitoriaApi(falhaTransitoria)) throw erroApi;
+          let healthDisponivel = false;
+          try {
+            const health = await fetch(`${API_URL}/v1/health`, { signal: controller.signal });
+            healthDisponivel = health.ok;
+          } catch (healthError) {
+            if (healthError.name === "AbortError") throw healthError;
+          }
+          if (healthDisponivel) throw erroApi;
+          stopLoading(tokenCarregamento);
+          const tokenInicializacao = startLoading(
+            "Os serviços estão sendo iniciados.",
+            "Isso pode levar até 1 minuto.\nAguarde enquanto tentamos novamente.",
+          );
+          try {
+            await aguardarDisponibilidadeApi(API_URL, { sinal: controller.signal });
+          } finally {
+            stopLoading(tokenInicializacao);
+          }
+          resposta = await fetch(`${API_URL}/v1/fatecs`, {
+            signal: controller.signal,
+          });
+        }
+        if (!resposta.ok) {
+          throw new Error("Não foi possível carregar as instituições.");
+        }
+
+        const dados = await resposta.json();
+
+        setInstituicoes(
+          Array.isArray(dados.fatecs) ? dados.fatecs : []
+        );
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          falhou = true;
+          const detalhe = error.message || "Erro ao carregar instituições.";
+          setErro("Não foi possível carregar as instituições.");
+          setErroTecnico(detalhe);
+          showError("Não foi possível carregar as instituições.", "Você pode tentar novamente mais tarde.", detalhe);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setCarregando(false);
+        }
+        if (!falhou) stopLoading(tokenCarregamento);
+      }
+    }
+
+    carregarInstituicoes();
+
+    return () => controller.abort();
+  }, [showError, startLoading, stopLoading]);
+
+  const instituicaoSelecionada = instituicoes.find(
+    (item) => item.id_fac === instituicao
+  );
+
+  function selecionarInstituicao(id) {
+    onChange({ instituicao: id, semInstituicao: false });
+    setDropdownAberto(false);
+  }
+
+  function alternarSemInstituicao(evento) {
+    const selecionado = evento.target.checked;
+
+    onChange({
+      instituicao: selecionado ? "" : instituicao,
+      semInstituicao: selecionado,
+    });
+
+    setDropdownAberto(false);
+  }
+
+  return (
+    <div className="mb-6">
+      <label className="mb-2 block text-sm font-medium text-texto-suave">
+        Instituição (opcional)
+      </label>
+
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() =>
+            !semInstituicao && setDropdownAberto((aberto) => !aberto)
+          }
+          className={`w-full rounded-md border border-borda px-4 py-3 text-left ${
+            semInstituicao
+              ? "cursor-not-allowed bg-superficie-alt text-texto-desabilitado"
+              : "bg-superficie"
+          }`}
+        >
+          {semInstituicao
+            ? "Nenhuma instituição selecionada"
+            : instituicaoSelecionada?.nome_fac ?? "Selecione uma instituição"}
+
+          <ChevronDown className="float-right" />
+        </button>
+
+        {dropdownAberto && (
+          <div className="absolute top-full z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-borda bg-superficie shadow-lg">
+            {carregando && (
+              <p className="px-4 py-3 text-sm text-texto-suave">
+                Carregando instituições...
+              </p>
+            )}
+
+            {!carregando && erro && (
+              <div className="px-4 py-3 text-sm text-erro-forte">
+                <p>{erro}</p>
+                <details className="mt-2 text-xs text-texto-secundario">
+                  <summary className="cursor-pointer">Detalhes técnicos</summary>
+                  <p className="mt-1">{erroTecnico}</p>
+                </details>
+              </div>
+            )}
+
+            {!carregando && !erro && instituicoes.length === 0 && (
+              <p className="px-4 py-3 text-sm text-texto-suave">
+                Nenhuma instituição encontrada.
+              </p>
+            )}
+
+            {!carregando &&
+              !erro &&
+              instituicoes.map((item) => (
+                <button
+                  type="button"
+                  key={item.id_fac}
+                  onClick={() => selecionarInstituicao(item.id_fac)}
+                  className="block w-full px-4 py-2 text-left text-texto hover:bg-superficie-alt"
+                >
+                  {item.nome_fac}
+                </button>
+              ))}
+          </div>
+        )}
+      </div>
+
+      <label className="mt-3 flex items-center text-sm text-texto-suave">
+        <input
+          type="checkbox"
+          checked={semInstituicao}
+          onChange={alternarSemInstituicao}
+          className="mr-2"
+        />
+        Não faço parte de uma instituição / Prefiro não informar
+      </label>
+    </div>
+  );
+}

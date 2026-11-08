@@ -17,7 +17,7 @@ function ExibicaoComParametro() {
 		return (
 			<main className="flex min-h-[calc(100vh-68px)] flex-col items-center justify-center">
 				<h1 className="text-center text-3xl font-bold">Acessar exibição</h1>
-				<p className="mt-3 text-center text-gray-600">
+				<p className="mt-3 text-center text-texto-secundario">
 					Informe o código de seis caracteres para continuar.
 				</p>
 				<AcessoRapidoForm />
@@ -31,7 +31,7 @@ function ExibicaoComParametro() {
 
 			<Link
 				href={`/mapa?codigo=${encodeURIComponent(codigo)}`}
-				className="border-sptrans font-roboto-mono text-sptrans hover:bg-sptrans fixed right-4 bottom-4 z-30 flex items-center rounded-lg border-2 bg-white px-3 py-2 text-sm font-bold shadow-2xs transition duration-300 ease-in-out hover:text-white sm:right-7 sm:bottom-7 sm:px-4 sm:text-base"
+				className="border-acento font-roboto-mono text-acento hover:bg-marca fixed right-4 bottom-4 z-30 flex items-center rounded-lg border-2 bg-superficie px-3 py-2 text-sm font-bold shadow-2xs transition duration-300 ease-in-out hover:text-superficie sm:right-7 sm:bottom-7 sm:px-4 sm:text-base"
 			>
 				<MapPinned className="mr-2" size={20} />
 				Abrir Mapa
