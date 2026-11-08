@@ -21,9 +21,10 @@ const AVATARES_PERMITIDOS = new Set([
   "avatar-15",
   "avatar-16",
 ]);
-export function meRoutes(config) {
+export function meRoutes(config, db) {
   const router = Router();
-  const protegido = exigirAutenticacao(config);
+  const sessoes = db?.collection("sessoes");
+  const protegido = exigirAutenticacao(config, sessoes);
   const indisponivel = (_req, res) => res.status(501).json({ erro: "Autenticação necessária para este recurso." });
   router.get("/", protegido, async (req, res, next) => {
     try {
