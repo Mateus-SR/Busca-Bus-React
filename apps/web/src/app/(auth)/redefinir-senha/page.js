@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
-import { validarSenha } from "@busca-bus/core";
+import { useState, useEffect } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
@@ -13,26 +13,54 @@ export default function RedefinirSenhaPage() {
     const token = searchParams.get("token");
     const [senha, setSenha] = useState("");
     const [confirmarSenha, setConfirmarSenha] = useState("");
+    const [mostrarSenha, setMostrarSenha] = useState(false);
     const [mensagem, setMensagem] = useState("");
+    const [mensagemVisivel, setMensagemVisivel] = useState(false);
+    const [contadorMensagem, setContadorMensagem] = useState(0);
     const [carregando, setCarregando] = useState(false);
     const [sucesso, setSucesso] = useState(false);
+
+    useEffect(() => {
+        if (!mensagem) return;
+
+        setMensagemVisivel(true);
+
+        const timeoutFade = setTimeout(() => {
+            setMensagemVisivel(false);
+        }, 3500);
+
+        const timeoutLimpar = setTimeout(() => {
+            setMensagem("");
+        }, 4000);
+
+        return () => {
+            clearTimeout(timeoutFade);
+            clearTimeout(timeoutLimpar);
+        };
+    }, [mensagem, contadorMensagem]);
+
+    function exibirMensagem(texto) {
+        setMensagem(texto);
+        setContadorMensagem((anterior) => anterior + 1);
+    }
 
     async function redefinirSenha(evento) {
         evento.preventDefault();
         setMensagem("");
+        setMensagemVisivel(false);
 
         if (!token) {
-            setMensagem("Link de recuperação inválido ou expirado.");
+            exibirMensagem("Link de recuperação inválido ou expirado.");
             return;
         }
 
-        if (!validarSenha(senha)) {
-            setMensagem("A senha deve conter letras e números, com no mínimo 6 caracteres.");
+        if (senha.length < 6 || !/[0-9]/.test(senha) || !/[^a-zA-Z0-9]/.test(senha)) {
+            exibirMensagem("A senha deve ter no mínimo 6 caracteres, incluindo pelo menos um número e um símbolo.");
             return;
         }
 
         if (senha !== confirmarSenha) {
-            setMensagem("As senhas estão diferentes.");
+            exibirMensagem("As senhas estão diferentes.");
             return;
         }
 
@@ -58,7 +86,7 @@ export default function RedefinirSenhaPage() {
 
             setSucesso(true);
         } catch (error) {
-            setMensagem(error.message || "Erro ao redefinir a senha.");
+            exibirMensagem(error.message || "Erro ao redefinir a senha.");
         } finally {
             setCarregando(false);
         }
@@ -90,15 +118,26 @@ export default function RedefinirSenhaPage() {
                             >
                                 Nova senha
                             </label>
-                            <input
-                                id="senha"
-                                type="password"
-                                value={senha}
-                                onChange={(evento) => setSenha(evento.target.value)}
-                                placeholder="Digite sua nova senha"
-                                autoComplete="new-password"
-                                className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
-                            />
+                            <div className="relative">
+                                <input
+                                    id="senha"
+                                    type={mostrarSenha ? "text" : "password"}
+                                    value={senha}
+                                    onChange={(evento) => setSenha(evento.target.value)}
+                                    placeholder="Digite sua nova senha"
+                                    autoComplete="new-password"
+                                    className="w-full rounded-md border border-borda px-4 py-3 pr-12 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={() => setMostrarSenha(!mostrarSenha)}
+                                    className="absolute inset-y-0 right-3 flex items-center text-texto-suave hover:text-texto"
+                                    aria-label={mostrarSenha ? "Ocultar senha" : "Mostrar senha"}
+                                >
+                                    {mostrarSenha ? <Eye size={20} /> : <EyeOff size={20} />}
+                                </button>
+                            </div>
                         </div>
 
                         <div>
@@ -120,7 +159,10 @@ export default function RedefinirSenhaPage() {
                         </div>
 
                         {mensagem && (
-                            <p className="text-center text-sm font-semibold text-erro">
+                            <p
+                                className={`text-center text-sm font-semibold text-erro transition-opacity duration-500 ${mensagemVisivel ? "opacity-100" : "opacity-0"
+                                    }`}
+                            >
                                 {mensagem}
                             </p>
                         )}
