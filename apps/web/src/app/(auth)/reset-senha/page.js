@@ -6,12 +6,15 @@ import AuthBackground from "@/components/auth/AuthBackground";
 import AuthLinks from "@/components/auth/AuthLinks";
 import { validarEmail } from "@busca-bus/core";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 export default function ResetSenhaPage() {
   const [email, setEmail] = useState("");
   const [mensagem, setMensagem] = useState("");
   const [enviado, setEnviado] = useState(false);
+  const [carregando, setCarregando] = useState(false);
 
-  function solicitarRedefinicao(evento) {
+  async function solicitarRedefinicao(evento) {
     evento.preventDefault();
     setMensagem("");
 
@@ -25,7 +28,31 @@ export default function ResetSenhaPage() {
       return;
     }
 
-    setEnviado(true);
+    setCarregando(true);
+
+    try {
+      const resposta = await fetch(`${API_URL}/v1/auth/esqueci-senha`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+        }),
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(dados.erro || "Não foi possível enviar o e-mail.");
+      }
+
+      setEnviado(true);
+    } catch (error) {
+      setMensagem(error.message || "Erro ao solicitar recuperação de senha.");
+    } finally {
+      setCarregando(false);
+    }
   }
 
   return (
@@ -83,9 +110,10 @@ export default function ResetSenhaPage() {
 
             <button
               type="submit"
-              className="w-full rounded-md bg-destaque py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte"
+              disabled={carregando}
+              className="w-full rounded-md bg-destaque py-3 text-lg font-semibold text-sobre-destaque transition hover:bg-destaque-forte disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Enviar instruções
+              {carregando ? "Enviando..." : "Enviar instruções"}
             </button>
           </form>
         </>

@@ -1,0 +1,34 @@
+
+import nodemailer from "nodemailer";
+
+export function criarServicoEmail(config) {
+  const transporter = nodemailer.createTransport({
+    host: config.smtpHost,
+    port: config.smtpPort,
+    secure: config.smtpSecure,
+    auth: {
+      user: config.smtpUser,
+      pass: config.smtpPass,
+    },
+  });
+
+  async function verificarConexao() {
+    await transporter.verify();
+    console.log("Servidor de e-mail conectado com sucesso!");
+  }
+
+  async function enviarEmail({ para, assunto, texto, html }) {
+    return await transporter.sendMail({
+      from: config.emailFrom,
+      to: para,
+      subject: assunto,
+      texto,
+      html,
+    });
+  }
+
+  return {
+    verificarConexao,
+    enviarEmail,
+  };
+}
