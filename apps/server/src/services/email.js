@@ -18,17 +18,27 @@ export function criarServicoEmail(config) {
   }
 
   async function enviarEmail({ para, assunto, texto, html }) {
-    const resultado = await transporter.sendMail({
-      from: config.emailFrom,
-      to: para,
-      subject: assunto,
-      texto,
-      html,
-    });
-    console.log("[email] Mensagem enviada com sucesso.", {
-      messageId: resultado.messageId,
-    });
-    return resultado;
+    try {
+      const resultado = await transporter.sendMail({
+        from: config.emailFrom,
+        to: para,
+        subject: assunto,
+        text: texto,
+        html,
+      });
+      console.log("[email] Mensagem enviada com sucesso.", {
+        messageId: resultado.messageId,
+      });
+      return resultado;
+    } catch (error) {
+      console.error("[email] Falha ao enviar mensagem:", {
+        code: error.code,
+        responseCode: error.responseCode,
+        command: error.command,
+        message: error.message,
+      });
+      throw error;
+    }
   }
 
   return {
