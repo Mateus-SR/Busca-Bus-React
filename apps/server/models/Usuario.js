@@ -37,7 +37,7 @@ const usuarioSchema = new mongoose.Schema(
     },
     avatarId: {
       type: String,
-      default: "avatar-01",
+      default: null,
     },
   },
   {

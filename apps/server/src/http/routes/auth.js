@@ -14,7 +14,7 @@ const publicUser = (user) => ({
   email: user.email,
   role: user.role,
   fac_id: user.fac_id?.toString() || null,
-  avatarId: user.avatarId || "avatar-01",
+  avatarId: user.avatarId || null,
 });
 
 const unavailable = (res) =>

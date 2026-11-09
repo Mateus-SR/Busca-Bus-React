@@ -1,7 +1,22 @@
-const AVATAR_PADRAO = "avatar-01";
 
-export default function Avatar({ avatarId = AVATAR_PADRAO, alt = "", className = "" }) {
-  const id = /^avatar-\d{2}$/.test(avatarId) ? avatarId : AVATAR_PADRAO;
+import { UserRound } from "lucide-react";
+
+export default function Avatar({ avatarId = null, alt = "", className = "" }) {
+  const id = typeof avatarId === "string" && /^avatar-\d{2}$/.test(avatarId)
+    ? avatarId
+    : null;
+
+  if (!id) {
+    return (
+      <div
+        role="img"
+        aria-label={alt || "Usuário sem foto de perfil"}
+        className={`flex items-center justify-center rounded-full bg-gray-100 text-gray-500 ${className}`}
+      >
+        <UserRound className="w-1/2 h-1/2" aria-hidden="true" />
+      </div>
+    );
+  }
 
   return (
     <img

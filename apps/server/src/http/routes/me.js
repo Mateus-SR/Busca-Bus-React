@@ -37,7 +37,7 @@ export function meRoutes(config, db) {
           email: usuario.email,
           role: usuario.role,
           fac_id: usuario.fac_id?.toString() || null,
-          avatarId: usuario.avatarId || "avatar-01",
+          avatarId: usuario.avatarId || null,
         },
       });
     } catch (error) {
@@ -66,7 +66,7 @@ export function meRoutes(config, db) {
           email: usuario.email,
           role: usuario.role,
           fac_id: usuario.fac_id?.toString() || null,
-          avatarId: usuario.avatarId || "avatar-01",
+          avatarId: usuario.avatarId || null,
         },
       });
     } catch (error) {
