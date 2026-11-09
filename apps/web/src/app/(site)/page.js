@@ -24,7 +24,7 @@ export default function Home() {
         </div>
       </section>
 
-      <div className="mx-auto grid w-full max-w-300 gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(24rem,1.2fr)] lg:items-start lg:gap-12">
+      <div className="mx-auto grid w-full max-w-300 gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(20rem,0.95fr)_minmax(28rem,1.05fr)] lg:items-start lg:gap-12">
         <AcessoRapidoForm />
         <EventosDaSemana />
       </div>

@@ -23,9 +23,27 @@ function chaveDoDia(data) {
 function nomeDoDia(data) {
 	return data.toLocaleDateString('pt-BR', {
 		weekday: 'long',
+	});
+}
+
+function dataDoDia(data) {
+	return data.toLocaleDateString('pt-BR', {
 		day: 'numeric',
 		month: 'long',
 	});
+}
+
+function descricaoRelativa(data) {
+	const hoje = new Date();
+	const hojeSemHora = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+	const diaSemHora = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+	const diferenca = Math.round((diaSemHora - hojeSemHora) / 86400000);
+
+	if (diferenca === 0) return 'Hoje';
+	if (diferenca === 1) return 'Amanhã';
+	if (diferenca > 1) return `Faltam ${diferenca} dias`;
+	if (diferenca === -1) return 'Ontem';
+	return `Há ${Math.abs(diferenca)} dias`;
 }
 
 function horaDoEvento(evento) {
@@ -133,7 +151,7 @@ export default function EventosDaSemana() {
 
 	return (
 		<section aria-label="Eventos desta semana" className="mt-10 overflow-hidden rounded-3xl border border-borda bg-superficie shadow-xl shadow-black/5 lg:mt-0">
-			<div className="bg-linear-to-br from-marca to-marca-forte p-5 text-sobre-marca sm:p-6">
+			<div className="bg-marca p-5 text-sobre-marca sm:p-6">
 				<div className="flex flex-wrap items-center justify-between gap-4">
 					<div className="flex items-center gap-3">
 						<div className="rounded-2xl bg-white/15 p-2.5">
@@ -154,9 +172,29 @@ export default function EventosDaSemana() {
 			) : (
 				<div className="mt-5 grid gap-4 sm:grid-cols-2">
 					{eventosPorDia.map(({ data, eventos: eventosDoDia }) => (
-						<div key={chaveDoDia(data)} className="rounded-2xl border border-borda-suave bg-superficie-alt/40 p-4 transition hover:-translate-y-0.5 hover:border-acento/50">
-							<h3 className="font-bold capitalize text-texto">{nomeDoDia(data)}</h3>
-							<ul className="mt-3 space-y-3">
+						<div
+							key={chaveDoDia(data)}
+							className={`rounded-2xl border border-borda-suave bg-superficie-alt/40 p-4 transition hover:-translate-y-0.5 hover:border-acento/50 ${
+								eventosDoDia.length > 2 ? 'flex h-72 min-h-0 flex-col' : ''
+							}`}
+						>
+							<div className="flex items-start justify-between gap-3">
+								<div>
+									<h3 className="font-bold capitalize text-texto">{nomeDoDia(data)}</h3>
+									<p className="mt-1 text-sm capitalize text-texto-suave">{dataDoDia(data)}</p>
+								</div>
+								<span className="shrink-0 rounded-full bg-acento/10 px-2.5 py-1 text-[11px] font-bold text-acento">
+									{descricaoRelativa(data)}
+								</span>
+							</div>
+							<ul
+								className={`mt-3 space-y-3 ${
+									eventosDoDia.length > 2
+										? 'min-h-0 flex-1 touch-pan-y overflow-y-auto pr-2'
+										: ''
+								}`}
+								aria-label={`Eventos de ${nomeDoDia(data)}`}
+							>
 								{eventosDoDia.map((evento) => (
 									<li key={evento.id_evento} className="border-l-4 border-acento pl-3">
 										<p className="text-sm font-bold">{evento.titulo}</p>
