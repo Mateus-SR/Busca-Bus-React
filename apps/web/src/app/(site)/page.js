@@ -1,4 +1,5 @@
 import AcessoRapidoForm from '@/components/home/AcessoRapidoForm';
+import EventosDaSemana from '@/components/home/EventosDaSemana';
 
 export default function Home() {
   return (
@@ -23,7 +24,10 @@ export default function Home() {
         </div>
       </section>
 
-      <AcessoRapidoForm />
+      <div className="mx-auto grid w-full max-w-300 gap-8 px-4 sm:px-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(24rem,1.2fr)] lg:items-start lg:gap-12">
+        <AcessoRapidoForm />
+        <EventosDaSemana />
+      </div>
     </main>
   );
 }

@@ -89,8 +89,19 @@ export default function EventosDaSemana() {
 
 	if (!usuario?.fac_id) {
 		return (
-			<section aria-label="Eventos desta semana" className="mt-10 rounded-2xl border border-borda bg-superficie p-5">
-				<h2 className="text-xl font-extrabold">Eventos desta semana</h2>
+			<section aria-label="Eventos desta semana" className="mt-10 overflow-hidden rounded-3xl border border-borda bg-superficie shadow-lg shadow-black/5 lg:mt-0">
+				<div className="bg-marca p-5 text-sobre-marca sm:p-6">
+					<div className="flex items-center gap-3">
+						<div className="rounded-2xl bg-white/15 p-2.5">
+							<CalendarDays size={22} aria-hidden="true" />
+						</div>
+						<div>
+							<p className="text-xs font-bold tracking-[0.16em] uppercase opacity-80">Agenda da instituição</p>
+							<h2 className="mt-1 text-xl font-extrabold">Eventos desta semana</h2>
+						</div>
+					</div>
+				</div>
+				<div className="p-5 sm:p-6">
 				<p className="mt-2 text-sm text-texto-suave">
 					Selecione sua instituição para ver os eventos publicados no calendário.
 				</p>
@@ -100,13 +111,14 @@ export default function EventosDaSemana() {
 				>
 					Escolher instituição
 				</Link>
+				</div>
 			</section>
 		);
 	}
 
 	if (erro) {
 		return (
-			<section aria-label="Eventos desta semana" className="mt-10 rounded-2xl border border-borda p-5">
+			<section aria-label="Eventos desta semana" className="mt-10 rounded-3xl border border-erro/30 bg-superficie p-5 shadow-lg shadow-black/5 lg:mt-0 sm:p-6">
 				<p role="alert" className="text-sm font-semibold text-erro">{erro}</p>
 				<button
 					type="button"
@@ -120,24 +132,30 @@ export default function EventosDaSemana() {
 	}
 
 	return (
-		<section aria-label="Eventos desta semana" className="mt-10 rounded-2xl border border-borda bg-superficie p-5 sm:p-6">
-			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div className="flex items-center gap-2">
-					<CalendarDays className="text-acento" size={22} aria-hidden="true" />
-					<h2 className="text-xl font-extrabold">Eventos desta semana</h2>
+		<section aria-label="Eventos desta semana" className="mt-10 overflow-hidden rounded-3xl border border-borda bg-superficie shadow-xl shadow-black/5 lg:mt-0">
+			<div className="bg-linear-to-br from-marca to-marca-forte p-5 text-sobre-marca sm:p-6">
+				<div className="flex flex-wrap items-center justify-between gap-4">
+					<div className="flex items-center gap-3">
+						<div className="rounded-2xl bg-white/15 p-2.5">
+							<CalendarDays size={22} aria-hidden="true" />
+						</div>
+						<div>
+							<p className="text-xs font-bold tracking-[0.16em] uppercase opacity-80">Agenda da instituição</p>
+							<h2 className="mt-1 text-xl font-extrabold">Eventos desta semana</h2>
+						</div>
+					</div>
+					<span className="rounded-full bg-white/15 px-3 py-1 text-xs font-bold">Atualizado agora</span>
 				</div>
-				<Link href="/calendario" className="text-sm font-bold text-acento underline-offset-2 hover:underline">
-					Ver calendário completo
-				</Link>
 			</div>
 
+			<div className="p-5 sm:p-6">
 			{eventosPorDia.length === 0 ? (
 				<p className="mt-5 text-sm text-texto-suave">Nenhum evento publicado nesta semana.</p>
 			) : (
 				<div className="mt-5 grid gap-4 sm:grid-cols-2">
 					{eventosPorDia.map(({ data, eventos: eventosDoDia }) => (
-						<div key={chaveDoDia(data)} className="rounded-xl border border-borda-suave p-4">
-							<h3 className="font-bold capitalize">{nomeDoDia(data)}</h3>
+						<div key={chaveDoDia(data)} className="rounded-2xl border border-borda-suave bg-superficie-alt/40 p-4 transition hover:-translate-y-0.5 hover:border-acento/50">
+							<h3 className="font-bold capitalize text-texto">{nomeDoDia(data)}</h3>
 							<ul className="mt-3 space-y-3">
 								{eventosDoDia.map((evento) => (
 									<li key={evento.id_evento} className="border-l-4 border-acento pl-3">
@@ -152,6 +170,10 @@ export default function EventosDaSemana() {
 					))}
 				</div>
 			)}
+			<Link href="/calendario" className="mt-6 inline-flex text-sm font-bold text-acento underline-offset-2 transition hover:text-marca hover:underline">
+				Ver calendário completo →
+			</Link>
+			</div>
 		</section>
 	);
 }
