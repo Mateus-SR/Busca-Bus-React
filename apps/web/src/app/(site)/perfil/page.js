@@ -165,9 +165,9 @@ export default function PerfilPage() {
                       key={avatar.id}
                       type="button"
                       onClick={() => setAvatarSelecionado(avatar.id)}
-                      className={`relative flex flex-col items-center rounded-2xl border-2 p-3 transition hover:bg-superficie-alt ${selecionado
-                          ? "border-acento bg-acento/10"
-                          : "border-borda"
+                      className={`group relative flex flex-col items-center rounded-2xl border-2 p-3 transition hover:bg-superficie-alt ${selecionado
+                        ? "border-acento bg-acento/10"
+                        : "border-borda"
                         }`}
                       aria-label={`Selecionar ${avatar.nome}`}
                       aria-pressed={selecionado}
@@ -178,7 +178,8 @@ export default function PerfilPage() {
                         className="size-24 sm:size-28"
                       />
 
-                      <span className="mt-2 text-sm font-semibold text-texto-suave">
+                      <span className={`mt-2 text-sm font-semibold text-texto-suave contraste:group-hover:text-white ${selecionado ? "contraste:text-white" : ""
+                        }`}>
                         {avatar.nome}
                       </span>
 
