@@ -11,6 +11,15 @@ import { criarServicoEmail } from "./services/email.js";
 const config = loadConfig();
 const servicoEmail = criarServicoEmail(config);
 
+console.log("[email] SMTP:", {
+  host: config.smtpHost || "ausente",
+  port: config.smtpPort,
+  secure: config.smtpSecure,
+  userConfigurado: Boolean(config.smtpUser),
+  senhaConfigurada: Boolean(config.smtpPass),
+  remetenteConfigurado: Boolean(config.emailFrom),
+});
+
 if (config.smtpHost && config.smtpUser && config.smtpPass) {
   servicoEmail.verificarConexao().catch((error) => {
     console.error("[email] Falha na conexão SMTP:", error.message);
