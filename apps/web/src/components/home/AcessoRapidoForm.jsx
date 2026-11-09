@@ -51,7 +51,7 @@ export default function AcessoRapidoForm() {
 
     return (
         <>
-        <div className="z-40 mx-auto my-10 w-full max-w-md px-4 sm:my-16 sm:px-0 md:w-1/5">
+        <div className="z-40 mx-auto my-10 w-full max-w-md px-4 sm:my-16 sm:px-0 lg:mt-16">
             <form onSubmit={handleAcessar} className="flex flex-col gap-2">
                 <input
                     type="text"

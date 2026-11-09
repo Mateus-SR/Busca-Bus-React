@@ -112,6 +112,37 @@ export function eventosRoutes(db, config) {
     }
   });
 
+  router.get("/semana", async (req, res, next) => {
+    if (!eventos) return indisponivel(res);
+
+    const facId = String(req.query.fac_id ?? "");
+    const inicio = lerData(req.query.inicio);
+    const fim = lerData(req.query.fim);
+
+    if (!ehIdValido(facId)) {
+      return res.status(400).json({ erro: "Instituição inválida." });
+    }
+
+    if (!inicio || !fim || fim <= inicio) {
+      return res.status(400).json({ erro: "Período inválido." });
+    }
+
+    try {
+      const lista = await eventos
+        .find({
+          fac_id: new mongoose.Types.ObjectId(facId),
+          inicio: { $gte: inicio, $lt: fim },
+        })
+        .sort({ inicio: 1 })
+        .limit(100)
+        .toArray();
+
+      return res.json({ eventos: lista.map(paraResposta) });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
   router.post("/", admin, async (req, res, next) => {
     if (!eventos || !fatecs) return indisponivel(res);
     try {
