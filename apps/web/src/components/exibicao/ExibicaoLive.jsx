@@ -16,6 +16,7 @@ export default function ExibicaoLive({ codigo }) {
   // Só com a API configurada: sem ela a tela roda em fixtures e não há conexão a esperar.
   const mostrarSemParadas = semParadas && Boolean(process.env.NEXT_PUBLIC_API_URL);
   const [debugAberto, setDebugAberto] = useState(false);
+  const [modoVisualizacao, setModoVisualizacao] = useState("completa");
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
@@ -26,6 +27,25 @@ export default function ExibicaoLive({ codigo }) {
     aguardar: carregandoExibicao || semParadas,
   }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
   const radar = useRadarOnibus(codigo, [], debugAberto, atualizacaoSolicitada, opcoesRadar);
+  const onibusPorPonto = useMemo(() => {
+    const grupos = new Map(
+      (radar.pontos ?? []).map((ponto) => [
+        String(ponto.codigo ?? ""),
+        { ponto, onibus: [] },
+      ]),
+    );
+    for (const onibus of radar.onibus ?? []) {
+      const codigoPonto = String(onibus.codigoParada ?? "");
+      if (!grupos.has(codigoPonto)) {
+        grupos.set(codigoPonto, {
+          ponto: { codigo: codigoPonto || null, nome: null, posicao: null },
+          onibus: [],
+        });
+      }
+      grupos.get(codigoPonto).onibus.push(onibus);
+    }
+    return [...grupos.values()];
+  }, [radar.pontos, radar.onibus]);
   
   const [mensagemVoz, setMensagemVoz] = useState("");
   
@@ -215,7 +235,52 @@ export default function ExibicaoLive({ codigo }) {
           {radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`}
         </p>
       )}
-      <ExibicaoTable onibus={radar?.onibus ?? []} detalhesTecnicos={debugAberto} />
+      <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
+        <div className="inline-flex rounded-lg border border-borda bg-superficie-alt p-1">
+          <button
+            type="button"
+            onClick={() => setModoVisualizacao("completa")}
+            aria-pressed={modoVisualizacao === "completa"}
+            className={`rounded-md px-3 py-2 text-sm font-semibold transition sm:px-4 ${
+              modoVisualizacao === "completa"
+                ? "bg-marca text-superficie"
+                : "text-texto-suave hover:bg-superficie"
+            }`}
+          >
+            Todos os pontos
+          </button>
+          <button
+            type="button"
+            onClick={() => setModoVisualizacao("por-ponto")}
+            aria-pressed={modoVisualizacao === "por-ponto"}
+            className={`rounded-md px-3 py-2 text-sm font-semibold transition sm:px-4 ${
+              modoVisualizacao === "por-ponto"
+                ? "bg-marca text-superficie"
+                : "text-texto-suave hover:bg-superficie"
+            }`}
+          >
+            Separar por ponto
+          </button>
+        </div>
+      </div>
+      {modoVisualizacao === "completa" ? (
+        <ExibicaoTable onibus={radar?.onibus ?? []} detalhesTecnicos={debugAberto} />
+      ) : (
+        <div className="flex flex-col gap-6">
+          {onibusPorPonto.map(({ ponto, onibus }) => (
+            <section key={ponto.codigo ?? "sem-ponto"} className="rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
+              <h2 className="mb-3 text-center text-base font-bold sm:text-lg">
+                Ponto {ponto.codigo ?? "—"}
+                {ponto.nome ? ` — ${ponto.nome}` : ""}
+              </h2>
+              <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} />
+            </section>
+          ))}
+          {!onibusPorPonto.length && (
+            <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
