@@ -27,6 +27,38 @@ export default function ExibicaoLive({ codigo }) {
     aguardar: carregandoExibicao || semParadas,
   }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
   const radar = useRadarOnibus(codigo, [], debugAberto, atualizacaoSolicitada, opcoesRadar);
+  const controleModoVisualizacao = (
+    <div
+      className="inline-flex w-full rounded-lg border border-borda bg-superficie-alt p-1 sm:w-auto"
+      role="group"
+      aria-label="Modo de exibição dos ônibus"
+    >
+      <button
+        type="button"
+        onClick={() => setModoVisualizacao("completa")}
+        aria-pressed={modoVisualizacao === "completa"}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
+          modoVisualizacao === "completa"
+            ? "bg-marca text-superficie"
+            : "text-texto-suave hover:bg-superficie"
+        }`}
+      >
+        Todos os pontos
+      </button>
+      <button
+        type="button"
+        onClick={() => setModoVisualizacao("por-ponto")}
+        aria-pressed={modoVisualizacao === "por-ponto"}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
+          modoVisualizacao === "por-ponto"
+            ? "bg-marca text-superficie"
+            : "text-texto-suave hover:bg-superficie"
+        }`}
+      >
+        Separar por ponto
+      </button>
+    </div>
+  );
   const onibusPorPonto = useMemo(() => {
     const grupos = new Map(
       (radar.pontos ?? []).map((ponto) => [
@@ -235,50 +267,31 @@ export default function ExibicaoLive({ codigo }) {
           {radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`}
         </p>
       )}
-      <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
-        <div className="inline-flex rounded-lg border border-borda bg-superficie-alt p-1">
-          <button
-            type="button"
-            onClick={() => setModoVisualizacao("completa")}
-            aria-pressed={modoVisualizacao === "completa"}
-            className={`rounded-md px-3 py-2 text-sm font-semibold transition sm:px-4 ${
-              modoVisualizacao === "completa"
-                ? "bg-marca text-superficie"
-                : "text-texto-suave hover:bg-superficie"
-            }`}
-          >
-            Todos os pontos
-          </button>
-          <button
-            type="button"
-            onClick={() => setModoVisualizacao("por-ponto")}
-            aria-pressed={modoVisualizacao === "por-ponto"}
-            className={`rounded-md px-3 py-2 text-sm font-semibold transition sm:px-4 ${
-              modoVisualizacao === "por-ponto"
-                ? "bg-marca text-superficie"
-                : "text-texto-suave hover:bg-superficie"
-            }`}
-          >
-            Separar por ponto
-          </button>
-        </div>
-      </div>
       {modoVisualizacao === "completa" ? (
-        <ExibicaoTable onibus={radar?.onibus ?? []} detalhesTecnicos={debugAberto} />
+        <ExibicaoTable
+          onibus={radar?.onibus ?? []}
+          detalhesTecnicos={debugAberto}
+          controleEsquerdo={controleModoVisualizacao}
+        />
       ) : (
-        <div className="flex flex-col gap-6">
+        <div>
+          <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
+            {controleModoVisualizacao}
+          </div>
+          <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
           {onibusPorPonto.map(({ ponto, onibus }) => (
-            <section key={ponto.codigo ?? "sem-ponto"} className="rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
+            <section key={ponto.codigo ?? "sem-ponto"} className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
               <h2 className="mb-3 text-center text-base font-bold sm:text-lg">
                 Ponto {ponto.codigo ?? "—"}
                 {ponto.nome ? ` — ${ponto.nome}` : ""}
               </h2>
-              <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} />
+              <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} compacto />
             </section>
           ))}
           {!onibusPorPonto.length && (
             <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
           )}
+          </div>
         </div>
       )}
     </div>
