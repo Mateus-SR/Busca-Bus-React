@@ -181,7 +181,7 @@ export default function CadastroPage() {
 
     if (!validarSenha(senha)) {
       mostrarMensagem(
-        "A senha precisa ter letras e números, e no mínimo 6 caracteres."
+        "A senha deve ter no mínimo 6 caracteres, incluindo pelo menos uma letra, um número e um caractere especial."
       );
       return;
     }

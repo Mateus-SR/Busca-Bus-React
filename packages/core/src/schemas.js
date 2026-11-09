@@ -3,5 +3,11 @@ export function validarEmail(value) {
 }
 
 export function validarSenha(value) {
-  return typeof value === "string" && value.length >= 6 && /[A-Za-z]/.test(value) && /\d/.test(value);
+  return (
+    typeof value === "string" &&
+    value.length >= 6 &&
+    /[A-Za-z]/.test(value) &&
+    /\d/.test(value) &&
+    /[^a-zA-Z0-9]/.test(value)
+  );
 }
