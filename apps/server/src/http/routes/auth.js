@@ -238,14 +238,65 @@ export function authRoutes({ config, db, servicoEmail }) {
           assunto: "Recuperação de senha - BuscaBus",
           texto: `Olá, ${user.nome}! Acesse o link para redefinir sua senha: ${link}. O link expira em 30 minutos.`,
           html: `
-          <h2>Recuperação de senha - BuscaBus</h2>
-          <p>Olá, ${user.nome}!</p>
-          <p>Recebemos uma solicitação para redefinir sua senha.</p>
-          <p>
-            <a href="${link}">Redefinir minha senha</a>
-          </p>
-          <p>Este link expira em 30 minutos.</p>
-          <p>Se você não solicitou a recuperação, ignore este e-mail.</p>
+          <!DOCTYPE html>
+          <html lang="pt-BR">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Recuperação de senha - Busca Bus</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #f5f5f5; color: #171717; font-family: Arial, Helvetica, sans-serif;">
+              <div style="display: none; max-height: 0; overflow: hidden; opacity: 0;">
+                Redefina sua senha do Busca Bus.
+              </div>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f5f5f5;">
+                <tr>
+                  <td align="center" style="padding: 32px 16px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
+                      <tr>
+                        <td style="padding: 28px 32px; background-color: #b91c1c; color: #ffffff; text-align: center;">
+                          <div style="font-size: 24px; font-weight: 700; letter-spacing: 0.02em;">Busca Bus</div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 36px 32px 24px;">
+                          <h1 style="margin: 0 0 20px; color: #171717; font-size: 24px; line-height: 1.3; font-weight: 700;">
+                            Recuperação de senha
+                          </h1>
+                          <p style="margin: 0 0 16px; color: #374151; font-size: 16px; line-height: 1.6;">
+                            Olá, ${user.nome}!
+                          </p>
+                          <p style="margin: 0 0 28px; color: #374151; font-size: 16px; line-height: 1.6;">
+                            Recebemos uma solicitação para redefinir a senha da sua conta no Busca Bus.
+                          </p>
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto 28px;">
+                            <tr>
+                              <td align="center" style="border-radius: 8px; background-color: #dc2626;">
+                                <a href="${link}" style="display: inline-block; padding: 14px 24px; border: 1px solid #dc2626; border-radius: 8px; color: #ffffff; font-size: 16px; font-weight: 700; line-height: 1.2; text-decoration: none;">
+                                  Redefinir minha senha
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                          <p style="margin: 0 0 12px; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            Este link expira em 30 minutos.
+                          </p>
+                          <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                            Se você não solicitou a recuperação, ignore este e-mail.
+                          </p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 20px 32px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px; line-height: 1.5; text-align: center;">
+                          Este é um e-mail automático. Não responda a esta mensagem.
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
         `,
         });
       } catch (error) {
