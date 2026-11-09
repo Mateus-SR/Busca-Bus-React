@@ -73,6 +73,56 @@ export function meRoutes(config, db) {
       return next(error);
     }
   });
+
+  router.patch("/instituicao", protegido, async (req, res, next) => {
+    try {
+      const facId = req.body?.fac_id;
+
+      if (
+        facId !== null &&
+        (typeof facId !== "string" || !mongoose.isValidObjectId(facId))
+      ) {
+        return res.status(400).json({ erro: "Instituição inválida." });
+      }
+
+      if (facId) {
+        const fatec = await db.collection("Fatec").findOne({
+          _id: new mongoose.Types.ObjectId(facId),
+        });
+
+        if (!fatec) {
+          return res.status(404).json({ erro: "Instituição não encontrada." });
+        }
+      }
+
+      const usuario = await Usuario.findByIdAndUpdate(
+        req.usuarioId,
+        { fac_id: facId ? new mongoose.Types.ObjectId(facId) : null },
+        {
+          new: true,
+          runValidators: true,
+          select: "nome email role fac_id avatarId",
+        },
+      );
+
+      if (!usuario) {
+        return res.status(404).json({ erro: "Usuário não encontrado." });
+      }
+
+      return res.json({
+        usuario: {
+          id: usuario._id.toString(),
+          nome: usuario.nome,
+          email: usuario.email,
+          role: usuario.role,
+          fac_id: usuario.fac_id?.toString() || null,
+          avatarId: usuario.avatarId || null,
+        },
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.put("/token-sptrans", indisponivel);
   router.delete("/", indisponivel);
   router.get("/exibicoes", indisponivel);

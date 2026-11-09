@@ -184,6 +184,35 @@ export function AuthProvider({ children }) {
     return dados.usuario;
   }
 
+  async function atualizarInstituicao(fac_id) {
+    if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
+
+    const resposta = await fetch(`${API_URL}/v1/me/instituicao`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ fac_id }),
+    });
+
+    const dados = await resposta.json().catch(() => ({}));
+
+    if (!resposta.ok) {
+      throw new Error(dados.erro || "Não foi possível atualizar a instituição.");
+    }
+
+    setUsuario(dados.usuario);
+
+    const armazenamento = localStorage.getItem("accessToken")
+      ? localStorage
+      : sessionStorage;
+
+    armazenamento.setItem("usuario", JSON.stringify(dados.usuario));
+
+    return dados.usuario;
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -192,6 +221,7 @@ export function AuthProvider({ children }) {
         login,
         logout,
         atualizarAvatar,
+        atualizarInstituicao,
         estaLogado: !!usuario,
         carregando,
       }}

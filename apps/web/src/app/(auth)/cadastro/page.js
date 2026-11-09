@@ -99,24 +99,6 @@ export default function CadastroPage() {
   const [statusCadastro, setStatusCadastro] = useState("formulario");
 
   useEffect(() => {
-    if (statusCadastro === "sucesso") {
-      const tempo = setTimeout(() => {
-        setStatusCadastro("redirecionando");
-      }, 3000);
-
-      return () => clearTimeout(tempo);
-    }
-
-    if (statusCadastro === "redirecionando") {
-      const tempo = setTimeout(() => {
-        router.replace("/login");
-      }, 1000);
-
-      return () => clearTimeout(tempo);
-    }
-  }, [statusCadastro, router]);
-
-  useEffect(() => {
     if (!mensagem) return;
 
     setMensagemVisivel(true);
@@ -135,10 +117,24 @@ export default function CadastroPage() {
     };
   }, [mensagem, contadorMensagem]);
 
+  useEffect(() => {
+    if (statusCadastro !== "redirecionando") return;
+
+    const tempo = setTimeout(() => {
+      router.replace("/login");
+    }, 2000);
+
+    return () => clearTimeout(tempo);
+  }, [statusCadastro, router]);
+
   function mostrarMensagem(texto) {
     setMensagem(texto);
     setMensagemVisivel(true);
     setContadorMensagem((atual) => atual + 1);
+  }
+
+  function confirmarCadastro() {
+    setStatusCadastro("redirecionando");
   }
 
   async function cadastrar(evento) {
@@ -181,7 +177,7 @@ export default function CadastroPage() {
 
     if (!validarSenha(senha)) {
       mostrarMensagem(
-        "A senha deve ter no mínimo 6 caracteres, incluindo pelo menos uma letra, um número e um caractere especial."
+        "A senha precisa ter letras e números, e no mínimo 6 caracteres."
       );
       return;
     }
@@ -284,9 +280,17 @@ export default function CadastroPage() {
             Conta criada com sucesso!
           </h1>
 
-          <p className="text-texto-suave">
-            Seu cadastro foi realizado. Você será encaminhado para a tela de login.
+          <p className="mb-6 text-texto-suave">
+            Seu cadastro foi realizado. Clique em Entendido para acessar a tela de login.
           </p>
+
+          <button
+            type="button"
+            onClick={confirmarCadastro}
+            className="rounded-md bg-destaque px-6 py-3 font-semibold text-sobre-destaque transition hover:bg-destaque-forte"
+          >
+            Entendido
+          </button>
         </div>
       </AuthBackground>
     );

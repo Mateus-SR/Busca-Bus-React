@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { Check, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Avatar from "@/components/ui/Avatar";
+import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 
 const AVATARES = [
   { id: "avatar-13", nome: "Beca" },
@@ -26,11 +27,55 @@ const AVATARES = [
   { id: "avatar-16", nome: "Débora" },
 ];
 export default function PerfilPage() {
-  const { usuario, estaLogado, carregando, atualizarAvatar } = useAuth();
+  const { usuario, estaLogado, carregando, atualizarAvatar, atualizarInstituicao, } = useAuth();
   const [galeriaAberta, setGaleriaAberta] = useState(false);
   const [avatarSelecionado, setAvatarSelecionado] = useState(usuario?.avatarId || null);
   const [salvando, setSalvando] = useState(false);
   const [erroAvatar, setErroAvatar] = useState("");
+  const [instituicao, setInstituicao] = useState("");
+  const [carregandoInstituicao, setCarregandoInstituicao] = useState(false);
+  const [editandoInstituicao, setEditandoInstituicao] = useState(false);
+  const [instituicaoSelecionada, setInstituicaoSelecionada] = useState(usuario?.fac_id || "");
+  const [semInstituicao, setSemInstituicao] = useState(!usuario?.fac_id);
+  const [salvandoInstituicao, setSalvandoInstituicao] = useState(false);
+  const [erroInstituicao, setErroInstituicao] = useState("");
+  const [sucessoInstituicao, setSucessoInstituicao] = useState("");
+
+  useEffect(() => {
+    async function carregarInstituicao() {
+      if (!usuario?.fac_id) {
+        setInstituicao("");
+        return;
+      }
+
+      try {
+        setCarregandoInstituicao(true);
+
+        const API_URL =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
+        const resposta = await fetch(`${API_URL}/v1/fatecs`);
+
+        if (!resposta.ok) {
+          throw new Error("Não foi possível carregar as instituições.");
+        }
+
+        const dados = await resposta.json();
+
+        const encontrada = dados.fatecs?.find(
+          (item) => item.id_fac === usuario.fac_id
+        );
+
+        setInstituicao(encontrada?.nome_fac || "Instituição não encontrada");
+      } catch {
+        setInstituicao("Não foi possível carregar a instituição");
+      } finally {
+        setCarregandoInstituicao(false);
+      }
+    }
+
+    carregarInstituicao();
+  }, [usuario?.fac_id]);
 
   if (carregando) return <main className="min-h-screen" />;
 
@@ -114,15 +159,103 @@ export default function PerfilPage() {
             </div>
             <div className="grid gap-1 px-4 py-4 sm:grid-cols-[12rem_1fr] sm:gap-4">
               <dt className="font-semibold text-texto-secundario">Instituição</dt>
+
               <dd className="text-texto-suave">
-                {usuario?.fac_id ? "Instituição cadastrada" : "Não informada"}
+                {!editandoInstituicao ? (
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span>
+                      {!usuario?.fac_id
+                        ? "Não informada"
+                        : carregandoInstituicao
+                          ? "Carregando instituição..."
+                          : instituicao || "Não foi possível carregar a instituição"}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInstituicaoSelecionada(usuario?.fac_id || "");
+                        setSemInstituicao(!usuario?.fac_id);
+                        setErroInstituicao("");
+                        setSucessoInstituicao("");
+                        setEditandoInstituicao(true);
+                      }}
+                      className="text-sm font-medium text-destaque hover:underline"
+                    >
+                      Alterar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-2">
+                    <InstituicaoSelect
+                      instituicao={instituicaoSelecionada}
+                      semInstituicao={semInstituicao}
+                      onChange={({ instituicao, semInstituicao }) => {
+                        setInstituicaoSelecionada(instituicao);
+                        setSemInstituicao(semInstituicao);
+                      }}
+                    />
+
+                    {erroInstituicao && (
+                      <p className="mb-3 text-sm text-erro-forte">
+                        {erroInstituicao}
+                      </p>
+                    )}
+
+                    {sucessoInstituicao && (
+                      <p className="mb-3 text-sm text-verde">
+                        {sucessoInstituicao}
+                      </p>
+                    )}
+
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        disabled={salvandoInstituicao}
+                        onClick={async () => {
+                          try {
+                            setSalvandoInstituicao(true);
+                            setErroInstituicao("");
+                            setSucessoInstituicao("");
+
+                            await atualizarInstituicao(
+                              semInstituicao ? null : instituicaoSelecionada || null
+                            );
+
+                            setEditandoInstituicao(false);
+                            setSucessoInstituicao("Instituição atualizada com sucesso!");
+                          } catch (error) {
+                            setErroInstituicao(
+                              error.message || "Não foi possível atualizar a instituição."
+                            );
+                          } finally {
+                            setSalvandoInstituicao(false);
+                          }
+                        }}
+                        className="rounded-md bg-destaque px-4 py-2 text-sm font-bold text-sobre-destaque disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {salvandoInstituicao ? "Salvando..." : "Salvar"}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={salvandoInstituicao}
+                        onClick={() => {
+                          setEditandoInstituicao(false);
+                          setErroInstituicao("");
+                          setInstituicaoSelecionada(usuario?.fac_id || "");
+                          setSemInstituicao(!usuario?.fac_id);
+                        }}
+                        className="rounded-md border border-borda px-4 py-2 text-sm font-medium text-texto-suave disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </dd>
             </div>
           </dl>
-
-          <p className="mt-6 text-center text-sm text-texto-mudo">
-            Esta tela é somente para consulta. Seus dados não podem ser alterados aqui.
-          </p>
         </section>
       </div>
 
