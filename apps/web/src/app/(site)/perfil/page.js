@@ -16,7 +16,7 @@ const AVATARES = [
   { id: "avatar-01", nome: "Paula" },
   { id: "avatar-03", nome: "Marisa" },
   { id: "avatar-04", nome: "Ana" },
- 
+
   { id: "avatar-08", nome: "Bia" },
   { id: "avatar-09", nome: "Samara" },
   { id: "avatar-10", nome: "Gaby" },
@@ -126,61 +126,103 @@ export default function PerfilPage() {
         </section>
       </div>
 
+
       {galeriaAberta && (
         <div className="fixed inset-0 z-[1400] flex items-center justify-center bg-black/60 px-4 py-6">
           <section
             role="dialog"
             aria-modal="true"
             aria-labelledby="titulo-galeria-avatares"
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-borda bg-superficie p-5 shadow-2xl sm:p-8"
+            className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-borda bg-superficie p-5 shadow-2xl sm:p-8"
           >
-            <div className="mb-6 flex items-center justify-between gap-4">
+            <div className="mb-6 flex shrink-0 items-center justify-between gap-4">
               <div>
                 <h2 id="titulo-galeria-avatares" className="text-2xl font-extrabold text-texto">
                   Escolha seu personagem
                 </h2>
-                <p className="mt-1 text-sm text-texto-mudo">Selecione um avatar para representar você.</p>
+                <p className="mt-1 text-sm text-texto-mudo">
+                  Selecione um avatar para representar você.
+                </p>
               </div>
-              <button type="button" onClick={() => setGaleriaAberta(false)} className="rounded-full p-2 text-texto-secundario hover:bg-superficie-alt" aria-label="Fechar galeria">
+
+              <button
+                type="button"
+                onClick={() => setGaleriaAberta(false)}
+                className="rounded-full p-2 text-texto-secundario hover:bg-superficie-alt"
+                aria-label="Fechar galeria"
+              >
                 <X />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {AVATARES.map((avatar) => {
-                const selecionado = avatarSelecionado === avatar.id;
-                return (
-                  <button
-                    key={avatar.id}
-                    type="button"
-                    onClick={() => setAvatarSelecionado(avatar.id)}
-                    className={`relative flex flex-col items-center rounded-2xl border-2 p-3 transition hover:bg-superficie-alt ${
-                      selecionado ? "border-acento bg-acento/10" : "border-borda"
-                    }`}
-                    aria-label={`Selecionar ${avatar.nome}`}
-                    aria-pressed={selecionado}
-                  >
-                    <Avatar avatarId={avatar.id} alt="" className="size-24 sm:size-28" />
-                    <span className="mt-2 text-sm font-semibold text-texto-suave">{avatar.nome}</span>
-                    {selecionado && <Check className="absolute right-2 top-2 text-acento" size={20} aria-hidden="true" />}
-                  </button>
-                );
-              })}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {AVATARES.map((avatar) => {
+                  const selecionado = avatarSelecionado === avatar.id;
+
+                  return (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={() => setAvatarSelecionado(avatar.id)}
+                      className={`relative flex flex-col items-center rounded-2xl border-2 p-3 transition hover:bg-superficie-alt ${selecionado
+                          ? "border-acento bg-acento/10"
+                          : "border-borda"
+                        }`}
+                      aria-label={`Selecionar ${avatar.nome}`}
+                      aria-pressed={selecionado}
+                    >
+                      <Avatar
+                        avatarId={avatar.id}
+                        alt=""
+                        className="size-24 sm:size-28"
+                      />
+
+                      <span className="mt-2 text-sm font-semibold text-texto-suave">
+                        {avatar.nome}
+                      </span>
+
+                      {selecionado && (
+                        <Check
+                          className="absolute right-2 top-2 text-acento"
+                          size={20}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {erroAvatar && (
+                <p className="mt-4 text-center text-sm font-semibold text-erro-forte">
+                  {erroAvatar}
+                </p>
+              )}
             </div>
 
-            {erroAvatar && <p className="mt-4 text-center text-sm font-semibold text-erro-forte">{erroAvatar}</p>}
-
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setGaleriaAberta(false)} className="rounded-xl border border-borda px-4 py-3 font-semibold text-texto-suave hover:bg-superficie-alt">
+            <div className="mt-4 flex shrink-0 justify-end gap-3 border-t border-borda bg-superficie pt-4">
+              <button
+                type="button"
+                onClick={() => setGaleriaAberta(false)}
+                className="rounded-xl border border-borda px-4 py-3 font-semibold text-texto-suave hover:bg-superficie-alt"
+              >
                 Cancelar
               </button>
-              <button type="button" onClick={salvarAvatar} disabled={salvando} className="rounded-xl bg-destaque px-4 py-3 font-bold text-sobre-destaque hover:bg-destaque-forte disabled:cursor-not-allowed disabled:opacity-60">
+
+              <button
+                type="button"
+                onClick={salvarAvatar}
+                disabled={salvando}
+                className="rounded-xl bg-destaque px-4 py-3 font-bold text-sobre-destaque hover:bg-destaque-forte disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 {salvando ? "Salvando..." : "Salvar personagem"}
               </button>
             </div>
           </section>
         </div>
       )}
+
     </main>
   );
 }
