@@ -16,7 +16,26 @@ const robotoMono = Roboto_Mono({
 
 // Aplica as preferências de acessibilidade salvas antes da primeira pintura, para o tema não "piscar" no
 // padrão a cada carga. Mesmo mapeamento do AccessibilityContext (que continua sendo a fonte da verdade).
-const SCRIPT_PREFERENCIAS = `try{var p=JSON.parse(localStorage.getItem("accessibilityPreferences")||"{}"),r=document.documentElement;if(p.fontSize==="large"||p.fontSize==="xlarge")r.dataset.fonte=p.fontSize;if(p.contrastMode==="dark")r.dataset.contraste="escuro";else if(p.contrastMode==="light")r.dataset.contraste="claro"}catch(e){}`;
+const SCRIPT_PREFERENCIAS = `try {
+  var p = JSON.parse(localStorage.getItem("accessibilityPreferences") || "{}");
+  var r = document.documentElement;
+
+  if (p.fontSize === "large" || p.fontSize === "xlarge") {
+    r.dataset.fonte = p.fontSize;
+  } else {
+    delete r.dataset.fonte;
+  }
+
+  if (p.contrastMode === "dark") {
+    r.dataset.contraste = "escuro";
+  } else if (p.contrastMode === "light") {
+    r.dataset.contraste = "claro";
+  } else {
+    delete r.dataset.contraste;
+  }
+} catch (e) {
+  console.error("Erro ao carregar preferências de acessibilidade", e);
+}`;
 
 export const metadata = {
   title: "Busca Bus",
