@@ -18,13 +18,17 @@ export function criarServicoEmail(config) {
   }
 
   async function enviarEmail({ para, assunto, texto, html }) {
-    return await transporter.sendMail({
+    const resultado = await transporter.sendMail({
       from: config.emailFrom,
       to: para,
       subject: assunto,
       texto,
       html,
     });
+    console.log("[email] Mensagem enviada com sucesso.", {
+      messageId: resultado.messageId,
+    });
+    return resultado;
   }
 
   return {
