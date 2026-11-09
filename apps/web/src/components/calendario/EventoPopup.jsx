@@ -20,12 +20,18 @@ export default function EventoPopup({ evento, onClose }) {
 		};
 		document.addEventListener('keydown', aoApertarTecla);
 
-		const overflowAnterior = document.body.style.overflow;
+		const larguraDaBarra =
+			window.innerWidth - document.documentElement.clientWidth;
+		const { overflow: overflowAnterior, paddingRight: paddingAnterior } =
+			document.body.style;
 		document.body.style.overflow = 'hidden';
+		if (larguraDaBarra > 0)
+			document.body.style.paddingRight = `${larguraDaBarra}px`;
 
 		return () => {
 			document.removeEventListener('keydown', aoApertarTecla);
 			document.body.style.overflow = overflowAnterior;
+			document.body.style.paddingRight = paddingAnterior;
 		};
 	}, [evento, onClose]);
 
