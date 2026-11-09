@@ -12,22 +12,31 @@ export function AccessibilityProvider({ children }) {
   const preferenciasLidas = useRef(false);
 
   useEffect(() => {
-    const tarefa = window.setTimeout(() => {
-      try {
-        const salvo = localStorage.getItem('accessibilityPreferences');
-        if (salvo) {
-          const preferencias = JSON.parse(salvo);
-          if (['normal', 'large', 'xlarge'].includes(preferencias.fontSize)) setFontSize(preferencias.fontSize);
-          if (['normal', 'dark', 'light'].includes(preferencias.contrastMode)) setContrastMode(preferencias.contrastMode);
+  const tarefa = window.setTimeout(() => {
+    try {
+      const salvo = localStorage.getItem('accessibilityPreferences');
+
+      if (salvo) {
+        const preferencias = JSON.parse(salvo);
+
+        if (['normal', 'large', 'xlarge'].includes(preferencias.fontSize)) {
+          setFontSize(preferencias.fontSize);
         }
-      } catch (erro) {
-        console.error('Erro ao carregar preferências de acessibilidade', erro);
-        localStorage.removeItem('accessibilityPreferences');
+
+        if (['normal', 'dark', 'light'].includes(preferencias.contrastMode)) {
+          setContrastMode(preferencias.contrastMode);
+        }
       }
-      preferenciasLidas.current = true;
-    }, 0);
-    return () => window.clearTimeout(tarefa);
-  }, []);
+    } catch (erro) {
+      console.error('Erro ao carregar preferências de acessibilidade', erro);
+      localStorage.removeItem('accessibilityPreferences');
+    }
+
+    preferenciasLidas.current = true;
+  }, 0);
+
+  return () => window.clearTimeout(tarefa);
+}, []);
 
   useEffect(() => {
     // Antes da leitura, o estado ainda é o padrão: aplicar/gravar agora apagaria a preferência salva.
