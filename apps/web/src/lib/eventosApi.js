@@ -15,6 +15,11 @@ async function pedir(caminho, opcoes) {
 
 export const listarEventos = () => pedir('/v1/eventos').then((dados) => dados.eventos);
 
+export const listarEventosDaSemana = ({ facId, inicio, fim }) =>
+	pedir(
+		`/v1/eventos/semana?fac_id=${encodeURIComponent(facId)}&inicio=${encodeURIComponent(inicio.toISOString())}&fim=${encodeURIComponent(fim.toISOString())}`
+	).then((dados) => dados.eventos);
+
 export const listarFatecs = () => pedir('/v1/fatecs').then((dados) => dados.fatecs);
 
 export const criarEvento = (token, evento) =>
