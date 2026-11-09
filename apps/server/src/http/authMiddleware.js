@@ -1,5 +1,7 @@
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { ehAdmin } from "@busca-bus/core";
+import { Usuario } from "../../models/Usuario.js";
 
 export function exigirAutenticacao(config, sessoes) {
   return async (req, res, next) => {
@@ -41,4 +43,22 @@ export function exigirAutenticacao(config, sessoes) {
       return next(error);
     }
   };
+}
+export function exigirAdmin(config, sessoes) {
+  const autenticado = exigirAutenticacao(config, sessoes);
+
+  const verificarPapel = async (req, res, next) => {
+    try {
+      const usuario = await Usuario.findById(req.usuarioId).select("role fac_id");
+      if (!usuario || !ehAdmin(usuario.role)) {
+        return res.status(403).json({ erro: "Apenas administradores podem fazer isso." });
+      }
+      req.usuario = usuario;
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  };
+
+  return [autenticado, verificarPapel];
 }
