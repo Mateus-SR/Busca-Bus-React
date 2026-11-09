@@ -9,6 +9,8 @@ import useExibicao from "@/hooks/useExibicao";
 import useRadarOnibus from "@/hooks/useRadarOnibus";
 import VisaoDesenvolvedor from "@/components/exibicao/VisaoDesenvolvedor";
 
+const INTERVALO_RODIZIO_SEGUNDOS = 15;
+
 export default function ExibicaoLive({ codigo }) {
   const { exibicao, carregando: carregandoExibicao, erro: erroExibicao } = useExibicao(codigo);
   // Sem paradas não há o que consultar: o servidor cairia na parada de teste e mostraria ônibus de outro ponto.
@@ -17,6 +19,9 @@ export default function ExibicaoLive({ codigo }) {
   const mostrarSemParadas = semParadas && Boolean(process.env.NEXT_PUBLIC_API_URL);
   const [debugAberto, setDebugAberto] = useState(false);
   const [modoVisualizacao, setModoVisualizacao] = useState("completa");
+  const [pontoComCodigoVisivel, setPontoComCodigoVisivel] = useState(null);
+  const [indicePontoRodizio, setIndicePontoRodizio] = useState(0);
+  const [segundosParaProximoPonto, setSegundosParaProximoPonto] = useState(INTERVALO_RODIZIO_SEGUNDOS);
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
@@ -57,6 +62,18 @@ export default function ExibicaoLive({ codigo }) {
       >
         Separar por ponto
       </button>
+      <button
+        type="button"
+        onClick={() => setModoVisualizacao("rodizio")}
+        aria-pressed={modoVisualizacao === "rodizio"}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
+          modoVisualizacao === "rodizio"
+            ? "bg-marca text-superficie"
+            : "text-texto-suave hover:bg-superficie"
+        }`}
+      >
+        Rodízio por ponto
+      </button>
     </div>
   );
   const onibusPorPonto = useMemo(() => {
@@ -78,6 +95,25 @@ export default function ExibicaoLive({ codigo }) {
     }
     return [...grupos.values()];
   }, [radar.pontos, radar.onibus]);
+
+  useEffect(() => {
+    setIndicePontoRodizio(0);
+    setPontoComCodigoVisivel(null);
+    setSegundosParaProximoPonto(INTERVALO_RODIZIO_SEGUNDOS);
+  }, [modoVisualizacao, onibusPorPonto.length]);
+
+  useEffect(() => {
+    if (modoVisualizacao !== "rodizio" || onibusPorPonto.length < 2) return undefined;
+    const intervalo = setInterval(() => {
+      setSegundosParaProximoPonto((segundos) => {
+        if (segundos > 1) return segundos - 1;
+        setIndicePontoRodizio((indice) => (indice + 1) % onibusPorPonto.length);
+        setPontoComCodigoVisivel(null);
+        return INTERVALO_RODIZIO_SEGUNDOS;
+      });
+    }, 1_000);
+    return () => clearInterval(intervalo);
+  }, [modoVisualizacao, onibusPorPonto.length]);
   
   const [mensagemVoz, setMensagemVoz] = useState("");
   
@@ -273,25 +309,85 @@ export default function ExibicaoLive({ codigo }) {
           detalhesTecnicos={debugAberto}
           controleEsquerdo={controleModoVisualizacao}
         />
-      ) : (
+      ) : modoVisualizacao === "por-ponto" ? (
         <div>
           <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
             {controleModoVisualizacao}
           </div>
           <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
-          {onibusPorPonto.map(({ ponto, onibus }) => (
-            <section key={ponto.codigo ?? "sem-ponto"} className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
-              <h2 className="mb-3 text-center text-base font-bold sm:text-lg">
-                Ponto {ponto.codigo ?? "—"}
-                {ponto.nome ? ` — ${ponto.nome}` : ""}
-              </h2>
+          {onibusPorPonto.map(({ ponto, onibus }, indice) => {
+            const codigo = ponto.codigo ?? "—";
+            const codigoVisivel = pontoComCodigoVisivel === codigo;
+            return (
+            <section key={codigo} className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
+              <button
+                type="button"
+                onClick={() => setPontoComCodigoVisivel(codigoVisivel ? null : codigo)}
+                aria-expanded={codigoVisivel}
+                className="mb-3 flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-base font-bold hover:text-acento sm:text-lg"
+                title="Mostrar código do ponto"
+              >
+                <span>Ponto {indice + 1}</span>
+                {codigoVisivel && <span className="font-roboto-mono text-sm font-normal sm:text-base">({codigo})</span>}
+              </button>
               <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} compacto />
             </section>
-          ))}
+            );
+          })}
           {!onibusPorPonto.length && (
             <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
           )}
           </div>
+        </div>
+      ) : (
+        <div className="min-w-0">
+          <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
+            {controleModoVisualizacao}
+          </div>
+          {onibusPorPonto.length > 1 && (
+            <div className="mx-auto mb-4 max-w-xl" role="status" aria-live="polite">
+              <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold text-texto-mudo sm:text-sm">
+                <span>Próximo ponto em {segundosParaProximoPonto}s</span>
+                <span>Ponto {indicePontoRodizio + 1} de {onibusPorPonto.length}</span>
+              </div>
+              <div
+                className="h-2 overflow-hidden rounded-full bg-superficie-alt"
+                role="progressbar"
+                aria-label="Tempo até o próximo ponto"
+                aria-valuemin="0"
+                aria-valuemax={INTERVALO_RODIZIO_SEGUNDOS}
+                aria-valuenow={INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto}
+              >
+                <div
+                  className="h-full rounded-full bg-acento transition-[width] duration-1000 linear"
+                  style={{ width: `${((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) / INTERVALO_RODIZIO_SEGUNDOS) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+          {onibusPorPonto.length ? (() => {
+            const indice = indicePontoRodizio % onibusPorPonto.length;
+            const { ponto, onibus } = onibusPorPonto[indice];
+            const codigo = ponto.codigo ?? "—";
+            const codigoVisivel = pontoComCodigoVisivel === codigo;
+            return (
+              <section className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
+                <button
+                  type="button"
+                  onClick={() => setPontoComCodigoVisivel(codigoVisivel ? null : codigo)}
+                  aria-expanded={codigoVisivel}
+                  className="mb-3 flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-base font-bold hover:text-acento sm:text-lg"
+                  title="Mostrar código do ponto"
+                >
+                  <span>Ponto {indice + 1}</span>
+                  {codigoVisivel && <span className="font-roboto-mono text-sm font-normal sm:text-base">({codigo})</span>}
+                </button>
+                <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} compacto />
+              </section>
+            );
+          })() : (
+            <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
+          )}
         </div>
       )}
     </div>
