@@ -124,7 +124,7 @@ export default function EventosDaSemana() {
 					Selecione sua instituição para ver os eventos publicados no calendário.
 				</p>
 				<Link
-					href="/configuracao"
+					href="/perfil"
 					className="mt-4 inline-flex rounded-xl bg-marca px-4 py-2 text-sm font-bold text-sobre-marca transition hover:bg-marca-forte"
 				>
 					Escolher instituição
