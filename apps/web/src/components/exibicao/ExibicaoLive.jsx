@@ -8,6 +8,7 @@ import InlineToast from "@/components/ui/InlineToast";
 import useExibicao from "@/hooks/useExibicao";
 import useRadarOnibus from "@/hooks/useRadarOnibus";
 import VisaoDesenvolvedor from "@/components/exibicao/VisaoDesenvolvedor";
+import EventosProximos from "@/components/exibicao/EventosProximos";
 
 const INTERVALO_RODIZIO_SEGUNDOS = 15;
 
@@ -219,31 +220,38 @@ export default function ExibicaoLive({ codigo }) {
 
       {/* Interface visual */}
       <div className="mb-3 flex flex-col items-center">
-        <div className="flex max-w-full items-center gap-2 text-center">
-          <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
-          <FavoriteStar />
-        </div>
-        <div className="mt-1 flex flex-col items-center gap-2 text-sm">
-          <span className="font-roboto-mono italic">Código: {codigo}</span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={copiarCodigo}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
-              aria-label="Copiar código da exibição"
-            >
-              <Copy size={14} aria-hidden="true" />
-              Copiar
-            </button>
-            <button
-              type="button"
-              onClick={compartilhar}
-              className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
-              aria-label="Compartilhar exibição"
-            >
-              <Share2 size={14} aria-hidden="true" />
-              Compartilhar
-            </button>
+        <div className="relative flex min-h-28 w-full max-w-full flex-col items-center gap-3 lg:min-h-28 lg:flex-row lg:items-start lg:justify-center lg:text-left">
+          <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
+              <FavoriteStar />
+            </div>
+            <div className="mt-1 flex flex-col items-center gap-2 text-sm lg:items-start">
+              <span className="font-roboto-mono italic">Código: {codigo}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={copiarCodigo}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
+                  aria-label="Copiar código da exibição"
+                >
+                  <Copy size={14} aria-hidden="true" />
+                  Copiar
+                </button>
+                <button
+                  type="button"
+                  onClick={compartilhar}
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
+                  aria-label="Compartilhar exibição"
+                >
+                  <Share2 size={14} aria-hidden="true" />
+                  Compartilhar
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="w-full lg:absolute lg:top-0 lg:right-0 lg:w-[min(36%,32rem)]">
+            <EventosProximos />
           </div>
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
