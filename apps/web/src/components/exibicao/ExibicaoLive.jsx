@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { Copy, Share2 } from "lucide-react";
+import { BusFront, Copy, MapPin, Share2 } from "lucide-react";
 import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
 import FavoriteStar from "@/components/exibicao/FavoriteStar";
 import InlineToast from "@/components/ui/InlineToast";
@@ -351,7 +351,7 @@ export default function ExibicaoLive({ codigo }) {
                 <span>Ponto {indicePontoRodizio + 1} de {onibusPorPonto.length}</span>
               </div>
               <div
-                className="h-2 overflow-hidden rounded-full bg-superficie-alt"
+                className="relative h-9 overflow-hidden rounded-full border border-borda bg-superficie-alt px-3"
                 role="progressbar"
                 aria-label="Tempo até o próximo ponto"
                 aria-valuemin="0"
@@ -359,8 +359,43 @@ export default function ExibicaoLive({ codigo }) {
                 aria-valuenow={INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto}
               >
                 <div
-                  className="h-full rounded-full bg-acento transition-[width] duration-1000 linear"
-                  style={{ width: `${((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) / INTERVALO_RODIZIO_SEGUNDOS) * 100}%` }}
+                  className="absolute inset-x-3 top-1/2 flex h-3 -translate-y-1/2 items-center justify-between gap-1"
+                  aria-hidden="true"
+                >
+                  {Array.from({ length: 18 }, (_, indice) => {
+                    const progresso =
+                      ((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
+                        INTERVALO_RODIZIO_SEGUNDOS) *
+                      18;
+                    return (
+                      <span
+                        key={indice}
+                        className={`h-1 w-full rounded-full transition-colors duration-1000 ${
+                          indice < progresso ? "bg-erro" : "bg-texto-mudo/40"
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+                <BusFront
+                  aria-hidden="true"
+                  size={25}
+                  strokeWidth={2.5}
+                  className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 fill-yellow-400 text-erro transition-[left] duration-1000 linear"
+                  style={{
+                    left: `clamp(12.5px, calc(${
+                      ((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
+                        INTERVALO_RODIZIO_SEGUNDOS) *
+                      100
+                    }% - 12.5px), calc(100% - 12.5px))`,
+                  }}
+                />
+                <MapPin
+                  aria-label="Destino: próximo ponto"
+                  size={25}
+                  strokeWidth={2.5}
+                  className="absolute top-1/2 right-0 -translate-y-1/2 fill-superficie text-acento"
+                  title="Próximo ponto"
                 />
               </div>
             </div>
