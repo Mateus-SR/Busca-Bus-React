@@ -23,3 +23,16 @@ export const criarEvento = (token, evento) =>
 		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
 		body: JSON.stringify(evento),
 	}).then((dados) => dados.evento);
+
+export const atualizarEvento = (token, id, evento) =>
+	pedir(`/v1/eventos/${encodeURIComponent(id)}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+		body: JSON.stringify(evento),
+	}).then((dados) => dados.evento);
+
+export const excluirEvento = (token, id) =>
+	pedir(`/v1/eventos/${encodeURIComponent(id)}`, {
+		method: 'DELETE',
+		headers: { Authorization: `Bearer ${token}` },
+	});

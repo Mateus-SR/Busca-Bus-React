@@ -53,6 +53,54 @@ export function eventosRoutes(db, config) {
   const fatecs = db?.collection("Fatec");
   const admin = exigirAdmin(config, db?.collection("sessoes"));
   const indisponivel = (res) => res.status(503).json({ erro: "Banco de dados indisponível." });
+  const validarEvento = async (body, facIdPadrao) => {
+    const { tipo, titulo, inicio, fim, local, descricao, fac_id } = body || {};
+    const tipoEscolhido = TIPOS_EVENTO.find((item) => item.valor === tipo);
+    if (!tipoEscolhido) return { erro: "Escolha um tipo de evento válido." };
+
+    const tituloLimpo = lerTexto(titulo, 80);
+    if (!tituloLimpo) return { erro: "Informe o título do evento (até 80 caracteres)." };
+
+    const localLimpo = lerTexto(local, 80);
+    if (!localLimpo) return { erro: "Informe o local do evento (até 80 caracteres)." };
+
+    const descricaoLimpa = lerTexto(descricao, 500);
+    if (!descricaoLimpa) return { erro: "Informe a descrição do evento (até 500 caracteres)." };
+
+    const dataInicio = lerData(inicio);
+    const dataFim = lerData(fim);
+    if (!dataInicio || !dataFim) return { erro: "Data ou horário inválido." };
+
+    const comecou = partesNoFuso(dataInicio);
+    const terminou = partesNoFuso(dataFim);
+    if (comecou.dia !== terminou.dia) {
+      return { erro: "O evento deve começar e terminar no mesmo dia." };
+    }
+    if (terminou.minutos <= comecou.minutos) {
+      return { erro: "O horário de término deve ser depois do início." };
+    }
+    if (comecou.minutos < HORA_MIN * 60 || terminou.minutos > HORA_MAX * 60) {
+      return { erro: "Os eventos devem acontecer entre 07:00 e 23:00." };
+    }
+
+    const facEscolhida = fac_id || facIdPadrao;
+    if (!ehIdValido(facEscolhida)) return { erro: "Escolha a Fatec do evento." };
+    const facId = new mongoose.Types.ObjectId(facEscolhida);
+    if (!(await fatecs.findOne({ _id: facId }))) return { erro: "Fatec não encontrada." };
+
+    return {
+      evento: {
+        tipo: tipoEscolhido.valor,
+        titulo: tituloLimpo,
+        cor: tipoEscolhido.cor,
+        inicio: dataInicio,
+        fim: dataFim,
+        local: localLimpo,
+        descricao: descricaoLimpa,
+        fac_id: facId,
+      },
+    };
+  };
 
   router.get("/", async (_req, res, next) => {
     if (!eventos) return indisponivel(res);
@@ -66,55 +114,52 @@ export function eventosRoutes(db, config) {
 
   router.post("/", admin, async (req, res, next) => {
     if (!eventos || !fatecs) return indisponivel(res);
-    const recusar = (mensagem) => res.status(400).json({ erro: mensagem });
-
     try {
-      const { tipo, titulo, inicio, fim, local, descricao, fac_id } = req.body || {};
-
-      const tipoEscolhido = TIPOS_EVENTO.find((item) => item.valor === tipo);
-      if (!tipoEscolhido) return recusar("Escolha um tipo de evento válido.");
-
-      const tituloLimpo = lerTexto(titulo, 80);
-      if (!tituloLimpo) return recusar("Informe o título do evento (até 80 caracteres).");
-
-      const localLimpo = lerTexto(local, 80);
-      if (!localLimpo) return recusar("Informe o local do evento (até 80 caracteres).");
-
-      const descricaoLimpa = lerTexto(descricao, 500);
-      if (!descricaoLimpa) return recusar("Informe a descrição do evento (até 500 caracteres).");
-
-      const dataInicio = lerData(inicio);
-      const dataFim = lerData(fim);
-      if (!dataInicio || !dataFim) return recusar("Data ou horário inválido.");
-
-      const comecou = partesNoFuso(dataInicio);
-      const terminou = partesNoFuso(dataFim);
-      if (comecou.dia !== terminou.dia) return recusar("O evento deve começar e terminar no mesmo dia.");
-      if (terminou.minutos <= comecou.minutos) return recusar("O horário de término deve ser depois do início.");
-      if (comecou.minutos < HORA_MIN * 60 || terminou.minutos > HORA_MAX * 60) {
-        return recusar("Os eventos devem acontecer entre 07:00 e 23:00.");
-      }
-
-      const facEscolhida = fac_id || req.usuario.fac_id?.toString();
-      if (!ehIdValido(facEscolhida)) return recusar("Escolha a Fatec do evento.");
-      const facId = new mongoose.Types.ObjectId(facEscolhida);
-      if (!(await fatecs.findOne({ _id: facId }))) return recusar("Fatec não encontrada.");
+      const resultado = await validarEvento(req.body, req.usuario.fac_id?.toString());
+      if (resultado.erro) return res.status(400).json({ erro: resultado.erro });
 
       const novo = {
-        tipo: tipoEscolhido.valor,
-        titulo: tituloLimpo,
-        cor: tipoEscolhido.cor,
-        inicio: dataInicio,
-        fim: dataFim,
-        local: localLimpo,
-        descricao: descricaoLimpa,
-        fac_id: facId,
+        ...resultado.evento,
         criado_por: req.usuario._id,
         created_at: new Date(),
       };
       const { insertedId } = await eventos.insertOne(novo);
 
       return res.status(201).json({ evento: paraResposta({ ...novo, _id: insertedId }) });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  router.put("/:id", admin, async (req, res, next) => {
+    if (!eventos || !fatecs) return indisponivel(res);
+    if (!ehIdValido(req.params.id)) return res.status(400).json({ erro: "Evento inválido." });
+
+    try {
+      const _id = new mongoose.Types.ObjectId(req.params.id);
+      const existente = await eventos.findOne({ _id });
+      if (!existente) return res.status(404).json({ erro: "Evento não encontrado." });
+
+      const resultado = await validarEvento(req.body, req.usuario.fac_id?.toString());
+      if (resultado.erro) return res.status(400).json({ erro: resultado.erro });
+
+      await eventos.updateOne({ _id }, { $set: resultado.evento });
+      return res.json({ evento: paraResposta({ ...existente, ...resultado.evento, _id }) });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  router.delete("/:id", admin, async (req, res, next) => {
+    if (!eventos) return indisponivel(res);
+    if (!ehIdValido(req.params.id)) return res.status(400).json({ erro: "Evento inválido." });
+
+    try {
+      const { deletedCount } = await eventos.deleteOne({
+        _id: new mongoose.Types.ObjectId(req.params.id),
+      });
+      if (!deletedCount) return res.status(404).json({ erro: "Evento não encontrado." });
+      return res.json({ removido: true });
     } catch (error) {
       return next(error);
     }

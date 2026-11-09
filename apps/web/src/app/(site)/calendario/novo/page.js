@@ -2,8 +2,19 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { ehAdmin, LOCAIS_COM_NUMERO, LOCAIS_EVENTO, TIPOS_EVENTO } from '@busca-bus/core';import { useAuth } from '@/contexts/AuthContext';
-import { criarEvento, listarFatecs } from '@/lib/eventosApi';
+import {
+	ehAdmin,
+	LOCAIS_COM_NUMERO,
+	LOCAIS_EVENTO,
+	TIPOS_EVENTO,
+} from '@busca-bus/core';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+	atualizarEvento,
+	criarEvento,
+	listarEventos,
+	listarFatecs,
+} from '@/lib/eventosApi';
 import { CORES_EVENTO, dataPorExtenso, horaCurta } from '@/utils/calendario';
 
 const FORMULARIO_VAZIO = {
@@ -43,9 +54,18 @@ export default function NovoEventoPage() {
 	const { usuario, estaLogado, carregando, accessToken } = useAuth();
 	const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
 	const [fatecs, setFatecs] = useState([]);
+	const [idEdicao, setIdEdicao] = useState(null);
+	const [inicializandoEdicao, setInicializandoEdicao] = useState(true);
+	const [edicaoCarregada, setEdicaoCarregada] = useState(false);
+	const [eventoEmEdicao, setEventoEmEdicao] = useState(null);
 	const [enviando, setEnviando] = useState(false);
 	const [erro, setErro] = useState('');
 	const [criado, setCriado] = useState(null);
+
+	useEffect(() => {
+		setIdEdicao(new URLSearchParams(window.location.search).get('editar'));
+		setInicializandoEdicao(false);
+	}, []);
 
 	useEffect(() => {
 		listarFatecs()
@@ -53,13 +73,67 @@ export default function NovoEventoPage() {
 			.catch(() => {});
 	}, []);
 
-	if (carregando) return <main className="min-h-[60vh]" />;
+	useEffect(() => {
+		if (!idEdicao) return;
+		let cancelado = false;
+		setEdicaoCarregada(false);
+		listarEventos()
+			.then((eventos) => {
+				const evento = eventos.find((item) => item.id_evento === idEdicao);
+				if (!evento) throw new Error('Evento não encontrado.');
+
+				const inicio = new Date(evento.inicio);
+				const fim = new Date(evento.fim);
+				const localComNumero = LOCAIS_COM_NUMERO.find((local) =>
+					evento.local.startsWith(`${local} `)
+				);
+				const formatarData = (data) =>
+					`${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}-${String(data.getDate()).padStart(2, '0')}`;
+				const formatarHora = (data) =>
+					`${String(data.getHours()).padStart(2, '0')}:${String(data.getMinutes()).padStart(2, '0')}`;
+
+				if (!cancelado) {
+					setEventoEmEdicao(evento);
+					setFormulario({
+						tipo: evento.tipo,
+						titulo: evento.titulo,
+						data: formatarData(inicio),
+						inicio: formatarHora(inicio),
+						fim: formatarHora(fim),
+						local: localComNumero || evento.local,
+						numeroLocal: localComNumero
+							? evento.local.slice(localComNumero.length).trim()
+							: '',
+						descricao: evento.descricao,
+						facId: evento.fac_id || '',
+					});
+				}
+			})
+			.catch((err) => {
+				if (!cancelado) setErro(err.message);
+			})
+			.finally(() => {
+				if (!cancelado) setEdicaoCarregada(true);
+			});
+
+		return () => {
+			cancelado = true;
+		};
+	}, [idEdicao]);
+
+	if (carregando || inicializandoEdicao || (idEdicao && !edicaoCarregada)) {
+		return <main className="min-h-[60vh]" />;
+	}
 
 	if (!estaLogado) {
 		return (
 			<Aviso
-				titulo="Novo evento"
-				texto="Faça login para criar eventos."
+				titulo={idEdicao ? 'Editar evento' : 'Novo evento'}
+				texto={
+					idEdicao
+						? 'Faça login para editar eventos.'
+						: 'Faça login para criar eventos.'
+				}
 				href="/login"
 				botao="Entrar"
 			/>
@@ -70,7 +144,18 @@ export default function NovoEventoPage() {
 		return (
 			<Aviso
 				titulo="Acesso restrito"
-				texto="Apenas administradores podem criar eventos."
+				texto="Apenas administradores podem criar ou editar eventos."
+				href="/calendario"
+				botao="Voltar ao calendário"
+			/>
+		);
+	}
+
+	if (idEdicao && edicaoCarregada && !eventoEmEdicao) {
+		return (
+			<Aviso
+				titulo="Não foi possível editar"
+				texto={erro || 'Evento não encontrado.'}
 				href="/calendario"
 				botao="Voltar ao calendário"
 			/>
@@ -96,16 +181,22 @@ export default function NovoEventoPage() {
 
 		setEnviando(true);
 		try {
-			const evento = await criarEvento(accessToken, {
+			const dadosEvento = {
 				tipo: formulario.tipo,
 				titulo: formulario.titulo,
 				inicio: inicio.toISOString(),
 				fim: fim.toISOString(),
-				local: pedeNumero ? `${formulario.local} ${formulario.numeroLocal.trim()}` : formulario.local,				descricao: formulario.descricao,
+				local: pedeNumero
+					? `${formulario.local} ${formulario.numeroLocal.trim()}`
+					: formulario.local,
+				descricao: formulario.descricao,
 				fac_id: facId,
-			});
+			};
+			const evento = idEdicao
+				? await atualizarEvento(accessToken, idEdicao, dadosEvento)
+				: await criarEvento(accessToken, dadosEvento);
 			setCriado(evento);
-			setFormulario(FORMULARIO_VAZIO);
+			if (!idEdicao) setFormulario(FORMULARIO_VAZIO);
 		} catch (err) {
 			setErro(err.message);
 		} finally {
@@ -122,12 +213,15 @@ export default function NovoEventoPage() {
 					role="status"
 					className="border-borda bg-superficie w-full max-w-lg rounded-2xl border p-6 text-center shadow-lg sm:p-8"
 				>
-					<h1 className="text-texto mb-2 text-2xl font-extrabold">Evento criado!</h1>
+					<h1 className="text-texto mb-2 text-2xl font-extrabold">
+						{idEdicao ? 'Evento atualizado!' : 'Evento criado!'}
+					</h1>
 					<p className="text-texto font-semibold">
 						{criado.tipo}: {criado.titulo}
 					</p>
 					<p className="text-texto-suave mt-1 text-sm">
-						{dataPorExtenso(inicio)} · {horaCurta(inicio)} às {horaCurta(fim)} · {criado.local}
+						{dataPorExtenso(inicio)} · {horaCurta(inicio)} às{' '}
+						{horaCurta(fim)} · {criado.local}
 					</p>
 					<div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
 						<Link
@@ -136,13 +230,15 @@ export default function NovoEventoPage() {
 						>
 							Ver no calendário
 						</Link>
-						<button
-							type="button"
-							onClick={() => setCriado(null)}
-							className="border-borda cursor-pointer rounded-xl border-2 px-5 py-3 font-bold transition hover:bg-gray-100"
-						>
-							Criar outro evento
-						</button>
+						{!idEdicao && (
+							<button
+								type="button"
+								onClick={() => setCriado(null)}
+								className="border-borda cursor-pointer rounded-xl border-2 px-5 py-3 font-bold transition hover:bg-gray-100"
+							>
+								Criar outro evento
+							</button>
+						)}
 					</div>
 				</section>
 			</main>
@@ -158,7 +254,9 @@ export default function NovoEventoPage() {
 				>
 					← Voltar ao calendário
 				</Link>
-				<h1 className="text-texto mt-3 mb-8 text-3xl font-extrabold">Novo evento</h1>
+				<h1 className="text-texto mt-3 mb-8 text-3xl font-extrabold">
+					{idEdicao ? 'Editar evento' : 'Novo evento'}
+				</h1>
 
 				<form onSubmit={enviar} className="space-y-6">
 					<div>
@@ -335,7 +433,13 @@ export default function NovoEventoPage() {
 						disabled={enviando}
 						className="bg-destaque text-sobre-destaque hover:bg-destaque-forte w-full cursor-pointer rounded-md px-4 py-3 text-lg font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
 					>
-						{enviando ? 'Criando...' : 'Criar evento'}
+						{enviando
+							? idEdicao
+								? 'Salvando...'
+								: 'Criando...'
+							: idEdicao
+								? 'Salvar alterações'
+								: 'Criar evento'}
 					</button>
 				</form>
 			</div>

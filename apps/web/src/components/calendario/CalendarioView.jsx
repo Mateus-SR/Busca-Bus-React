@@ -31,7 +31,11 @@ const HORAS = Array.from(
 
 const COLUNAS = 'grid grid-cols-[3.5rem_repeat(7,minmax(0,1fr))]';
 
-export default function CalendarioView({ eventos: eventosBrutos }) {
+export default function CalendarioView({
+	eventos: eventosBrutos,
+	ehAdministrador,
+	onExcluirEvento,
+}) {
 	const [hoje, setHoje] = useState(null);
 	const [inicioSemana, setInicioSemana] = useState(null);
 	const [mesMini, setMesMini] = useState(null);
@@ -264,7 +268,12 @@ export default function CalendarioView({ eventos: eventosBrutos }) {
 				</div>
 			</div>
 
-			<EventoPopup evento={eventoAberto} onClose={fecharEvento} />
+			<EventoPopup
+				evento={eventoAberto}
+				onClose={fecharEvento}
+				ehAdministrador={ehAdministrador}
+				onExcluirEvento={onExcluirEvento}
+			/>
 		</section>
 	);
 }
