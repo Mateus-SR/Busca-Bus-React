@@ -188,6 +188,7 @@ export function AuthProvider({ children }) {
     <AuthContext.Provider
       value={{
         usuario,
+        accessToken,
         login,
         logout,
         atualizarAvatar,
