@@ -22,6 +22,7 @@ export default function ExibicaoLive({ codigo }) {
   const [pontoComCodigoVisivel, setPontoComCodigoVisivel] = useState(null);
   const [indicePontoRodizio, setIndicePontoRodizio] = useState(0);
   const [segundosParaProximoPonto, setSegundosParaProximoPonto] = useState(INTERVALO_RODIZIO_SEGUNDOS);
+  const indicePontoRodizioRef = useRef(0);
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
@@ -98,20 +99,25 @@ export default function ExibicaoLive({ codigo }) {
 
   useEffect(() => {
     setIndicePontoRodizio(0);
+    indicePontoRodizioRef.current = 0;
     setPontoComCodigoVisivel(null);
     setSegundosParaProximoPonto(INTERVALO_RODIZIO_SEGUNDOS);
-  }, [modoVisualizacao, onibusPorPonto.length]);
-
-  useEffect(() => {
     if (modoVisualizacao !== "rodizio" || onibusPorPonto.length < 2) return undefined;
-    const intervalo = setInterval(() => {
-      setSegundosParaProximoPonto((segundos) => {
-        if (segundos > 1) return segundos - 1;
-        setIndicePontoRodizio((indice) => (indice + 1) % onibusPorPonto.length);
+    const inicio = Date.now();
+    const atualizarRodizio = () => {
+      const decorrido = Date.now() - inicio;
+      const ciclos = Math.floor(decorrido / (INTERVALO_RODIZIO_SEGUNDOS * 1000));
+      const novoIndice = ciclos % onibusPorPonto.length;
+      if (novoIndice !== indicePontoRodizioRef.current) {
+        indicePontoRodizioRef.current = novoIndice;
         setPontoComCodigoVisivel(null);
-        return INTERVALO_RODIZIO_SEGUNDOS;
-      });
-    }, 1_000);
+        setIndicePontoRodizio(novoIndice);
+      }
+      const segundosDecorridos = Math.floor((decorrido % (INTERVALO_RODIZIO_SEGUNDOS * 1000)) / 1000);
+      setSegundosParaProximoPonto(INTERVALO_RODIZIO_SEGUNDOS - segundosDecorridos);
+    };
+    atualizarRodizio();
+    const intervalo = setInterval(atualizarRodizio, 250);
     return () => clearInterval(intervalo);
   }, [modoVisualizacao, onibusPorPonto.length]);
   
