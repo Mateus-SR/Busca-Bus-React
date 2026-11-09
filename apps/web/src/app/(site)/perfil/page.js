@@ -28,7 +28,7 @@ const AVATARES = [
 export default function PerfilPage() {
   const { usuario, estaLogado, carregando, atualizarAvatar } = useAuth();
   const [galeriaAberta, setGaleriaAberta] = useState(false);
-  const [avatarSelecionado, setAvatarSelecionado] = useState(usuario?.avatarId || "avatar-01");
+  const [avatarSelecionado, setAvatarSelecionado] = useState(usuario?.avatarId || null);
   const [salvando, setSalvando] = useState(false);
   const [erroAvatar, setErroAvatar] = useState("");
 
@@ -56,7 +56,7 @@ export default function PerfilPage() {
 
   const nome = usuario?.nome || "Não informado";
   const email = usuario?.email || "Não informado";
-  const avatarAtual = usuario?.avatarId || "avatar-01";
+  const avatarAtual = usuario?.avatarId || null;
 
   function abrirGaleria() {
     setAvatarSelecionado(avatarAtual);
