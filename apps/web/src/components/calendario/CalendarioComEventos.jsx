@@ -5,11 +5,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { ehAdmin } from '@busca-bus/core';
 import { useAuth } from '@/contexts/AuthContext';
-import { listarEventos, listarFatecs } from '@/lib/eventosApi';
+import { excluirEvento, listarEventos, listarFatecs } from '@/lib/eventosApi';
 import CalendarioView from './CalendarioView';
 
 export default function CalendarioComEventos() {
-	const { usuario, carregando } = useAuth();
+	const { usuario, carregando, accessToken } = useAuth();
 	const [eventos, setEventos] = useState(null);
 	const [fatecs, setFatecs] = useState([]);
 	const [erro, setErro] = useState('');
@@ -35,6 +35,11 @@ export default function CalendarioComEventos() {
 		setErro('');
 		setEventos(null);
 		carregar();
+	};
+
+	const removerEvento = async (idEvento) => {
+		await excluirEvento(accessToken, idEvento);
+		setEventos((atuais) => atuais.filter((evento) => evento.id_evento !== idEvento));
 	};
 
 	if (erro) {
@@ -79,7 +84,11 @@ export default function CalendarioComEventos() {
 				)}
 			</div>
 
-			<CalendarioView eventos={eventosDaFatec} />
+			<CalendarioView
+				eventos={eventosDaFatec}
+				ehAdministrador={ehAdmin(usuario?.role)}
+				onExcluirEvento={removerEvento}
+			/>
 		</>
 	);
 }
