@@ -23,7 +23,7 @@ export default function InlineToast({ mensagem }) {
 		<div
 			role="status"
 			aria-live="polite"
-			className={`fixed top-4 right-4 z-[9999] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${
+			className={`fixed top-4 right-4 z-[9999] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${mensagem.cor || ""} ${
 				visivel ? "opacity-100" : "pointer-events-none opacity-0"
 			}`}
 		>

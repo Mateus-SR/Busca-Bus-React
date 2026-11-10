@@ -58,7 +58,6 @@ export default function useExibicao(codigo) {
           erroApi.status === 503 && erroApi.detalhe?.erro === "Banco de dados não configurado."
             ? "Use o código de teste configurado para este ambiente."
             : "Verifique o código e tente novamente.",
-          erroApi.message,
         );
       } finally {
         if (!cancelado) {

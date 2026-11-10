@@ -31,6 +31,7 @@ export default function ExibicaoLive({ codigo }) {
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
+  const estadoConexaoAnterior = useRef(null);
   const opcoesRadar = useMemo(() => ({
     parada: exibicao?.paradas?.[0],
     paradas: exibicao?.paradas,
@@ -41,6 +42,26 @@ export default function ExibicaoLive({ codigo }) {
     if (!podeVerDetalhesTecnicos) setDebugAberto(false);
   }, [podeVerDetalhesTecnicos]);
   const radar = useRadarOnibus(codigo, [], podeVerDetalhesTecnicos && debugAberto, atualizacaoSolicitada, opcoesRadar, accessToken);
+  useEffect(() => {
+    const estado = radar.estadoConexao;
+    if (!estado || estado === estadoConexaoAnterior.current) return;
+    const anterior = estadoConexaoAnterior.current;
+    estadoConexaoAnterior.current = estado;
+    if (anterior === null) return;
+    const mensagens = {
+      conectado: "Radar conectado.",
+      reconectando: "Conexão interrompida. Tentando novamente.",
+      conectando: "Conectando ao radar...",
+    };
+    const texto = mensagens[estado];
+    if (texto) {
+      setMensagemAcao({
+        id: Date.now(),
+        texto,
+        cor: estado === "conectado" ? "bg-sucesso text-sobre-sucesso" : "bg-destaque text-sobre-destaque",
+      });
+    }
+  }, [radar.estadoConexao]);
   const controleModoVisualizacao = (
     <div
       className="inline-flex w-full rounded-lg border border-borda bg-superficie-alt p-1 sm:w-auto"
@@ -310,18 +331,18 @@ export default function ExibicaoLive({ codigo }) {
       {mostrarSemParadas && (
         <p role="status" className="mb-3 text-center text-sm text-erro">
           {erroExibicao
-            ? `Não foi possível carregar a exibição: ${erroExibicao}`
+            ? "Não foi possível carregar a exibição. Verifique o código e tente novamente."
             : "Esta exibição não tem pontos de parada cadastrados."}
         </p>
       )}
-      {radar.erro && (
-        <p role="status" className="mb-3 text-center text-sm text-erro">
-          Não foi possível atualizar o radar: {radar.erro}
-        </p>
-      )}
-      {!radar.erro && !mostrarSemParadas && (
-        <p role="status" className="mb-3 text-center text-sm text-texto-mudo">
-          {radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`}
+      {!mostrarSemParadas && (
+        <p
+          role="status"
+          className={`mb-3 text-center text-sm font-semibold ${
+            radar.erro ? "text-erro" : radar.estadoConexao === "conectado" ? "text-sucesso" : "text-texto-mudo"
+          }`}
+        >
+          {radar.erro || (radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`)}
         </p>
       )}
       {modoVisualizacao === "completa" ? (
