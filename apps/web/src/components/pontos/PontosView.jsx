@@ -1,0 +1,173 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import Link from "next/link";
+import { Crosshair, LocateFixed } from "lucide-react";
+import { formatarDistancia } from "@busca-bus/core";
+import useGeolocalizacao from "@/hooks/useGeolocalizacao";
+import usePontosProximos from "@/hooks/usePontosProximos";
+import CartaoPonto from "@/components/pontos/CartaoPonto";
+
+const PontosMapa = dynamic(() => import("@/components/pontos/PontosMapa"), {
+  ssr: false,
+  loading: () => <div className="flex h-full min-h-[320px] items-center justify-center">Carregando mapa...</div>,
+});
+
+const RAIOS = [100, 200, 300];
+const RAIO_PADRAO = 200;
+// Acima disso o GPS provavelmente está pegando só a região (Wi-Fi/antena) e o ponto mais próximo pode não ser o que parece.
+const PRECISAO_RUIM_METROS = 150;
+
+const botao = "flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-bold transition focus:ring-2 focus:ring-foco focus:outline-none";
+
+export default function PontosView() {
+  const geo = useGeolocalizacao();
+  const [raio, setRaio] = useState(RAIO_PADRAO);
+  const [escolhendoManual, setEscolhendoManual] = useState(false);
+  const [selecionado, setSelecionado] = useState(null);
+  const [copiado, setCopiado] = useState(null);
+  const [avisoCopia, setAvisoCopia] = useState("");
+  const temporizadorRef = useRef(null);
+  const areaMapaRef = useRef(null);
+  const { pontos, maisProximo, erro, carregando, consultou, recarregar } = usePontosProximos(geo.posicao, raio);
+
+  useEffect(() => () => window.clearTimeout(temporizadorRef.current), []);
+
+  // Sem localização liberada, escolher o local no mapa é o único caminho; fora disso, o usuário liga e desliga o modo.
+  const escolhendo = escolhendoManual || geo.status === "negada" || geo.status === "indisponivel";
+  const imprecisa = geo.posicao?.precisao > PRECISAO_RUIM_METROS;
+
+  function aoEscolherLocal(local) {
+    geo.escolherLocal(local);
+    setEscolhendoManual(false);
+    setSelecionado(null);
+  }
+
+  function aoUsarLocalizacao() {
+    setEscolhendoManual(false);
+    setSelecionado(null);
+    geo.solicitar();
+  }
+
+  function aoSelecionar(codigo) {
+    setSelecionado(codigo);
+    // No celular o mapa fica acima da lista: traz o mapa de volta para o usuário ver o ponto.
+    areaMapaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  async function aoCopiar(codigo) {
+    window.clearTimeout(temporizadorRef.current);
+    try {
+      await navigator.clipboard.writeText(codigo);
+      setCopiado(codigo);
+      setAvisoCopia(`Código ${codigo} copiado.`);
+    } catch {
+      setCopiado(null);
+      setAvisoCopia(`Não foi possível copiar automaticamente. O código é ${codigo}.`);
+    }
+    temporizadorRef.current = window.setTimeout(() => {
+      setCopiado(null);
+      setAvisoCopia("");
+    }, 4000);
+  }
+
+  let resumo = "";
+  if (geo.status === "solicitando") resumo = "Obtendo sua localização...";
+  else if (escolhendo && !geo.posicao) resumo = "Toque no mapa para escolher o local da busca.";
+  else if (carregando) resumo = "Buscando pontos...";
+  else if (consultou) resumo = pontos.length ? `${pontos.length} ${pontos.length === 1 ? "ponto encontrado" : "pontos encontrados"} em até ${raio} m.` : `Nenhum ponto em até ${raio} m.`;
+
+  const proximoRaio = RAIOS.find((valor) => valor > raio);
+
+  return (
+    <main className="flex min-h-[calc(100dvh-68px)] flex-col bg-superficie-alt lg:h-[calc(100dvh-68px)] lg:flex-row">
+      <section aria-labelledby="titulo-pontos" className="flex w-full flex-col gap-4 overflow-y-auto p-4 lg:w-[26rem] lg:shrink-0">
+        <div>
+          <h1 id="titulo-pontos" className="text-2xl font-extrabold text-texto">Pontos perto de você</h1>
+          <p className="mt-1 text-sm text-texto-suave">Encontre o código de um ponto de ônibus para criar sua exibição.</p>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+          <button type="button" onClick={aoUsarLocalizacao} disabled={geo.status === "solicitando"} className={`${botao} bg-marca text-sobre-marca hover:bg-marca-forte disabled:cursor-not-allowed disabled:opacity-60`}>
+            <LocateFixed size={18} aria-hidden="true" />
+            {geo.posicao?.origem === "gps" ? "Atualizar minha localização" : "Usar minha localização"}
+          </button>
+          <button type="button" onClick={() => setEscolhendoManual((atual) => !atual)} aria-pressed={escolhendo} disabled={geo.status === "negada" || geo.status === "indisponivel"} className={`${botao} border border-borda-forte text-texto hover:bg-superficie-forte aria-pressed:bg-superficie-forte`}>
+            <Crosshair size={18} aria-hidden="true" />
+            Escolher outro local no mapa
+          </button>
+        </div>
+
+        <fieldset>
+          <legend className="mb-1 text-sm font-semibold text-texto-suave">Distância da busca</legend>
+          <div className="flex gap-2">
+            {RAIOS.map((valor) => (
+              <label key={valor} className={`flex flex-1 cursor-pointer items-center justify-center rounded-md border px-3 py-2 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-foco ${raio === valor ? "border-marca bg-marca text-sobre-marca" : "border-borda-forte bg-superficie text-texto"}`}>
+                <input type="radio" name="raio" value={valor} checked={raio === valor} onChange={() => setRaio(valor)} className="sr-only" />
+                {valor} m
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto">
+          {geo.erro ? <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">{geo.erro}</p> : null}
+          {erro ? (
+            <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">
+              {erro}{" "}
+              <button type="button" onClick={recarregar} className="font-bold underline">Tentar de novo</button>
+            </p>
+          ) : null}
+          {resumo ? <p className="font-semibold">{resumo}</p> : null}
+          {imprecisa ? <p className="rounded-md bg-superficie p-3 text-texto-suave">Sua localização está imprecisa (cerca de {Math.round(geo.posicao.precisao)} m). Os pontos mostrados podem não ser os mais próximos; se precisar, escolha o local no mapa.</p> : null}
+          {avisoCopia ? <p className="font-semibold text-sucesso">{avisoCopia}</p> : null}
+        </div>
+
+        {consultou && !pontos.length ? (
+          <div className="flex flex-col gap-3">
+            {maisProximo ? (
+              <>
+                <p className="text-sm text-texto-suave">O ponto mais próximo está a {formatarDistancia(maisProximo.distancia)}:</p>
+                <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} onSelecionar={() => {}} onCopiar={aoCopiar} />
+              </>
+            ) : (
+              <p className="text-sm text-texto-suave">Não encontramos pontos por aqui. Confira se o local escolhido está em São Paulo.</p>
+            )}
+            {proximoRaio ? (
+              <button type="button" onClick={() => setRaio(proximoRaio)} className={`${botao} border border-borda-forte text-texto hover:bg-superficie-forte`}>Ampliar a busca para {proximoRaio} m</button>
+            ) : null}
+          </div>
+        ) : null}
+
+        {pontos.length ? (
+          <ol aria-label="Pontos encontrados, do mais próximo ao mais distante" className="flex flex-col gap-3">
+            {pontos.map((ponto) => (
+              <li key={ponto.codigo}>
+                <CartaoPonto ponto={ponto} selecionado={ponto.codigo === selecionado} copiado={copiado === ponto.codigo} onSelecionar={aoSelecionar} onCopiar={aoCopiar} />
+              </li>
+            ))}
+          </ol>
+        ) : null}
+
+        <p className="text-xs text-texto-mudo">
+          Sua localização é usada só para esta busca: o Busca Bus não a guarda. Já sabe o código?{" "}
+          <Link href="/exibicao" className="underline">Acessar exibição</Link>
+        </p>
+      </section>
+
+      <div ref={areaMapaRef} className="relative order-first h-[45dvh] min-h-[320px] flex-1 lg:order-none lg:h-auto">
+        <PontosMapa
+          centro={geo.posicao}
+          precisao={geo.posicao?.precisao}
+          raio={raio}
+          pontos={pontos}
+          selecionado={selecionado}
+          onSelecionar={setSelecionado}
+          escolhendo={escolhendo}
+          onEscolherLocal={aoEscolherLocal}
+        />
+      </div>
+    </main>
+  );
+}
