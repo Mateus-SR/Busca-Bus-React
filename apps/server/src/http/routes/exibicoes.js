@@ -32,6 +32,8 @@ function validarEntrada(body) {
     erros.push("Informe de 1 a 5 pontos de ônibus.");
   } else if (paradas.some((codigo) => !/^(?:\d{7}|\d{9})$/.test(String(codigo)))) {
     erros.push("Os códigos de parada devem ter 7 ou 9 dígitos.");
+  } else if (new Set(paradas.map((codigo) => String(codigo))).size !== paradas.length) {
+    erros.push("Não é permitido repetir o mesmo código de parada.");
   }
   for (const [campo, limite] of Object.entries(LIMITES)) {
     const valor = Number(config[campo]);
