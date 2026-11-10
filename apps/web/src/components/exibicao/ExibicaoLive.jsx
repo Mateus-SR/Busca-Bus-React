@@ -224,7 +224,7 @@ export default function ExibicaoLive({ codigo }) {
           <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
-              <FavoriteStar />
+              <FavoriteStar codigo={codigo} />
             </div>
             <div className="mt-1 flex flex-col items-center gap-2 text-sm">
               <span className="font-roboto-mono italic">Código: {codigo}</span>

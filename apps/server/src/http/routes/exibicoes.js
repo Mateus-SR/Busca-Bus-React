@@ -8,11 +8,16 @@ const LIMITES = {
   tempoAdiantado: { min: 1, max: 5 },
   distanciaMaxMin: { min: 5, max: 60 },
 };
+const LIMITE_NOME_EXIBICAO = 25;
 
 function validarEntrada(body) {
+  const nome = String(body?.nome ?? "").trim();
   const paradas = body?.paradas;
   const config = body?.config || {};
   const erros = [];
+  if (nome.length > LIMITE_NOME_EXIBICAO) {
+    erros.push(`O nome da exibição deve ter no máximo ${LIMITE_NOME_EXIBICAO} caracteres.`);
+  }
   if (!Array.isArray(paradas) || paradas.length < 1 || paradas.length > 5) {
     erros.push("Informe de 1 a 5 pontos de ônibus.");
   } else if (paradas.some((codigo) => !/^(?:\d{7}|\d{9})$/.test(String(codigo)))) {

@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const LIMITE_NOME_EXIBICAO = 25;
 const PADRAO = {
   nome: "",
   instituicao: "",
@@ -99,6 +100,9 @@ export default function ConfiguracaoForm({ codigo }) {
 
   async function salvar(evento) {
     evento.preventDefault();
+    if (formulario.nome.length > LIMITE_NOME_EXIBICAO) {
+      return setMensagem(`O nome da exibição deve ter no máximo ${LIMITE_NOME_EXIBICAO} caracteres.`);
+    }
     const paradasValidas = formulario.paradas.filter(Boolean);
     if (!formulario.token.trim()) return setMensagem("Token da API é obrigatório.");
     if (!paradasValidas.length || paradasValidas.some((parada) => ![7, 9].includes(parada.length))) {
@@ -155,7 +159,7 @@ export default function ConfiguracaoForm({ codigo }) {
   }
 
   return <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-borda bg-superficie p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10"><h1 className="mb-8 text-center text-2xl font-bold text-texto sm:text-3xl">Configuração</h1><Link href="/" className="absolute top-4 left-4 text-sm text-texto transition hover:text-destaque sm:top-12 sm:left-6">← Voltar</Link><form onSubmit={salvar}>
-    <div className="mb-6"><label htmlFor="nomeExib" className="mb-2 block text-sm font-medium text-texto-suave">Nome da exibição (Opcional)</label><input id="nomeExib" value={formulario.nome} onChange={(e) => atualizar("nome", e.target.value)} placeholder="exemplo: Fatec-ZL" className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none" /></div>
+    <div className="mb-6"><label htmlFor="nomeExib" className="mb-2 block text-sm font-medium text-texto-suave">Nome da exibição (Opcional)</label><input id="nomeExib" value={formulario.nome} maxLength={LIMITE_NOME_EXIBICAO} onChange={(e) => atualizar("nome", e.target.value)} placeholder="exemplo: Fatec-ZL" className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none" /><p className="mt-1 text-xs text-texto-mudo">Máximo de {LIMITE_NOME_EXIBICAO} caracteres.</p></div>
     <InstituicaoSelect instituicao={formulario.instituicao} semInstituicao={formulario.semInstituicao} onChange={(alteracoes) => setFormulario((atual) => ({ ...atual, ...alteracoes }))} />
     <div className="flex flex-wrap justify-center gap-3.5"><NumberField label="Tolerância atraso (1–5 min)" value={formulario.atraso} min={1} max={5} onChange={(valor) => atualizar("atraso", valor)} /><NumberField label="Tolerância adiantado (1–5 min)" value={formulario.adiantado} min={1} max={5} onChange={(valor) => atualizar("adiantado", valor)} /><NumberField label="Distância máxima (5-60 min)" value={formulario.distancia} min={5} max={60} onChange={(valor) => atualizar("distancia", valor)} /></div>
     <label className="mb-8 flex items-start gap-3 border-t border-borda-suave pt-6 text-sm text-texto-suave"><input type="checkbox" checked={formulario.permitirMultiplosPorLinha} onChange={(e) => atualizar("permitirMultiplosPorLinha", e.target.checked)} className="mt-1" /><span><strong>Exibir vários ônibus da mesma linha</strong><br /><span className="text-xs text-texto-mudo">Desativado por padrão: mostra no máximo um ônibus por código de linha.</span></span></label>

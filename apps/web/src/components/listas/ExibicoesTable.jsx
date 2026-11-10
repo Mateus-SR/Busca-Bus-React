@@ -2,28 +2,87 @@
 
 import Link from "next/link";
 import { Pencil, Trash2, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { criarClienteApi } from "@busca-bus/core/cliente";
 import { EXIBICOES_MOCK } from "@/lib/fixtures/exibicoesFixture";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
+import ConfirmarFavoritoModal from "@/components/listas/ConfirmarFavoritoModal";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function ExibicoesTable({ modo }) {
-  const { estaLogado, carregando } = useAuth();
+  const { accessToken, estaLogado, carregando } = useAuth();
   const { confirm } = useLoading();
-  const [itens, setItens] = useState(() => EXIBICOES_MOCK.filter((item) => modo === "favoritos" ? item.favorita : !item.favorita));
-  if (carregando) return null;
+  const [itens, setItens] = useState(() => modo === "favoritos" ? [] : EXIBICOES_MOCK.filter((item) => !item.favorita));
+  const [carregandoDados, setCarregandoDados] = useState(modo === "favoritos");
+  const [erro, setErro] = useState("");
+  const [modal, setModal] = useState(null);
+
+  useEffect(() => {
+    if (modo !== "favoritos" || carregando) return;
+    if (!estaLogado || !API_URL || !accessToken) {
+      setErro(!API_URL ? "Favoritos exigem conexão com o servidor." : "Faça login para carregar seus favoritos.");
+      setCarregandoDados(false);
+      return;
+    }
+    let cancelado = false;
+    setCarregandoDados(true);
+    criarClienteApi(API_URL).listarFavoritos(accessToken)
+      .then((resposta) => {
+        if (!cancelado) setItens(Array.isArray(resposta.favoritos) ? resposta.favoritos : []);
+      })
+      .catch((error) => {
+        if (!cancelado) setErro(error.message || "Não foi possível carregar os favoritos.");
+      })
+      .finally(() => {
+        if (!cancelado) setCarregandoDados(false);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [accessToken, carregando, estaLogado, modo]);
+
+  if (carregando || carregandoDados) return <p className="py-8 text-center text-texto-secundario">Carregando favoritos...</p>;
   if (!estaLogado) return <div className="py-6 text-center text-texto-mudo">Faça login para ver suas linhas</div>;
+  if (erro) return <p className="py-8 text-center text-erro-forte">{erro}</p>;
+
   const vazio = modo === "favoritos" ? "Você ainda não favoritou nenhuma linha 😢" : "Você ainda não criou nenhuma exibição 📂";
 
   async function remover(item) {
-    const confirmado = await confirm({
-      mensagem: `${modo === "favoritos" ? "Remover" : "Apagar"} "${item.nome_exibicao || item.codigo_exib}"?`,
-      simTexto: modo === "favoritos" ? "Remover" : "Apagar",
-      naoTexto: "Cancelar",
-    });
+    const codigo = item.codigo || item.codigo_exib;
+    const nome = item.nome || item.nome_exibicao || codigo;
+    if (modo === "favoritos") {
+      setModal({ tipo: "remocao", item });
+      return;
+    }
+    const confirmado = await confirm({ mensagem: `Apagar "${nome}"?`, simTexto: "Apagar", naoTexto: "Cancelar" });
     if (!confirmado) return;
-    setItens((atuais) => atuais.filter((atual) => atual.codigo_exib !== item.codigo_exib));
+    await removerConfirmado(item);
   }
 
-  return <table className="min-w-full table-auto border-collapse"><thead><tr className="bg-superficie-alt font-bold text-texto-suave"><th className="w-1/4 px-6 py-3 text-center">Código</th><th className="w-2/4 px-6 py-3 text-center">Nome da exibição</th><th className="w-1/4 px-6 py-3 text-center">Ações</th></tr></thead><tbody>{itens.length ? itens.map((item) => <tr key={item.codigo_exib} className="border-b transition hover:bg-superficie-alt"><td className="cursor-pointer px-6 py-3 text-center text-lg font-bold hover:text-acento"><Link href={`/exibicao?codigo=${encodeURIComponent(item.codigo_exib)}`}>{item.codigo_exib}</Link></td><td className="cursor-pointer px-6 py-3 text-center font-medium text-texto-suave"><Link href={`/exibicao?codigo=${encodeURIComponent(item.codigo_exib)}`}>{item.nome_exibicao || "Sem Nome"}</Link></td><td className="px-6 py-3 text-center"><div className="flex justify-center gap-4">{modo === "criadas" ? <><Link href={`/configuracao?editar=${encodeURIComponent(item.codigo_exib)}`} className="p-2 text-info transition hover:scale-110 hover:text-info-forte" title="Editar"><Pencil /></Link><button type="button" onClick={() => remover(item)} className="p-2 text-erro transition hover:scale-110 hover:text-erro-intenso" title="Excluir"><Trash2 /></button></> : <button type="button" onClick={() => remover(item)} className="p-2 text-texto-desabilitado transition hover:scale-110 hover:text-erro-suave" title="Remover favorito"><X /></button>}</div></td></tr>) : <tr><td colSpan="3" className="py-8 text-center text-lg text-texto-secundario">{vazio}</td></tr>}</tbody></table>;
+  async function removerConfirmado(item) {
+    const codigo = item.codigo || item.codigo_exib;
+    if (modo === "favoritos") {
+      try {
+        await criarClienteApi(API_URL).desfavoritar(codigo, accessToken);
+      } catch (error) {
+        setErro(error.message || "Não foi possível remover o favorito.");
+        return;
+      }
+    }
+    setItens((atuais) => atuais.filter((atual) => (atual.codigo || atual.codigo_exib) !== codigo));
+    setModal(null);
+  }
+
+  function acessar(item) {
+    setModal({ tipo: "acesso", item });
+  }
+
+  function confirmarAcesso() {
+    const codigo = modal.item.codigo || modal.item.codigo_exib;
+    window.location.assign(`/exibicao?codigo=${encodeURIComponent(codigo)}`);
+  }
+
+  return <><table className="min-w-full table-auto border-collapse"><thead><tr className="bg-superficie-alt font-bold text-texto-suave"><th className="w-1/4 px-6 py-3 text-center">Código</th><th className="w-2/4 px-6 py-3 text-center">Nome da exibição</th><th className="w-1/4 px-6 py-3 text-center">Ações</th></tr></thead><tbody>{itens.length ? itens.map((item) => { const codigo = item.codigo || item.codigo_exib; const nome = item.nome || item.nome_exibicao; const linha = modo === "favoritos" ? { ...item, codigo, nome } : item; return <tr key={codigo} className="border-b transition hover:bg-superficie-alt"><td className="px-6 py-3 text-center text-lg font-bold hover:text-acento"><button type="button" onClick={() => modo === "favoritos" ? acessar(linha) : window.location.assign(`/exibicao?codigo=${encodeURIComponent(codigo)}`)} className="cursor-pointer">{codigo}</button></td><td className="px-6 py-3 text-center font-medium text-texto-suave"><button type="button" onClick={() => modo === "favoritos" ? acessar(linha) : window.location.assign(`/exibicao?codigo=${encodeURIComponent(codigo)}`)} className="cursor-pointer hover:text-acento">{nome || "Sem Nome"}</button></td><td className="px-6 py-3 text-center"><div className="flex justify-center gap-4">{modo === "criadas" ? <><Link href={`/configuracao?editar=${encodeURIComponent(codigo)}`} className="p-2 text-info transition hover:scale-110 hover:text-info-forte" title="Editar"><Pencil /></Link><button type="button" onClick={() => remover(item)} className="p-2 text-erro transition hover:scale-110 hover:text-erro-intenso" title="Apagar"><Trash2 /></button></> : <button type="button" onClick={() => remover(item)} className="p-2 text-texto-desabilitado transition hover:text-erro-suave" title="Remover favorito"><X /></button>}</div></td></tr>; }) : <tr><td colSpan="3" className="py-8 text-center text-lg text-texto-secundario">{vazio}</td></tr>}</tbody></table><ConfirmarFavoritoModal tipo={modal?.tipo} item={modal?.item} onClose={() => setModal(null)} onConfirm={modal?.tipo === "acesso" ? confirmarAcesso : () => removerConfirmado(modal.item)} /></>;
 }

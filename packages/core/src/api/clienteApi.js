@@ -59,6 +59,16 @@ export function criarClienteApi(baseUrl) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: tokenSptrans }),
     }),
+    listarFavoritos: (token) => requisicao("/v1/me/favoritos", { token }),
+    verificarFavorito: (codigo, token) => requisicao(`/v1/me/favoritos/${encodeURIComponent(codigo)}`, { token }),
+    favoritar: (codigo, token) => requisicao(`/v1/me/favoritos/${encodeURIComponent(codigo)}`, {
+      method: "POST",
+      token,
+    }),
+    desfavoritar: (codigo, token) => requisicao(`/v1/me/favoritos/${encodeURIComponent(codigo)}`, {
+      method: "DELETE",
+      token,
+    }),
     obterRadar: (codigo, opcoes = {}) => {
       const parametros = new URLSearchParams();
       if (opcoes.diagnostico) parametros.set("diagnostico", "1");
