@@ -3,16 +3,16 @@
 import React, { useState } from "react";
 import { Star, Send, CheckCircle2 } from "lucide-react";
 
-export default function FeedbackForm({ user }: { user: any }) {
-  const [nps, setNps] = useState<number | null>(null);
-  const [navegacao, setNavegacao] = useState<number | null>(null);
+export default function FeedbackForm({ user }) {
+  const [nps, setNps] = useState(null);
+  const [navegacao, setNavegacao] = useState(null);
   const [ajudaViagem, setAjudaViagem] = useState("");
-  const [avaliacaoProjeto, setAvaliacaoProjeto] = useState<number | null>(null);
+  const [avaliacaoProjeto, setAvaliacaoProjeto] = useState(null);
   const [sugestoes, setSugestoes] = useState("");
   const [enviado, setEnviado] = useState(false);
 
   // Declarando a função como 'async' e garantindo o fechamento correto da chave
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const formData = {
       userId: user?.id,
@@ -80,13 +80,13 @@ export default function FeedbackForm({ user }: { user: any }) {
           2. Como você avalia a facilidade de navegação do sistema? (1 a 5)
         </label>
         <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((star) => (
+          {[1, 2, 3, 4,5].map((star) => (
             <button key={`nav-${star}`} type="button" onClick={() => setNavegacao(star)} className="focus:outline-none transition-transform hover:scale-110">
               <Star
                 className={`w-8 h-8 ${
-                  (navegacao ?? 0) >= star
+                  (navegacao ??0) >= star
                     ? "fill-yellow-400 text-yellow-400"
-                    : "fill-transparent border-current/20 opacity-30 hover:opacity-100"
+                    : "fill-transparent border-current/20 opacity -30 hover:opacity -100"
                 }`}
               />
             </button>
