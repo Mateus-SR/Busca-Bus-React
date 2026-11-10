@@ -1,11 +1,12 @@
 "use client";
 
-import { Check, Copy, MapPin } from "lucide-react";
+import Link from "next/link";
+import { Check, Copy, MapPin, Plus } from "lucide-react";
 import { formatarDistancia } from "@busca-bus/core";
 
 export default function CartaoPonto({ ponto, selecionado, copiado, onSelecionar, onCopiar }) {
   return (
-    <article className={`rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca" : "border-borda bg-superficie"}`}>
+    <article className={`rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-base font-bold break-words text-texto">{ponto.nome || "Ponto sem nome"}</h3>
@@ -22,6 +23,15 @@ export default function CartaoPonto({ ponto, selecionado, copiado, onSelecionar,
         Código <span className="font-roboto-mono text-base font-bold text-texto">{ponto.codigo}</span>
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
+        {/* Sempre disponível: se o código não tiver 7 ou 9 dígitos, o formulário avisa (a validação será ajustada numa próxima etapa). */}
+        <Link
+          href={`/configuracao?parada=${encodeURIComponent(ponto.codigo)}`}
+          aria-label={`Criar exibição com o ponto ${ponto.nome || ponto.codigo}`}
+          className="flex items-center gap-1.5 rounded-md bg-marca px-3 py-1.5 text-sm font-semibold text-sobre-marca transition hover:bg-marca-forte focus:ring-2 focus:ring-foco focus:outline-none"
+        >
+          <Plus size={16} aria-hidden="true" />
+          Criar exibição com este ponto
+        </Link>
         <button
           type="button"
           onClick={() => onCopiar(ponto.codigo)}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import "@/components/mapa/leaflet.css";
-import { ATRIBUICAO_TILES, CENTRO_INICIAL, LIMITES_SAO_PAULO, URL_TILES, lerCor } from "@/components/mapa/configMapa";
+import { ATRIBUICAO_TILES, CENTRO_INICIAL, LIMITES_SAO_PAULO, URL_TILES, coresDoMapa } from "@/components/mapa/configMapa";
 import { escaparHtml } from "@/components/mapa/pontosMapa";
 
 // Mapa da busca de pontos: círculo do raio e da precisão em volta de quem busca, e um marcador leve (canvas) por ponto.
@@ -68,8 +68,7 @@ export default function PontosMapa({ centro, precisao, raio, pontos, selecionado
     let cancelado = false;
     import("leaflet").then(({ default: L }) => {
       if (cancelado || !mapaRef.current) return;
-      const cor = lerCor("--color-info", "#2563eb");
-      const contorno = lerCor("--color-superficie", "#fff");
+      const { destaque: cor, contorno } = coresDoMapa();
       const camada = camadaCentroRef.current;
       camada.clearLayers();
       const posicao = [centro.lat, centro.lng];
@@ -98,10 +97,7 @@ export default function PontosMapa({ centro, precisao, raio, pontos, selecionado
       const camada = camadaPontosRef.current;
       camada.clearLayers();
       pontosPorCodigoRef.current.clear();
-      const cor = lerCor("--color-marca", "#dc2626");
-      const corSelecionado = lerCor("--color-marca-forte", "#991b1b");
-      const contorno = lerCor("--color-superficie", "#fff");
-      const contornoSelecionado = lerCor("--color-texto", "#000");
+      const { ponto: cor, pontoSelecionado: corSelecionado, contorno, contornoSelecionado } = coresDoMapa();
       pontos.forEach((ponto) => {
         const ativo = ponto.codigo === selecionado;
         const marcador = L.circleMarker([ponto.lat, ponto.lng], {

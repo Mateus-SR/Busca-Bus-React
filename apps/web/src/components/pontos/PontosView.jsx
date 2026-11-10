@@ -153,7 +153,7 @@ export default function PontosView() {
               <legend className="mb-1 text-sm font-semibold text-texto-suave">Distância da busca</legend>
               <div className="flex gap-2">
                 {RAIOS.map((valor) => (
-                  <label key={valor} className={`flex flex-1 cursor-pointer items-center justify-center rounded-md border px-3 py-2 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-foco ${raio === valor ? "border-marca bg-marca text-sobre-marca" : "border-borda-forte bg-superficie text-texto"}`}>
+                  <label key={valor} className={`flex flex-1 cursor-pointer items-center justify-center rounded-md border px-3 py-2 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-foco ${raio === valor ? "border-marca bg-marca text-sobre-marca contraste:border-acento contraste:bg-acento contraste:text-superficie" : "border-borda-forte bg-superficie text-texto"}`}>
                     <input type="radio" name="raio" value={valor} checked={raio === valor} onChange={() => setRaio(valor)} className="sr-only" />
                     {valor} m
                   </label>
