@@ -57,7 +57,7 @@ export default function AcessoRapidoForm() {
                     type="text"
                     value={codigo}
                     onChange={handleChange}
-                    placeholder="Exemplo: UpilXc"
+                    placeholder="Exemplo: ABC123"
                     maxLength={6}
                     aria-invalid={erro}
                     aria-describedby={erro ? "codigo-erro" : undefined}

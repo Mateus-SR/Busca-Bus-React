@@ -2,11 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Minus, Plus, Save } from "lucide-react";
 import { criarClienteApi } from "@busca-bus/core/cliente";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
-import { EXIBICOES_MOCK } from "@/lib/fixtures/exibicoesFixture";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLoading } from "@/contexts/LoadingContext";
 
@@ -41,7 +40,7 @@ export default function ConfiguracaoForm({ codigo }) {
   const router = useRouter();
   const { usuario, accessToken, estaLogado, carregando } = useAuth();
   const { confirm } = useLoading();
-  const existente = useMemo(() => EXIBICOES_MOCK.find((item) => item.codigo_exib === codigo), [codigo]);
+  const existente = null;
   const [formulario, setFormulario] = useState(() => ({
     ...PADRAO,
     ...(existente ? converterExibicao(existente) : {}),
