@@ -18,13 +18,23 @@ function normalizarLista(onibus) {
 
 const OPCOES_PADRAO = {};
 
+function mensagemPublicaRadar(erro, fallback = "Não foi possível atualizar o radar.") {
+  const status = erro?.status;
+  if (status === 401 || status === 403) return "Você não tem permissão para acessar esta exibição.";
+  if (status === 404) return "Esta exibição não foi encontrada.";
+  if (status === 503 || erro?.codigo === "REDE" || erro?.name === "TypeError") {
+    return "O serviço está temporariamente indisponível. Tente novamente em instantes.";
+  }
+  return fallback;
+}
+
 // Tamanho do snapshot como o servidor o conta: sem o bloco de diagnóstico, que só existe com o painel aberto.
 function tamanhoSemDiagnostico(resposta) {
   const texto = JSON.stringify(resposta, (chave, valor) => (chave === "diagnostico" ? undefined : valor));
   return new TextEncoder().encode(texto).byteLength;
 }
 
-export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoAtivo = false, atualizacaoSolicitada = 0, opcoes = OPCOES_PADRAO) {
+export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoAtivo = false, atualizacaoSolicitada = 0, opcoes = OPCOES_PADRAO, accessToken = null) {
   const { startLoading, stopLoading, showError } = useLoading();
   const [onibus, setOnibus] = useState(() => normalizarLista(onibusIniciais));
   const [atualizadoEm, setAtualizadoEm] = useState(null);
@@ -82,6 +92,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       setEventosConexao((historico) => [{ tipo, detalhe, em: new Date().toISOString() }, ...historico].slice(0, 30));
     };
     const socket = io(process.env.NEXT_PUBLIC_API_URL, {
+      auth: { token: accessToken },
       reconnection: true,
       reconnectionAttempts: Infinity,
       transports: ["websocket", "polling"],
@@ -129,7 +140,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       setPontos(resposta.pontos ?? (resposta.ponto ? [resposta.ponto] : []));
       setConfiguracaoServidor(resposta.configuracao ?? null);
       setEstadoConexao(origem === "socket" ? "conectado" : (resposta.estadoConexao ?? "reconectando"));
-      setErro(resposta.erro ?? null);
+      setErro(resposta.erro ? "Não foi possível atualizar o radar." : null);
       const diagnosticoBase = resposta.diagnostico
         ? (resposta.diagnostico.paradas
           ? resposta.diagnostico
@@ -170,6 +181,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
         const resposta = await cliente.obterRadar(codigo, {
           diagnostico: diagnosticoAtivoRef.current,
           permitirMultiplosPorLinha: opcoesRef.current.config?.permitirMultiplosPorLinha,
+          token: accessToken,
         });
         if (!ativo || numeroAtualizacao !== atualizacao) {
           metricasRef.current.respostasDescartadas += 1;
@@ -179,7 +191,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       } catch (erroApi) {
         if (!ativo || numeroAtualizacao !== atualizacao) return;
         setEstadoConexao("reconectando");
-        setErro(erroApi.message);
+        setErro(mensagemPublicaRadar(erroApi));
       }
     }
     function ativarFallback() {
@@ -218,7 +230,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
         diagnostico: diagnosticoAtivoRef.current,
       }, (resposta) => {
         if (!ativo || resposta?.ok) return;
-        setErro(resposta?.erro || "Não foi possível entrar na exibição.");
+        setErro("Não foi possível conectar ao radar.");
         ativarFallback();
       });
     });
@@ -229,7 +241,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
     socket.on("connect_error", (erroSocket) => {
       if (!ativo) return;
       registrarConexao("erro de conexão", erroSocket.message);
-      setErro(erroSocket.message);
+      setErro("Não foi possível conectar ao radar.");
       setEstadoConexao("reconectando");
       ativarFallback();
       if (!jaConectou && !verificandoInicializacao && ehFalhaTransitoriaApi({ ...erroSocket, codigo: "REDE" })) {
@@ -250,7 +262,6 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
             showError(
               "Não foi possível conectar aos serviços.",
               "Tente novamente mais tarde.",
-              erroHealth.message,
             );
           })
           .finally(() => {
@@ -264,7 +275,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       registrarConexao("desconectado", motivo);
       setConexao((atual) => ({ ...atual, desconexoes: atual.desconexoes + 1, ultimaDesconexaoEm: new Date().toISOString() }));
       setEstadoConexao("reconectando");
-      setErro(`Socket.IO desconectado: ${motivo}`);
+      setErro("Conexão interrompida. Tentando novamente.");
       ativarFallback();
     });
     socket.connect();
@@ -279,7 +290,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       socket.disconnect();
       if (socketRef.current === socket) socketRef.current = null;
     };
-  }, [codigo, atualizacaoSolicitada, chaveParadas, aguardar]);
+  }, [accessToken, codigo, atualizacaoSolicitada, chaveParadas, aguardar]);
   return {
     onibus, atualizadoEm, ponto, pontos, configuracao: configuracaoServidor, exibicaoDesde: null, estadoConexao,
     carregando: estadoConexao === "iniciando", erro, diagnostico, historicoDiagnostico, eventosOnibus,

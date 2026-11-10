@@ -3,6 +3,7 @@ export function normalizarExibicao(exibicao) {
   return {
     codigo: exibicao.codigo ?? exibicao.codigo_exib,
     nome: exibicao.nome ?? exibicao.nome_exibicao ?? "Exibição",
+    usuarioId: exibicao.usuarioId ?? exibicao.usu_id ?? null,
     paradas: exibicao.paradas ?? exibicao.codigos_parada ?? [],
     instituicaoId: exibicao.instituicaoId ?? exibicao.instituicao ?? null,
     config: {

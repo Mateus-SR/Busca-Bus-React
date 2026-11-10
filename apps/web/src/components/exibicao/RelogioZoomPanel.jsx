@@ -57,7 +57,6 @@ function RelogioAba() {
 				)}
 				<p className="text-6xl">{hora}</p>
 			</button>
-
 			<ZoomControls />
 		</section>
 	);

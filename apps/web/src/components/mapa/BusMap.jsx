@@ -9,6 +9,7 @@ import {
   CLASSE_PINO_PARADA,
   CLASSE_PONTO,
   CLASSE_TOOLTIP_PARADA,
+  CLASSE_TOOLTIP_PONTO,
   corDoPonto,
   escaparHtml,
   infoPontoDoOnibus,
@@ -58,6 +59,20 @@ function criarIconeParada(L, cor) {
   });
 }
 
+const LIMITES_SAO_PAULO = [
+  [-25.35, -53.35],
+  [-19.75, -44.0],
+];
+
+function atualizarOpacidadePontos(mapa, marcadores) {
+  const zoom = mapa.getZoom();
+  const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.25;
+  marcadores.forEach((marcador) => {
+    const elemento = marcador.getTooltip()?.getElement();
+    if (elemento) elemento.style.opacity = String(opacidade);
+  });
+}
+
 export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null }) {
   const containerRef = useRef(null);
   const mapaRef = useRef(null);
@@ -74,11 +89,16 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
     const pontos = pontosRef.current;
     import("leaflet").then(({ default: L }) => {
       if (cancelado || !containerRef.current) return;
-      const mapa = L.map(containerRef.current).setView([-23.556, -46.475], 13);
+      const mapa = L.map(containerRef.current, {
+        maxBounds: LIMITES_SAO_PAULO,
+        maxBoundsViscosity: 1,
+        minZoom: 7,
+      }).setView([-23.556, -46.475], 13);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: "&copy; OpenStreetMap contributors",
       }).addTo(mapa);
       mapaRef.current = mapa;
+      mapa.on("zoomend", () => atualizarOpacidadePontos(mapa, pontosRef.current));
       setMapaPronto(true);
     });
 
@@ -173,9 +193,10 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
           .addTo(mapaRef.current)
           .bindTooltip(
             `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
-            { permanent: true, direction: "top", offset: [0, -34] },
+            { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO },
           );
         pontosRef.current.set(String(item.codigo), marcador);
+        atualizarOpacidadePontos(mapaRef.current, pontosRef.current.values());
         if (indice === 0) mapaRef.current.setView([lat, lng], 16);
       });
     });

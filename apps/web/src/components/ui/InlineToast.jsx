@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import useMontado from "@/hooks/useMontado";
 
 const DURACAO_MS = 1800;
 
 export default function InlineToast({ mensagem }) {
 	const [visivel, setVisivel] = useState(true);
+	const montado = useMontado();
 
 	useEffect(() => {
 		if (!mensagem) return;
@@ -14,17 +17,18 @@ export default function InlineToast({ mensagem }) {
 		return () => clearTimeout(timeout);
 	}, [mensagem]);
 
-	if (!mensagem) return null;
+	if (!mensagem || !montado) return null;
 
-	return (
+	return createPortal(
 		<div
 			role="status"
 			aria-live="polite"
-			className={`fixed top-4 right-4 z-[2200] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${
+			className={`fixed top-4 right-4 z-[9999] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${mensagem.cor || ""} ${
 				visivel ? "opacity-100" : "pointer-events-none opacity-0"
 			}`}
 		>
 			{mensagem.texto}
-		</div>
+		</div>,
+		document.body,
 	);
 }

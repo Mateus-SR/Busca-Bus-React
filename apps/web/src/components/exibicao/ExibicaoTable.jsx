@@ -6,7 +6,12 @@ import ExibicaoCard from "@/components/exibicao/ExibicaoCard";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import { minutosAteChegar } from "@busca-bus/core";
 
-export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
+export default function ExibicaoTable({
+	onibus,
+	detalhesTecnicos = false,
+	controleEsquerdo = null,
+	compacto = false,
+}) {
 	const [busca, setBusca] = useState("");
 	const [ordenacao, setOrdenacao] = useState("padrao");
 
@@ -44,6 +49,7 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 				aoMudarBusca={setBusca}
 				ordenacao={ordenacao}
 				aoMudarOrdenacao={setOrdenacao}
+				controleEsquerdo={controleEsquerdo}
 			/>
 
 			{/* Abaixo de lg: cards, sem rolagem horizontal. Mesma lista filtrada/ordenada da tabela. */}
@@ -57,14 +63,18 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 				))}
 			</ul>
 
-			<table className="mx-auto hidden min-w-full table-auto border-collapse lg:table lg:text-3xl">
+			<table
+				className={`mx-auto hidden w-full max-w-full border-collapse lg:table ${
+					compacto ? "table-fixed text-sm xl:text-base" : "table-auto lg:text-3xl"
+				}`}
+			>
 				<thead>
 					<tr className="bg-superficie-alt font-extrabold">
 						{detalhesTecnicos && <th className="hidden px-2 py-3 text-center text-xs sm:table-cell sm:px-3 sm:text-sm lg:text-base">ID</th>}
-						<th className="px-3 py-3 text-center sm:px-6">Código</th>
-						<th className="px-3 py-3 text-center sm:px-6">Nome</th>
-						<th className="px-3 py-3 text-center sm:px-6">Previsão</th>
-						<th className="px-3 py-3 text-center sm:px-6">Status</th>
+						<th className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>Código</th>
+						<th className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>Nome</th>
+						<th className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>Previsão</th>
+						<th className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>Status</th>
 						{detalhesTecnicos && <th className="hidden px-2 py-3 text-center text-xs lg:table-cell lg:px-3 lg:text-base">Posição</th>}
 						{detalhesTecnicos && <th className="hidden px-2 py-3 text-center text-xs xl:table-cell xl:px-3 xl:text-base">Atualizado</th>}
 					</tr>
@@ -78,15 +88,15 @@ export default function ExibicaoTable({ onibus, detalhesTecnicos = false }) {
 							{detalhesTecnicos && <td className="hidden max-w-32 truncate px-2 py-3 text-center font-roboto-mono text-xs sm:table-cell sm:px-3 lg:text-sm" title={item.id}>
 								{item.id}
 							</td>}
-							<td className="px-3 py-3 text-center font-extrabold sm:px-6">
+							<td className={compacto ? "break-words px-1 py-2 text-center font-extrabold" : "px-3 py-3 text-center font-extrabold sm:px-6"}>
 								{item.codigoLetreiro}
 							</td>
-							<td className="px-3 py-3 text-center sm:px-6">{item.sentidoLinha}</td>
-							<td className="px-3 py-3 text-center sm:px-6">
+							<td className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>{item.sentidoLinha}</td>
+							<td className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>
 								<div>{item.previsao}</div>
 								{detalhesTecnicos && <div className="text-xs font-normal text-texto-mudo">Promessa: {item.promessa ?? "—"}</div>}
 							</td>
-							<td className="px-3 py-3 text-center sm:px-6">
+							<td className={compacto ? "break-words px-1 py-2 text-center" : "px-3 py-3 text-center sm:px-6"}>
 								<StatusBadge status={item.status} />
 							</td>
 							{detalhesTecnicos && <td className="hidden px-2 py-3 text-center font-roboto-mono text-xs lg:table-cell lg:px-3 lg:text-sm">

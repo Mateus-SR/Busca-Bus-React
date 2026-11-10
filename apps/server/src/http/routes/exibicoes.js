@@ -1,10 +1,70 @@
 import { Router } from "express";
+import { randomInt } from "node:crypto";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { ehAdmin } from "@busca-bus/core";
+import { Usuario } from "../../../models/Usuario.js";
 import { criarExibicoesRepo } from "../../repos/exibicoes.js";
 import { montarListaPontos } from "../../sptrans/normalizar.js";
+import { exigirAutenticacao } from "../authMiddleware.js";
+
+const LIMITES = {
+  tempoAtraso: { min: 1, max: 5 },
+  tempoAdiantado: { min: 1, max: 5 },
+  distanciaMaxMin: { min: 5, max: 60 },
+};
+const LIMITE_NOME_EXIBICAO = 25;
+const ALFABETO_CODIGO_EXIBICAO = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+
+function gerarCodigoExibicao(tamanho = 6) {
+  return Array.from({ length: tamanho }, () => ALFABETO_CODIGO_EXIBICAO[randomInt(ALFABETO_CODIGO_EXIBICAO.length)]).join("");
+}
+
+function validarEntrada(body) {
+  const nome = String(body?.nome ?? "").trim();
+  const paradas = body?.paradas;
+  const config = body?.config || {};
+  const erros = [];
+  if (nome.length > LIMITE_NOME_EXIBICAO) {
+    erros.push(`O nome da exibição deve ter no máximo ${LIMITE_NOME_EXIBICAO} caracteres.`);
+  }
+  if (!Array.isArray(paradas) || paradas.length < 1 || paradas.length > 5) {
+    erros.push("Informe de 1 a 5 pontos de ônibus.");
+  } else if (paradas.some((codigo) => !/^(?:\d{7}|\d{9})$/.test(String(codigo)))) {
+    erros.push("Os códigos de parada devem ter 7 ou 9 dígitos.");
+  } else if (new Set(paradas.map((codigo) => String(codigo))).size !== paradas.length) {
+    erros.push("Não é permitido repetir o mesmo código de parada.");
+  }
+  for (const [campo, limite] of Object.entries(LIMITES)) {
+    const valor = Number(config[campo]);
+    if (!Number.isInteger(valor) || valor < limite.min || valor > limite.max) {
+      erros.push(`${campo} deve estar entre ${limite.min} e ${limite.max}.`);
+    }
+  }
+  if (body?.instituicaoId !== null && body?.instituicaoId !== undefined && typeof body.instituicaoId !== "string") {
+    erros.push("Instituição inválida.");
+  }
+  return erros;
+}
+
+function normalizarEntrada(body) {
+  return {
+    nome: String(body.nome || "").trim(),
+    instituicaoId: body.instituicaoId || null,
+    paradas: body.paradas.map((codigo) => String(codigo)),
+    config: {
+      tempoAtraso: Number(body.config.tempoAtraso),
+      tempoAdiantado: Number(body.config.tempoAdiantado),
+      distanciaMaxMin: Number(body.config.distanciaMaxMin),
+      permitirMultiplosPorLinha: Boolean(body.config.permitirMultiplosPorLinha),
+    },
+  };
+}
 
 export function exibicoesRoutes(db, config, poller, io = null) {
   const router = Router();
   const repo = criarExibicoesRepo(db);
+  const protegido = exigirAutenticacao(config, db?.collection("sessoes"));
   const codigosLocais = new Set([config.testDisplayCode, "dev", "testes"]);
   const teste = {
     codigo: config.testDisplayCode,
@@ -15,6 +75,24 @@ export function exibicoesRoutes(db, config, poller, io = null) {
     criadoEm: new Date().toISOString(),
   };
   const eTesteLocal = (codigo) => !config.mongodbUri && codigosLocais.has(codigo);
+  async function podeVerDiagnostico(req, exibicao) {
+    const [tipo, token] = String(req.headers.authorization || "").split(" ");
+    if (tipo !== "Bearer" || !token || !config.jwtSecret || !db) return false;
+    try {
+      const carga = jwt.verify(token, config.jwtSecret);
+      if (!mongoose.isValidObjectId(carga.sid) || !mongoose.isValidObjectId(carga.sub)) return false;
+      const sessao = await db.collection("sessoes").findOne({
+        _id: new mongoose.Types.ObjectId(carga.sid),
+        usuarioId: new mongoose.Types.ObjectId(carga.sub),
+        expiraEm: { $gt: new Date() },
+      });
+      if (!sessao) return false;
+      const usuario = await Usuario.findById(carga.sub).select("role");
+      return Boolean(usuario && (ehAdmin(usuario.role) || String(exibicao.usuarioId) === String(carga.sub)));
+    } catch {
+      return false;
+    }
+  }
   const aplicarOverrideLocal = (exibicao, req) => {
     if (req.query.permitirMultiplosPorLinha === "true") {
       return { ...exibicao, config: { ...exibicao.config, permitirMultiplosPorLinha: true } };
@@ -24,6 +102,58 @@ export function exibicoesRoutes(db, config, poller, io = null) {
     }
     return exibicao;
   };
+  router.post("/", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const erros = validarEntrada(req.body);
+      if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
+      let codigo;
+      do {
+        codigo = gerarCodigoExibicao();
+      } while (await repo.porCodigo(codigo));
+      const exibicao = {
+        codigo,
+        usuarioId: req.usuarioId,
+        ativo: true,
+        criadoEm: new Date().toISOString(),
+        ...normalizarEntrada(req.body),
+      };
+      await repo.criar(exibicao);
+      return res.status(201).json({ exibicao });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.get("/usuario", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      return res.json({ exibicoes: await repo.doUsuario(req.usuarioId) });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.put("/:codigo", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const erros = validarEntrada(req.body);
+      if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
+      const exibicao = await repo.atualizar(req.params.codigo, req.usuarioId, normalizarEntrada(req.body));
+      if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+      return res.json({ exibicao });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.delete("/:codigo", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const exibicao = await repo.excluir(req.params.codigo, req.usuarioId);
+      if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+      return res.status(204).send();
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.get("/:codigo", async (req, res) => {
     if (eTesteLocal(req.params.codigo)) {
       return res.json({ exibicao: { ...teste, codigo: req.params.codigo } });
@@ -39,9 +169,13 @@ export function exibicoesRoutes(db, config, poller, io = null) {
         if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
         const exibicao = await repo.porCodigo(req.params.codigo);
         if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+        const incluirDiagnostico = req.query.diagnostico === "1";
+        if (incluirDiagnostico && !(await podeVerDiagnostico(req, exibicao))) {
+          return res.status(403).json({ erro: "Você não tem permissão para ver os detalhes técnicos." });
+        }
         const configuracao = aplicarOverrideLocal(exibicao, req);
         const snapshots = await Promise.all((configuracao.paradas || []).map((parada) => poller.consultar(parada, configuracao.config)));
-        return responderSnapshot(res, compactarSnapshot(req.params.codigo, configuracao, snapshots, req.query.diagnostico === "1", io?.diagnostico?.(req.params.codigo)));
+        return responderSnapshot(res, compactarSnapshot(req.params.codigo, configuracao, snapshots, incluirDiagnostico, io?.diagnostico?.(req.params.codigo)));
       }
       const exibicaoLocal = { ...teste, codigo: req.params.codigo };
       const configuracao = aplicarOverrideLocal(exibicaoLocal, req);

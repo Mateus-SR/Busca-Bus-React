@@ -37,7 +37,7 @@ function ExibicaoComParametro() {
 				Abrir Mapa
 			</Link>
 
-			<section className="max-w-full px-2 sm:px-4 lg:px-10">
+			<section className="max-w-full px-2 pt-2 sm:px-4 lg:px-10 lg:pt-6">
 				{/* `key` remonta o componente ao trocar de exibição: nenhum estado (ônibus, métricas, eventos) vaza de uma para outra. */}
 				<ExibicaoLive key={codigo} codigo={codigo} />
 			</section>

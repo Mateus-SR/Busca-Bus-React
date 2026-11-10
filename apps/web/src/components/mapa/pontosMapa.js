@@ -34,6 +34,7 @@ export const CLASSE_PINO_PARADA =
 // Conteúdo do tooltip permanente da parada.
 export const CLASSE_TOOLTIP_PARADA =
   "inline-flex min-w-[150px] max-w-[200px] flex-col items-center gap-0.5 text-center whitespace-normal";
+export const CLASSE_TOOLTIP_PONTO = "ponto-tooltip";
 
 // Os textos vêm da API e entram em `html` de L.divIcon / bindTooltip, então precisam ser escapados.
 export function escaparHtml(valor) {
