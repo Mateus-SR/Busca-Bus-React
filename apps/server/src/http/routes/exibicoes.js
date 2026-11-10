@@ -114,6 +114,16 @@ export function exibicoesRoutes(db, config, poller, io = null) {
       return next(error);
     }
   });
+  router.delete("/:codigo", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const exibicao = await repo.excluir(req.params.codigo, req.usuarioId);
+      if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+      return res.status(204).send();
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.get("/:codigo", async (req, res) => {
     if (eTesteLocal(req.params.codigo)) {
       return res.json({ exibicao: { ...teste, codigo: req.params.codigo } });

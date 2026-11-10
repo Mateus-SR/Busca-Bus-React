@@ -21,6 +21,16 @@ function normalizarExibicao(documento) {
 
 export function criarExibicoesRepo(db) {
   const collection = db?.collection("exibicoes");
+  const instituicoes = db?.collection("Fatec");
+  async function enriquecerExibicao(exibicao) {
+    if (!exibicao?.instituicaoId || !instituicoes) return exibicao;
+    const instituicao = await instituicoes.findOne({ _id: idMongo(exibicao.instituicaoId) });
+    return {
+      ...exibicao,
+      instituicao: instituicao?.nome || instituicao?.nome_fac || exibicao.instituicaoId,
+    };
+  }
+
   return {
     disponivel: Boolean(collection),
     async porCodigo(codigo) {
@@ -35,7 +45,7 @@ export function criarExibicoesRepo(db) {
         $or: [{ usu_id: { $in: idsDoUsuario(usuarioId) } }, { usuarioId: { $in: idsDoUsuario(usuarioId) } }],
         ativo: { $ne: false },
       }).toArray();
-      return documentos.map(normalizarExibicao);
+      return Promise.all(documentos.map((documento) => enriquecerExibicao(normalizarExibicao(documento))));
     },
     async criar(exibicao) {
       if (!collection) return null;
@@ -82,9 +92,28 @@ export function criarExibicoesRepo(db) {
       );
       return normalizarExibicao(resultado?.value ?? resultado);
     },
+    async excluir(codigo, usuarioId) {
+      if (!collection) return null;
+      const resultado = await collection.findOneAndUpdate(
+        {
+          $and: [
+            { $or: [{ codigo_exibicao: codigo }, { codigo }] },
+            { $or: [{ usu_id: { $in: idsDoUsuario(usuarioId) } }, { usuarioId: { $in: idsDoUsuario(usuarioId) } }] },
+            { ativo: { $ne: false } },
+          ],
+        },
+        { $set: { ativo: false, last_update: new Date() } },
+        { returnDocument: "after" },
+      );
+      return normalizarExibicao(resultado?.value ?? resultado);
+    },
   };
 }
 import { ObjectId } from "mongodb";
+
+function idMongo(valor) {
+  return valor && ObjectId.isValid(valor) ? new ObjectId(valor) : valor;
+}
 
 function idsDoUsuario(usuarioId) {
   const ids = [usuarioId];

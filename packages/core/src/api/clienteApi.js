@@ -46,6 +46,10 @@ export function criarClienteApi(baseUrl) {
       body: JSON.stringify(dados),
     }),
     obterExibicoesUsuario: (token) => requisicao("/v1/exibicoes/usuario", { token }),
+    excluirExibicao: (codigo, token) => requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}`, {
+      method: "DELETE",
+      token,
+    }),
     atualizarExibicao: (codigo, dados, token) => requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}`, {
       method: "PUT",
       token,

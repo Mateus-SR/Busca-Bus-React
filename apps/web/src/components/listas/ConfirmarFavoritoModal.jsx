@@ -7,6 +7,7 @@ import useMontado from "@/hooks/useMontado";
 export default function ConfirmarFavoritoModal({ tipo, item, onClose, onConfirm }) {
   const montado = useMontado();
   const acesso = tipo === "acesso";
+  const exclusao = tipo === "exclusao";
   const codigo = item?.codigo || item?.codigo_exib || "";
   const nome = item?.nome || item?.nome_exibicao || "Sem nome";
   const instituicao = item?.instituicao || item?.instituicaoNome || "Não informada";
@@ -36,7 +37,7 @@ export default function ConfirmarFavoritoModal({ tipo, item, onClose, onConfirm 
         </div>
         <div className="text-center">
           <h2 id="confirmar-favorito-titulo" className="text-2xl font-extrabold tracking-tight text-texto-forte">
-            {acesso ? "Acessar exibição" : "Remover dos favoritos"}
+            {acesso ? "Acessar exibição" : exclusao ? "Apagar exibição" : "Remover dos favoritos"}
           </h2>
           {acesso ? (
             <p className="mt-3 text-sm leading-6 text-texto-secundario">
@@ -44,6 +45,13 @@ export default function ConfirmarFavoritoModal({ tipo, item, onClose, onConfirm 
               <span className="mt-3 block font-semibold text-texto-forte">{nome}</span>
               <span className="block font-roboto-mono text-xs">Código: {codigo}</span>
               <span className="block text-xs">Instituição: {instituicao}</span>
+            </p>
+          ) : exclusao ? (
+            <p className="mt-3 text-sm leading-6 text-texto-secundario">
+              Deseja mesmo apagar esta exibição?
+              <span className="mt-3 block font-semibold text-texto-forte">{nome}</span>
+              <span className="block font-roboto-mono text-xs">Código: {codigo}</span>
+              <span className="block text-xs">Essa ação removerá a exibição da sua lista.</span>
             </p>
           ) : (
             <p className="mt-3 text-sm leading-6 text-texto-secundario">
@@ -55,7 +63,7 @@ export default function ConfirmarFavoritoModal({ tipo, item, onClose, onConfirm 
         </div>
         <div className="mt-7 flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-borda bg-superficie px-4 py-3 text-sm font-semibold text-texto-suave transition hover:bg-superficie-sutil">Cancelar</button>
-          <button type="button" onClick={onConfirm} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-sobre-marca transition ${acesso ? "bg-marca hover:bg-marca-forte" : "bg-destaque hover:bg-destaque-forte"}`}>{acesso ? "Acessar" : "Remover"}</button>
+          <button type="button" onClick={onConfirm} className={`flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-sobre-marca transition ${acesso ? "bg-marca hover:bg-marca-forte" : "bg-destaque hover:bg-destaque-forte"}`}>{acesso ? "Acessar" : exclusao ? "Apagar" : "Remover"}</button>
         </div>
       </div>
     </div>,
