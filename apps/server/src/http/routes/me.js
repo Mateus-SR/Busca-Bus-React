@@ -123,7 +123,30 @@ export function meRoutes(config, db) {
       return next(error);
     }
   });
-  router.put("/token-sptrans", indisponivel);
+  router.get("/token-sptrans", protegido, async (req, res, next) => {
+    try {
+      const usuario = await Usuario.findById(req.usuarioId).select("token");
+      if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+      return res.json({ token: usuario.token || "" });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.put("/token-sptrans", protegido, async (req, res, next) => {
+    try {
+      const token = String(req.body?.token || "").trim();
+      if (!token) return res.status(400).json({ erro: "Token da API é obrigatório." });
+      const usuario = await Usuario.findByIdAndUpdate(
+        req.usuarioId,
+        { token },
+        { new: true, runValidators: true, select: "token" },
+      );
+      if (!usuario) return res.status(404).json({ erro: "Usuário não encontrado." });
+      return res.json({ token: usuario.token });
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.delete("/", indisponivel);
   router.get("/exibicoes", indisponivel);
   router.get("/favoritos", indisponivel);

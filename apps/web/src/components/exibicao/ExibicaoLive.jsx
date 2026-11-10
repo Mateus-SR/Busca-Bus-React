@@ -226,7 +226,7 @@ export default function ExibicaoLive({ codigo }) {
               <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
               <FavoriteStar />
             </div>
-            <div className="mt-1 flex flex-col items-center gap-2 text-sm lg:items-start">
+            <div className="mt-1 flex flex-col items-center gap-2 text-sm">
               <span className="font-roboto-mono italic">Código: {codigo}</span>
               <div className="flex items-center gap-2">
                 <button

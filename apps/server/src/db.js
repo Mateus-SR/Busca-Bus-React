@@ -20,6 +20,12 @@ export async function connectDatabase(config) {
 
     const database = mongoose.connection.db;
 
+    const exibicoes = database.collection("exibicoes");
+    const indicesExibicoes = await exibicoes.listIndexes().toArray();
+    if (indicesExibicoes.some((indice) => indice.name === "codigo_1")) {
+      await exibicoes.dropIndex("codigo_1");
+    }
+
     await Promise.all([
       database.collection("Users").createIndex(
         { email: 1 },
@@ -36,6 +42,17 @@ export async function connectDatabase(config) {
       database.collection("reset_senha").createIndex(
         { expiraEm: 1 },
         { expireAfterSeconds: 0 }
+      ),
+      exibicoes.createIndex(
+        { codigo_exibicao: 1 },
+        {
+          name: "codigo_exibicao_unico",
+          unique: true,
+          partialFilterExpression: { codigo_exibicao: { $type: "string" } },
+        }
+      ),
+      database.collection("exibicoes").createIndex(
+        { usuarioId: 1, ativo: 1 }
       ),
     ]);
 

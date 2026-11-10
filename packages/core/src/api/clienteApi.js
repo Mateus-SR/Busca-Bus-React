@@ -10,11 +10,14 @@ class ApiError extends Error {
 
 export function criarClienteApi(baseUrl) {
   const url = baseUrl?.replace(/\/$/, "");
-  async function requisicao(path, opcoes) {
+  async function requisicao(path, opcoes = {}) {
     if (!url) throw new Error("A URL base da API não foi configurada.");
+    const { token, ...opcoesFetch } = opcoes;
+    const headers = { ...(opcoesFetch.headers || {}) };
+    if (token) headers.Authorization = `Bearer ${token}`;
     let resposta;
     try {
-      resposta = await fetch(`${url}${path}`, opcoes);
+      resposta = await fetch(`${url}${path}`, { ...opcoesFetch, headers });
     } catch (error) {
       if (error?.name === "AbortError") throw error;
       throw new ApiError("Não foi possível conectar ao servidor.", undefined, "REDE", { cause: error });
@@ -36,6 +39,26 @@ export function criarClienteApi(baseUrl) {
     },
     obterExibicao: (codigo) => requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}`),
     obterHealth: () => requisicao("/v1/health"),
+    criarExibicao: (dados, token) => requisicao("/v1/exibicoes", {
+      method: "POST",
+      token,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    }),
+    obterExibicoesUsuario: (token) => requisicao("/v1/exibicoes/usuario", { token }),
+    atualizarExibicao: (codigo, dados, token) => requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}`, {
+      method: "PUT",
+      token,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados),
+    }),
+    obterTokenSptrans: (token) => requisicao("/v1/me/token-sptrans", { token }),
+    atualizarTokenSptrans: (tokenSptrans, token) => requisicao("/v1/me/token-sptrans", {
+      method: "PUT",
+      token,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: tokenSptrans }),
+    }),
     obterRadar: (codigo, opcoes = {}) => {
       const parametros = new URLSearchParams();
       if (opcoes.diagnostico) parametros.set("diagnostico", "1");

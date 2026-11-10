@@ -1,10 +1,53 @@
 import { Router } from "express";
 import { criarExibicoesRepo } from "../../repos/exibicoes.js";
 import { montarListaPontos } from "../../sptrans/normalizar.js";
+import { exigirAutenticacao } from "../authMiddleware.js";
+
+const LIMITES = {
+  tempoAtraso: { min: 1, max: 5 },
+  tempoAdiantado: { min: 1, max: 5 },
+  distanciaMaxMin: { min: 5, max: 60 },
+};
+
+function validarEntrada(body) {
+  const paradas = body?.paradas;
+  const config = body?.config || {};
+  const erros = [];
+  if (!Array.isArray(paradas) || paradas.length < 1 || paradas.length > 5) {
+    erros.push("Informe de 1 a 5 pontos de ônibus.");
+  } else if (paradas.some((codigo) => !/^(?:\d{7}|\d{9})$/.test(String(codigo)))) {
+    erros.push("Os códigos de parada devem ter 7 ou 9 dígitos.");
+  }
+  for (const [campo, limite] of Object.entries(LIMITES)) {
+    const valor = Number(config[campo]);
+    if (!Number.isInteger(valor) || valor < limite.min || valor > limite.max) {
+      erros.push(`${campo} deve estar entre ${limite.min} e ${limite.max}.`);
+    }
+  }
+  if (body?.instituicaoId !== null && body?.instituicaoId !== undefined && typeof body.instituicaoId !== "string") {
+    erros.push("Instituição inválida.");
+  }
+  return erros;
+}
+
+function normalizarEntrada(body) {
+  return {
+    nome: String(body.nome || "").trim(),
+    instituicaoId: body.instituicaoId || null,
+    paradas: body.paradas.map((codigo) => String(codigo)),
+    config: {
+      tempoAtraso: Number(body.config.tempoAtraso),
+      tempoAdiantado: Number(body.config.tempoAdiantado),
+      distanciaMaxMin: Number(body.config.distanciaMaxMin),
+      permitirMultiplosPorLinha: Boolean(body.config.permitirMultiplosPorLinha),
+    },
+  };
+}
 
 export function exibicoesRoutes(db, config, poller, io = null) {
   const router = Router();
   const repo = criarExibicoesRepo(db);
+  const protegido = exigirAutenticacao(config, db?.collection("sessoes"));
   const codigosLocais = new Set([config.testDisplayCode, "dev", "testes"]);
   const teste = {
     codigo: config.testDisplayCode,
@@ -24,6 +67,48 @@ export function exibicoesRoutes(db, config, poller, io = null) {
     }
     return exibicao;
   };
+  router.post("/", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const erros = validarEntrada(req.body);
+      if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
+      let codigo;
+      do {
+        codigo = Math.random().toString(36).slice(2, 8);
+      } while (await repo.porCodigo(codigo));
+      const exibicao = {
+        codigo,
+        usuarioId: req.usuarioId,
+        ativo: true,
+        criadoEm: new Date().toISOString(),
+        ...normalizarEntrada(req.body),
+      };
+      await repo.criar(exibicao);
+      return res.status(201).json({ exibicao });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.get("/usuario", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      return res.json({ exibicoes: await repo.doUsuario(req.usuarioId) });
+    } catch (error) {
+      return next(error);
+    }
+  });
+  router.put("/:codigo", protegido, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const erros = validarEntrada(req.body);
+      if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
+      const exibicao = await repo.atualizar(req.params.codigo, req.usuarioId, normalizarEntrada(req.body));
+      if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+      return res.json({ exibicao });
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.get("/:codigo", async (req, res) => {
     if (eTesteLocal(req.params.codigo)) {
       return res.json({ exibicao: { ...teste, codigo: req.params.codigo } });
