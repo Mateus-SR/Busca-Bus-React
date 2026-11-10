@@ -80,7 +80,7 @@ export function criarClienteApi(baseUrl) {
         parametros.set("permitirMultiplosPorLinha", String(opcoes.permitirMultiplosPorLinha));
       }
       const query = parametros.toString();
-      return requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}/radar${query ? `?${query}` : ""}`);
+      return requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}/radar${query ? `?${query}` : ""}`, { token: opcoes.token });
     },
   };
 }

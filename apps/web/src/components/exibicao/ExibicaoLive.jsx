@@ -9,16 +9,20 @@ import useExibicao from "@/hooks/useExibicao";
 import useRadarOnibus from "@/hooks/useRadarOnibus";
 import VisaoDesenvolvedor from "@/components/exibicao/VisaoDesenvolvedor";
 import EventosProximos from "@/components/exibicao/EventosProximos";
+import { useAuth } from "@/contexts/AuthContext";
 
 const INTERVALO_RODIZIO_SEGUNDOS = 15;
 
 export default function ExibicaoLive({ codigo }) {
   const { exibicao, carregando: carregandoExibicao, erro: erroExibicao } = useExibicao(codigo);
+  const { usuario, accessToken } = useAuth();
   // Sem paradas não há o que consultar: o servidor cairia na parada de teste e mostraria ônibus de outro ponto.
   const semParadas = !carregandoExibicao && !exibicao?.paradas?.length;
   // Só com a API configurada: sem ela a tela roda em fixtures e não há conexão a esperar.
   const mostrarSemParadas = semParadas && Boolean(process.env.NEXT_PUBLIC_API_URL);
   const [debugAberto, setDebugAberto] = useState(false);
+  const podeVerDetalhesTecnicos = Boolean(usuario?.role === "admin"
+    || (usuario?.id && exibicao?.usuarioId && String(usuario.id) === String(exibicao.usuarioId)));
   const [modoVisualizacao, setModoVisualizacao] = useState("completa");
   const [pontoComCodigoVisivel, setPontoComCodigoVisivel] = useState(null);
   const [indicePontoRodizio, setIndicePontoRodizio] = useState(0);
@@ -33,7 +37,10 @@ export default function ExibicaoLive({ codigo }) {
     config: { ...exibicao?.config, permitirMultiplosPorLinha },
     aguardar: carregandoExibicao || semParadas,
   }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
-  const radar = useRadarOnibus(codigo, [], debugAberto, atualizacaoSolicitada, opcoesRadar);
+  useEffect(() => {
+    if (!podeVerDetalhesTecnicos) setDebugAberto(false);
+  }, [podeVerDetalhesTecnicos]);
+  const radar = useRadarOnibus(codigo, [], podeVerDetalhesTecnicos && debugAberto, atualizacaoSolicitada, opcoesRadar, accessToken);
   const controleModoVisualizacao = (
     <div
       className="inline-flex w-full rounded-lg border border-borda bg-superficie-alt p-1 sm:w-auto"
@@ -220,7 +227,7 @@ export default function ExibicaoLive({ codigo }) {
 
       {/* Interface visual */}
       <div className="mb-3 flex flex-col items-center">
-        <div className="relative flex min-h-28 w-full max-w-full flex-col items-center gap-3 lg:min-h-28 lg:flex-row lg:items-start lg:justify-center lg:text-left">
+        <div className="relative flex min-h-24 w-full max-w-full flex-col items-center gap-3 lg:flex-row lg:items-start lg:justify-center lg:text-left">
           <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
@@ -255,7 +262,7 @@ export default function ExibicaoLive({ codigo }) {
           </div>
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
-        {debugAberto && radar.pontos.length > 0 && (
+        {podeVerDetalhesTecnicos && debugAberto && radar.pontos.length > 0 && (
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-texto-mudo flex-col">
             {radar.pontos.map((item, indice) => (
               <span key={item.codigo ?? indice} className="flex flex-wrap justify-center gap-x-2">
@@ -272,9 +279,9 @@ export default function ExibicaoLive({ codigo }) {
             ))}
           </div>
         )}
-        <button type="button" onClick={() => setDebugAberto((aberto) => !aberto)} className="mt-1 text-xs text-texto-desabilitado underline hover:text-texto-suave">Detalhes técnicos</button>
+        {podeVerDetalhesTecnicos && <button type="button" onClick={() => setDebugAberto((aberto) => !aberto)} className="mt-1 text-xs text-texto-desabilitado underline hover:text-texto-suave">Detalhes técnicos</button>}
       </div>
-      <VisaoDesenvolvedor
+      {podeVerDetalhesTecnicos && <VisaoDesenvolvedor
         aberto={debugAberto}
         diagnostico={radar.diagnostico}
         historico={radar.historicoDiagnostico}
@@ -298,7 +305,7 @@ export default function ExibicaoLive({ codigo }) {
           }
           return resposta;
         }}
-      />
+      />}
       
       {mostrarSemParadas && (
         <p role="status" className="mb-3 text-center text-sm text-erro">

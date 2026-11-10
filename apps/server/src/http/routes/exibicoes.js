@@ -1,4 +1,9 @@
 import { Router } from "express";
+import { randomInt } from "node:crypto";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { ehAdmin } from "@busca-bus/core";
+import { Usuario } from "../../../models/Usuario.js";
 import { criarExibicoesRepo } from "../../repos/exibicoes.js";
 import { montarListaPontos } from "../../sptrans/normalizar.js";
 import { exigirAutenticacao } from "../authMiddleware.js";
@@ -9,6 +14,11 @@ const LIMITES = {
   distanciaMaxMin: { min: 5, max: 60 },
 };
 const LIMITE_NOME_EXIBICAO = 25;
+const ALFABETO_CODIGO_EXIBICAO = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
+
+function gerarCodigoExibicao(tamanho = 6) {
+  return Array.from({ length: tamanho }, () => ALFABETO_CODIGO_EXIBICAO[randomInt(ALFABETO_CODIGO_EXIBICAO.length)]).join("");
+}
 
 function validarEntrada(body) {
   const nome = String(body?.nome ?? "").trim();
@@ -63,6 +73,24 @@ export function exibicoesRoutes(db, config, poller, io = null) {
     criadoEm: new Date().toISOString(),
   };
   const eTesteLocal = (codigo) => !config.mongodbUri && codigosLocais.has(codigo);
+  async function podeVerDiagnostico(req, exibicao) {
+    const [tipo, token] = String(req.headers.authorization || "").split(" ");
+    if (tipo !== "Bearer" || !token || !config.jwtSecret || !db) return false;
+    try {
+      const carga = jwt.verify(token, config.jwtSecret);
+      if (!mongoose.isValidObjectId(carga.sid) || !mongoose.isValidObjectId(carga.sub)) return false;
+      const sessao = await db.collection("sessoes").findOne({
+        _id: new mongoose.Types.ObjectId(carga.sid),
+        usuarioId: new mongoose.Types.ObjectId(carga.sub),
+        expiraEm: { $gt: new Date() },
+      });
+      if (!sessao) return false;
+      const usuario = await Usuario.findById(carga.sub).select("role");
+      return Boolean(usuario && (ehAdmin(usuario.role) || String(exibicao.usuarioId) === String(carga.sub)));
+    } catch {
+      return false;
+    }
+  }
   const aplicarOverrideLocal = (exibicao, req) => {
     if (req.query.permitirMultiplosPorLinha === "true") {
       return { ...exibicao, config: { ...exibicao.config, permitirMultiplosPorLinha: true } };
@@ -79,7 +107,7 @@ export function exibicoesRoutes(db, config, poller, io = null) {
       if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
       let codigo;
       do {
-        codigo = Math.random().toString(36).slice(2, 8);
+        codigo = gerarCodigoExibicao();
       } while (await repo.porCodigo(codigo));
       const exibicao = {
         codigo,
@@ -139,9 +167,13 @@ export function exibicoesRoutes(db, config, poller, io = null) {
         if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
         const exibicao = await repo.porCodigo(req.params.codigo);
         if (!exibicao) return res.status(404).json({ erro: "Exibição não encontrada." });
+        const incluirDiagnostico = req.query.diagnostico === "1";
+        if (incluirDiagnostico && !(await podeVerDiagnostico(req, exibicao))) {
+          return res.status(403).json({ erro: "Você não tem permissão para ver os detalhes técnicos." });
+        }
         const configuracao = aplicarOverrideLocal(exibicao, req);
         const snapshots = await Promise.all((configuracao.paradas || []).map((parada) => poller.consultar(parada, configuracao.config)));
-        return responderSnapshot(res, compactarSnapshot(req.params.codigo, configuracao, snapshots, req.query.diagnostico === "1", io?.diagnostico?.(req.params.codigo)));
+        return responderSnapshot(res, compactarSnapshot(req.params.codigo, configuracao, snapshots, incluirDiagnostico, io?.diagnostico?.(req.params.codigo)));
       }
       const exibicaoLocal = { ...teste, codigo: req.params.codigo };
       const configuracao = aplicarOverrideLocal(exibicaoLocal, req);

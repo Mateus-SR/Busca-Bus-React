@@ -24,7 +24,7 @@ function tamanhoSemDiagnostico(resposta) {
   return new TextEncoder().encode(texto).byteLength;
 }
 
-export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoAtivo = false, atualizacaoSolicitada = 0, opcoes = OPCOES_PADRAO) {
+export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoAtivo = false, atualizacaoSolicitada = 0, opcoes = OPCOES_PADRAO, accessToken = null) {
   const { startLoading, stopLoading, showError } = useLoading();
   const [onibus, setOnibus] = useState(() => normalizarLista(onibusIniciais));
   const [atualizadoEm, setAtualizadoEm] = useState(null);
@@ -82,6 +82,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       setEventosConexao((historico) => [{ tipo, detalhe, em: new Date().toISOString() }, ...historico].slice(0, 30));
     };
     const socket = io(process.env.NEXT_PUBLIC_API_URL, {
+      auth: { token: accessToken },
       reconnection: true,
       reconnectionAttempts: Infinity,
       transports: ["websocket", "polling"],
@@ -170,6 +171,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
         const resposta = await cliente.obterRadar(codigo, {
           diagnostico: diagnosticoAtivoRef.current,
           permitirMultiplosPorLinha: opcoesRef.current.config?.permitirMultiplosPorLinha,
+          token: accessToken,
         });
         if (!ativo || numeroAtualizacao !== atualizacao) {
           metricasRef.current.respostasDescartadas += 1;
@@ -279,7 +281,7 @@ export default function useRadarOnibus(codigo, onibusIniciais = [], diagnosticoA
       socket.disconnect();
       if (socketRef.current === socket) socketRef.current = null;
     };
-  }, [codigo, atualizacaoSolicitada, chaveParadas, aguardar]);
+  }, [accessToken, codigo, atualizacaoSolicitada, chaveParadas, aguardar]);
   return {
     onibus, atualizadoEm, ponto, pontos, configuracao: configuracaoServidor, exibicaoDesde: null, estadoConexao,
     carregando: estadoConexao === "iniciando", erro, diagnostico, historicoDiagnostico, eventosOnibus,

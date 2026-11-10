@@ -35,7 +35,7 @@ const simulador = config.simulacaoHabilitada
 const clienteSptrans = simulador ?? clienteSptransReal;
 const poller = criarPoller({ clienteSptrans, intervaloMs: config.pollIntervalMs });
 const httpServer = http.createServer();
-const io = createSocketServer(httpServer, config, poller, simulador);
+const io = createSocketServer(httpServer, config, poller, simulador, db);
 httpServer.on("request", createApp(config, db, poller, io, servicoEmail));
 
 httpServer.listen(config.port, config.host, () => console.log(`Servidor ouvindo em ${config.host}:${config.port}`));

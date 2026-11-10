@@ -1,4 +1,8 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import { ehAdmin } from "@busca-bus/core";
+import { Usuario } from "../../models/Usuario.js";
 import { EVENTOS_SOCKET } from "@busca-bus/core";
 import { montarListaPontos } from "../sptrans/normalizar.js";
 
@@ -84,7 +88,7 @@ function montarResposta(codigo, lista, configuracao) {
   };
 }
 
-export function createSocketServer(httpServer, config, poller, simulador = null) {
+export function createSocketServer(httpServer, config, poller, simulador = null, db = null) {
   const metricas = {
     conectados: 0,
     totalConexoes: 0,
@@ -139,14 +143,43 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
     // Um payload malformado nunca pode virar exceção não tratada (derrubaria o processo inteiro).
     const escutar = (evento, tratador) => socket.on(evento, (...argumentos) => {
       try {
-        tratador(...argumentos);
+        Promise.resolve(tratador(...argumentos)).catch((erro) => {
+          console.error(`[socket] erro em ${evento}:`, erro);
+          responder(argumentos.at(-1), { ok: false, erro: "Requisição inválida." });
+        });
       } catch (erro) {
         console.error(`[socket] erro em ${evento}:`, erro);
         responder(argumentos.at(-1), { ok: false, erro: "Requisição inválida." });
       }
     });
+    async function podeVerDiagnostico(codigo) {
+      const token = socket.handshake.auth?.token;
+      if (!token || !config.jwtSecret || !db) return false;
+      try {
+        const carga = jwt.verify(token, config.jwtSecret);
+        if (!mongoose.isValidObjectId(carga.sid) || !mongoose.isValidObjectId(carga.sub)) return false;
+        const sessao = await db.collection("sessoes").findOne({
+          _id: new mongoose.Types.ObjectId(carga.sid),
+          usuarioId: new mongoose.Types.ObjectId(carga.sub),
+          expiraEm: { $gt: new Date() },
+        });
+        if (!sessao) return false;
+        const usuario = await Usuario.findById(carga.sub).select("role");
+        const exibicao = await db.collection("exibicoes").findOne({
+          $or: [{ codigo_exibicao: codigo }, { codigo }],
+          ativo: { $ne: false },
+        });
+        return Boolean(usuario && exibicao && (
+          ehAdmin(usuario.role)
+          || String(exibicao.usu_id ?? exibicao.usuarioId) === String(carga.sub)
+          || String(exibicao.usu_id?._id) === String(carga.sub)
+        ));
+      } catch {
+        return false;
+      }
+    }
 
-    escutar(EVENTOS_SOCKET.ENTRAR, (payload, ack) => {
+    escutar(EVENTOS_SOCKET.ENTRAR, async (payload, ack) => {
       if (!permitido()) return responder(ack, { ok: false, erro: "Muitas requisições." });
       const dados = payload && typeof payload === "object" ? payload : {};
       const codigo = String(dados.codigo ?? "");
@@ -170,17 +203,17 @@ export function createSocketServer(httpServer, config, poller, simulador = null)
         };
         salas.set(codigo, sala);
       }
-      iniciarAssinatura(socket, codigo, paradas, sala, Boolean(dados.diagnostico));
+      iniciarAssinatura(socket, codigo, paradas, sala, Boolean(dados.diagnostico && await podeVerDiagnostico(codigo)));
       return responder(ack, { ok: true });
     });
     // O diagnóstico é por navegador: só quem está com o painel aberto recebe o bloco, e some junto com a conexão.
-    escutar(EVENTOS_SOCKET.DIAGNOSTICO, (payload, ack) => {
+    escutar(EVENTOS_SOCKET.DIAGNOSTICO, async (payload, ack) => {
       if (!permitido()) return responder(ack, { ok: false, erro: "Muitas requisições." });
       const codigo = String(payload?.codigo ?? "");
       const sala = salas.get(codigo);
       const assinatura = sala?.assinaturas.get(socket);
       if (!assinatura) return responder(ack, { ok: false, erro: "Exibição não conectada." });
-      const ativo = Boolean(payload?.ativo);
+      const ativo = Boolean(payload?.ativo && await podeVerDiagnostico(codigo));
       if (assinatura.diagnostico !== ativo) {
         assinatura.diagnostico = ativo;
         if (ativo && assinatura.pronta) emitirSnapshot(socket, codigo, sala, assinatura);
