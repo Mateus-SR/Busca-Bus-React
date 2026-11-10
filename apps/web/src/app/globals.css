@@ -395,6 +395,14 @@ html[data-contraste] tbody tr:hover td {
   line-height: 1.35;
 }
 
+.ponto-tooltip {
+  transition: opacity 180ms ease;
+}
+
+.ponto-tooltip--transparente {
+  opacity: 0.25;
+}
+
 .leaflet-control-zoom {
   position: absolute !important;
   top: 4.75rem !important;

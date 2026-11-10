@@ -73,7 +73,9 @@ export function criarPoller({ clienteSptrans, intervaloMs }) {
           atual.promessa.set(item.id, promessa);
           return { ...item, promessa };
         });
-        atual.ponto = normalizado.ponto;
+        // Algumas respostas sem ônibus não repetem os metadados do ponto; preserve
+        // a posição conhecida para o mapa não remover o marcador.
+        atual.ponto = normalizado.ponto ?? atual.ponto;
         atual.atualizadoEm = new Date().toISOString();
         atual.ultimaConsultaEm = atual.atualizadoEm;
         atual.ultimaDuracaoMs = Date.now() - iniciouEm;
