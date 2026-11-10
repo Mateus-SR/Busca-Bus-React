@@ -33,6 +33,10 @@ export function criarClienteApi(baseUrl) {
     }
     return resposta.status === 204 ? null : resposta.json();
   }
+  const comQuery = (path, parametros) => {
+    const query = new URLSearchParams(parametros).toString();
+    return query ? `${path}?${query}` : path;
+  };
   return {
     async listarLinhas() {
       return requisicao("/linhas");
@@ -73,6 +77,15 @@ export function criarClienteApi(baseUrl) {
       method: "DELETE",
       token,
     }),
+    obterPontosProximos: ({ lat, lng, raio }, opcoes = {}) => requisicao(
+      comQuery("/v1/pontos/proximos", { lat, lng, ...(raio ? { raio } : {}) }),
+      { signal: opcoes.signal },
+    ),
+    obterPontosNaArea: ({ norte, sul, leste, oeste }, opcoes = {}) => requisicao(
+      comQuery("/v1/pontos", { norte, sul, leste, oeste }),
+      { signal: opcoes.signal },
+    ),
+    buscarPontos: (termo, opcoes = {}) => requisicao(comQuery("/v1/pontos/busca", { q: termo }), { signal: opcoes.signal }),
     obterRadar: (codigo, opcoes = {}) => {
       const parametros = new URLSearchParams();
       if (opcoes.diagnostico) parametros.set("diagnostico", "1");
