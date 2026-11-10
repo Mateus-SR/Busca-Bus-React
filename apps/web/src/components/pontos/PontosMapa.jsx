@@ -6,19 +6,21 @@ import { ATRIBUICAO_TILES, CENTRO_INICIAL, LIMITES_SAO_PAULO, URL_TILES, lerCor 
 import { escaparHtml } from "@/components/mapa/pontosMapa";
 
 // Mapa da busca de pontos: círculo do raio e da precisão em volta de quem busca, e um marcador leve (canvas) por ponto.
+// Sem `raio` (modo "todos os pontos") não há círculo do raio: o mapa só marca a posição e informa a área visível em `onVisaoMudou`.
 // A lista ao lado é a alternativa acessível do mapa; aqui o foco é mostrar onde fica cada ponto.
-export default function PontosMapa({ centro, precisao, raio, pontos, selecionado, onSelecionar, escolhendo, onEscolherLocal }) {
+export default function PontosMapa({ centro, precisao, raio, pontos, selecionado, onSelecionar, escolhendo, onEscolherLocal, foco, onVisaoMudou }) {
   const containerRef = useRef(null);
   const mapaRef = useRef(null);
   const camadaCentroRef = useRef(null);
   const camadaPontosRef = useRef(null);
   const pontosPorCodigoRef = useRef(new Map());
-  const acoesRef = useRef({ escolhendo, onEscolherLocal, onSelecionar });
+  const centroAnteriorRef = useRef(null);
+  const acoesRef = useRef({ escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou });
   const [mapaPronto, setMapaPronto] = useState(false);
 
   useEffect(() => {
-    acoesRef.current = { escolhendo, onEscolherLocal, onSelecionar };
-  }, [escolhendo, onEscolherLocal, onSelecionar]);
+    acoesRef.current = { escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou };
+  }, [escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou]);
 
   useEffect(() => {
     if (containerRef.current) containerRef.current.style.cursor = escolhendo ? "crosshair" : "";
@@ -41,7 +43,13 @@ export default function PontosMapa({ centro, precisao, raio, pontos, selecionado
         const { escolhendo: ativo, onEscolherLocal: escolher } = acoesRef.current;
         if (ativo) escolher({ lat: evento.latlng.lat, lng: evento.latlng.lng });
       });
+      const informarVisao = () => {
+        const limites = mapa.getBounds();
+        acoesRef.current.onVisaoMudou?.({ norte: limites.getNorth(), sul: limites.getSouth(), leste: limites.getEast(), oeste: limites.getWest(), zoom: mapa.getZoom() });
+      };
+      mapa.on("moveend", informarVisao);
       mapaRef.current = mapa;
+      informarVisao();
       setMapaPronto(true);
     });
     const pontosPorCodigo = pontosPorCodigoRef.current;
@@ -66,9 +74,15 @@ export default function PontosMapa({ centro, precisao, raio, pontos, selecionado
       camada.clearLayers();
       const posicao = [centro.lat, centro.lng];
       if (precisao) L.circle(posicao, { radius: precisao, color: cor, weight: 1, fillColor: cor, fillOpacity: 0.12, interactive: false }).addTo(camada);
-      const circuloRaio = L.circle(posicao, { radius: raio, color: cor, weight: 2, dashArray: "6 6", fillColor: cor, fillOpacity: 0.05, interactive: false }).addTo(camada);
       L.circleMarker(posicao, { radius: 8, color: contorno, weight: 3, fillColor: cor, fillOpacity: 1, interactive: false }).addTo(camada);
-      mapaRef.current.fitBounds(circuloRaio.getBounds(), { padding: [24, 24], maxZoom: 18 });
+      if (raio) {
+        const circuloRaio = L.circle(posicao, { radius: raio, color: cor, weight: 2, dashArray: "6 6", fillColor: cor, fillOpacity: 0.05, interactive: false }).addTo(camada);
+        mapaRef.current.fitBounds(circuloRaio.getBounds(), { padding: [24, 24], maxZoom: 18 });
+      } else if (centroAnteriorRef.current !== centro) {
+        // Modo "todos os pontos": leva o mapa para a pessoa só quando a posição muda (trocar de modo não faz o mapa pular).
+        mapaRef.current.setView(posicao, Math.max(mapaRef.current.getZoom(), 16));
+      }
+      centroAnteriorRef.current = centro;
     });
     return () => {
       cancelado = true;
@@ -114,7 +128,13 @@ export default function PontosMapa({ centro, precisao, raio, pontos, selecionado
   useEffect(() => {
     const ponto = selecionado && pontosPorCodigoRef.current.get(selecionado);
     if (mapaRef.current && ponto) mapaRef.current.panTo([ponto.lat, ponto.lng]);
-  }, [selecionado, pontos]);
+    // Só quando a seleção muda: recarregar os pontos da área não pode puxar o mapa de volta para o ponto selecionado.
+  }, [selecionado]);
+
+  // Pedido de ir até um ponto (resultado de busca): o `id` muda a cada pedido, então escolher o mesmo ponto de novo também leva até ele.
+  useEffect(() => {
+    if (mapaPronto && foco) mapaRef.current.setView([foco.lat, foco.lng], foco.zoom ?? 17);
+  }, [mapaPronto, foco]);
 
   return <div ref={containerRef} role="region" aria-label="Mapa dos pontos de ônibus" className="h-full min-h-[320px] w-full" />;
 }
