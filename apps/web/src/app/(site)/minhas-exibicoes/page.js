@@ -1,11 +1,8 @@
 import ExibicoesTable from '@/components/listas/ExibicoesTable';
 export default function MinhasExibicoesPage() {
 	return (
-		<main>
-			<div className="my-6 flex justify-center">
-				<h1 className="font-roboto-mono text-2xl font-bold">Suas exibições:</h1>
-			</div>
-			<div className="mx-auto max-w-6xl overflow-x-auto rounded-xl bg-superficie p-6 shadow">
+		<main className="px-4 py-8 sm:px-6 lg:py-12">
+			<div className="mx-auto max-w-6xl rounded-2xl bg-superficie p-5 shadow-sm sm:p-8">
 				<ExibicoesTable modo="criadas" />
 			</div>
 		</main>
