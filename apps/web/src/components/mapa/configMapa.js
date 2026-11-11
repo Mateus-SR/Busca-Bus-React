@@ -12,3 +12,19 @@ export function lerCor(variavel, reserva) {
   if (typeof document === "undefined") return reserva;
   return getComputedStyle(document.documentElement).getPropertyValue(variavel).trim() || reserva;
 }
+
+// O mapa (tiles do OpenStreetMap) fica claro mesmo no alto contraste, mas os tokens de superfície e de info viram preto e azul-claro:
+// no alto contraste usamos cores fixas escuras, com contorno branco, para o desenho continuar visível sobre o mapa.
+export function coresDoMapa() {
+  const altoContraste = typeof document !== "undefined" && Boolean(document.documentElement.dataset.contraste);
+  if (altoContraste) {
+    return { destaque: "#1e3a8a", ponto: "#000", pontoSelecionado: "#000", contorno: "#fff", contornoSelecionado: "#fbbf24" };
+  }
+  return {
+    destaque: lerCor("--color-info", "#2563eb"),
+    ponto: lerCor("--color-marca", "#dc2626"),
+    pontoSelecionado: lerCor("--color-marca-forte", "#991b1b"),
+    contorno: lerCor("--color-superficie", "#fff"),
+    contornoSelecionado: lerCor("--color-texto", "#000"),
+  };
+}
