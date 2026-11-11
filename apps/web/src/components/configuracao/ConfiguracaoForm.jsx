@@ -162,18 +162,234 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
     if (formulario.paradas.length > 1) atualizar("paradas", formulario.paradas.slice(0, -1));
   }
 
-  return <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-borda bg-superficie p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10"><h1 className="mb-8 text-center text-2xl font-bold text-texto sm:text-3xl">Configuração</h1><Link href="/" className="absolute top-4 left-4 text-sm text-texto transition hover:text-destaque sm:top-12 sm:left-6">← Voltar</Link><form onSubmit={salvar}>
-    <div className="mb-6"><label htmlFor="nomeExib" className="mb-2 block text-sm font-medium text-texto-suave">Nome da exibição (Opcional)</label><input id="nomeExib" value={formulario.nome} maxLength={LIMITE_NOME_EXIBICAO} onChange={(e) => atualizar("nome", e.target.value)} placeholder="exemplo: Fatec-ZL" className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none" /><p className="mt-1 text-xs text-texto-mudo">Máximo de {LIMITE_NOME_EXIBICAO} caracteres.</p></div>
-    <InstituicaoSelect instituicao={formulario.instituicao} semInstituicao={formulario.semInstituicao} onChange={(alteracoes) => setFormulario((atual) => ({ ...atual, ...alteracoes }))} />
-    <div className="flex flex-wrap justify-center gap-3.5"><NumberField label="Tolerância atraso (1–5 min)" value={formulario.atraso} min={1} max={5} onChange={(valor) => atualizar("atraso", valor)} /><NumberField label="Tolerância adiantado (1–5 min)" value={formulario.adiantado} min={1} max={5} onChange={(valor) => atualizar("adiantado", valor)} /><NumberField label="Distância máxima (5-60 min)" value={formulario.distancia} min={5} max={60} onChange={(valor) => atualizar("distancia", valor)} /></div>
-    <label className="mb-8 flex items-start gap-3 border-t border-borda-suave pt-6 text-sm text-texto-suave"><input type="checkbox" checked={formulario.permitirMultiplosPorLinha} onChange={(e) => atualizar("permitirMultiplosPorLinha", e.target.checked)} className="mt-1" /><span><strong>Exibir vários ônibus da mesma linha</strong><br /><span className="text-xs text-texto-mudo">Desativado por padrão: mostra no máximo um ônibus por código de linha.</span></span></label>
-    <div className="mb-8 border-t border-borda-suave pt-6"><label htmlFor="tokenApi" className="mb-2 block text-sm font-bold text-erro-forte">🔑 Token da API Olho Vivo (SPTrans)</label><input id="tokenApi" value={formulario.token} onChange={(e) => atualizar("token", e.target.value)} placeholder="Cole seu token aqui..." className="w-full rounded-md border border-borda px-4 py-3 font-mono text-sm focus:ring-2 focus:ring-foco focus:outline-none" /><p className="mt-2 text-xs text-texto-mudo">Obrigatório. O token é armazenado no seu usuário.</p></div>
-    <div><div className="mb-2 flex justify-between text-sm font-medium text-texto-suave"><label>Código do ponto de ônibus</label><span className="underline">Onde achar o código</span></div>{formulario.paradas.map((parada, indice) => { const duplicado = parada && formulario.paradas.indexOf(parada) !== formulario.paradas.lastIndexOf(parada); return <div key={indice}><input aria-invalid={errosParadas.includes(indice)} value={parada} onChange={(e) => { atualizarParada(indice, e.target.value); setErrosParadas((atuais) => atuais.filter((item) => item !== indice)); }} placeholder="exemplo: 650004840" inputMode="numeric" className={`mb-2 w-full rounded-md border px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none ${errosParadas.includes(indice) ? "border-erro bg-erro/10" : "border-borda"}`} />{errosParadas.includes(indice) && <p className="mb-2 text-sm text-erro">{duplicado ? "Este código de ponto está repetido." : "Informe um código com 7 ou 9 dígitos."}</p>}</div>; })}</div>
-    <div className="mt-3 flex flex-wrap items-center justify-between gap-4"><div className="flex gap-5 sm:gap-10"><button type="button" disabled={formulario.paradas.length >= 5} onClick={adicionar} className="flex items-center gap-2 font-roboto-mono text-sm italic disabled:cursor-not-allowed disabled:text-texto-desabilitado sm:text-base"><Plus />Adicionar</button><button type="button" disabled={formulario.paradas.length <= 1} onClick={remover} className="flex items-center gap-2 font-roboto-mono text-sm italic disabled:cursor-not-allowed disabled:text-texto-desabilitado sm:text-base"><Minus />Remover</button></div><button type="submit" className="flex items-center gap-2 font-roboto-mono italic hover:text-acento"><Save />Salvar</button></div>
-    {mensagem && <p className="mt-5 text-center font-semibold text-acento">{mensagem}</p>}
-  </form><ConfirmarSalvamentoModal aberto={Boolean(salvamento)} atualizado={salvamento?.atualizado} codigo={salvamento?.codigo} onClose={() => setSalvamento(null)} onAcessar={() => router.push(salvamento?.destino || `/exibicao?codigo=${encodeURIComponent(salvamento?.codigo || "")}`)} /></div>;
+
+  return (
+    <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-borda bg-superficie p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10">
+      <h1 className="mb-8 text-center text-2xl font-bold text-texto sm:text-3xl">
+        Configuração
+      </h1>
+
+      <Link
+        href="/"
+        className="absolute top-4 left-4 inline-flex cursor-pointer items-center gap-1 text-sm text-texto transition hover:text-destaque hover:underline sm:top-12 sm:left-6"
+      >
+        ← Voltar
+      </Link>
+
+      <form onSubmit={salvar}>
+        <div className="mb-6">
+          <label
+            htmlFor="nomeExib"
+            className="mb-2 block text-sm font-medium text-texto-suave"
+          >
+            Nome da exibição (Opcional)
+          </label>
+
+          <input
+            id="nomeExib"
+            value={formulario.nome}
+            maxLength={LIMITE_NOME_EXIBICAO}
+            onChange={(e) => atualizar("nome", e.target.value)}
+            placeholder="exemplo: Fatec-ZL"
+            className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none"
+          />
+
+          <p className="mt-1 text-xs text-texto-mudo">
+            Máximo de {LIMITE_NOME_EXIBICAO} caracteres.
+          </p>
+        </div>
+
+        <InstituicaoSelect
+          instituicao={formulario.instituicao}
+          semInstituicao={formulario.semInstituicao}
+          onChange={(alteracoes) =>
+            setFormulario((atual) => ({ ...atual, ...alteracoes }))
+          }
+        />
+
+        <div className="flex flex-wrap justify-center gap-3.5">
+          <NumberField
+            label="Tolerância atraso (1–5 min)"
+            value={formulario.atraso}
+            min={1}
+            max={5}
+            onChange={(valor) => atualizar("atraso", valor)}
+          />
+
+          <NumberField
+            label="Tolerância adiantado (1–5 min)"
+            value={formulario.adiantado}
+            min={1}
+            max={5}
+            onChange={(valor) => atualizar("adiantado", valor)}
+          />
+
+          <NumberField
+            label="Distância máxima (5-60 min)"
+            value={formulario.distancia}
+            min={5}
+            max={60}
+            onChange={(valor) => atualizar("distancia", valor)}
+          />
+        </div>
+
+        <label className="mb-8 flex cursor-pointer items-start gap-3 border-t border-borda-suave pt-6 text-sm text-texto-suave">
+          <input
+            type="checkbox"
+            checked={formulario.permitirMultiplosPorLinha}
+            onChange={(e) =>
+              atualizar("permitirMultiplosPorLinha", e.target.checked)
+            }
+            className="mt-1 cursor-pointer"
+          />
+
+          <span>
+            <strong>Exibir vários ônibus da mesma linha</strong>
+            <br />
+            <span className="text-xs text-texto-mudo">
+              Desativado por padrão: mostra no máximo um ônibus por código de linha.
+            </span>
+          </span>
+        </label>
+
+        <div className="mb-8 border-t border-borda-suave pt-6">
+          <label
+            htmlFor="tokenApi"
+            className="mb-2 block text-sm font-bold text-erro-forte"
+          >
+            🔑 Token da API Olho Vivo (SPTrans)
+          </label>
+
+          <input
+            id="tokenApi"
+            value={formulario.token}
+            onChange={(e) => atualizar("token", e.target.value)}
+            placeholder="Cole seu token aqui..."
+            className="w-full rounded-md border border-borda px-4 py-3 font-mono text-sm focus:ring-2 focus:ring-foco focus:outline-none"
+          />
+
+          <p className="mt-2 text-xs text-texto-mudo">
+            Obrigatório. O token é armazenado no seu usuário.
+          </p>
+        </div>
+
+        <div>
+          <div className="mb-2 flex justify-between text-sm font-medium text-texto-suave">
+            <label>Código do ponto de ônibus</label>
+
+            <span className="cursor-pointer underline transition hover:text-destaque">
+              Onde achar o código
+            </span>
+          </div>
+
+          {formulario.paradas.map((parada, indice) => {
+            const duplicado =
+              parada &&
+              formulario.paradas.indexOf(parada) !==
+              formulario.paradas.lastIndexOf(parada);
+
+            return (
+              <div key={indice}>
+                <input
+                  aria-invalid={errosParadas.includes(indice)}
+                  value={parada}
+                  onChange={(e) => {
+                    atualizarParada(indice, e.target.value);
+                    setErrosParadas((atuais) =>
+                      atuais.filter((item) => item !== indice)
+                    );
+                  }}
+                  placeholder="exemplo: 650004840"
+                  inputMode="numeric"
+                  className={`mb-2 w-full rounded-md border px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none ${errosParadas.includes(indice)
+                      ? "border-erro bg-erro/10"
+                      : "border-borda"
+                    }`}
+                />
+
+                {errosParadas.includes(indice) && (
+                  <p className="mb-2 text-sm text-erro">
+                    {duplicado
+                      ? "Este código de ponto está repetido."
+                      : "Informe um código com 7 ou 9 dígitos."}
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex gap-5 sm:gap-10">
+            <button
+              type="button"
+              disabled={formulario.paradas.length >= 5}
+              onClick={adicionar}
+              className="flex cursor-pointer items-center gap-2 font-roboto-mono text-sm italic transition hover:text-destaque hover:underline disabled:cursor-not-allowed disabled:text-texto-desabilitado disabled:no-underline sm:text-base"
+            >
+              <Plus />Adicionar
+            </button>
+
+            <button
+              type="button"
+              disabled={formulario.paradas.length <= 1}
+              onClick={remover}
+              className="flex cursor-pointer items-center gap-2 font-roboto-mono text-sm italic transition hover:text-destaque hover:underline disabled:cursor-not-allowed disabled:text-texto-desabilitado disabled:no-underline sm:text-base"
+            >
+              <Minus />Remover
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            className="flex cursor-pointer items-center gap-2 font-roboto-mono italic transition hover:text-acento hover:underline"
+          >
+            <Save />Salvar
+          </button>
+        </div>
+
+        {mensagem && (
+          <p className="mt-5 text-center font-semibold text-acento">
+            {mensagem}
+          </p>
+        )}
+      </form>
+
+      <ConfirmarSalvamentoModal
+        aberto={Boolean(salvamento)}
+        atualizado={salvamento?.atualizado}
+        codigo={salvamento?.codigo}
+        onClose={() => setSalvamento(null)}
+        onAcessar={() =>
+          router.push(
+            salvamento?.destino ||
+            `/exibicao?codigo=${encodeURIComponent(salvamento?.codigo || "")}`
+          )
+        }
+      />
+    </div>
+  );
+
 }
 
 function NumberField({ label, value, min, max, onChange }) {
-  return <div className="mb-6 flex w-full max-w-56 flex-col items-center"><label className="mb-2 text-center text-sm font-medium text-texto-suave">{label}</label><input type="number" value={value} min={min} max={max} onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value))))} className="w-32 rounded-md border border-borda px-3 py-2 text-center text-lg focus:ring-2 focus:ring-foco focus:outline-none" /></div>;
+  return (
+    <div className="mb-6 flex w-full max-w-56 flex-col items-center">
+      <label className="mb-2 text-center text-sm font-medium text-texto-suave">
+        {label}
+      </label>
+
+      <input
+        type="number"
+        value={value}
+        min={min}
+        max={max}
+        onChange={(e) =>
+          onChange(Math.min(max, Math.max(min, Number(e.target.value))))
+        }
+        className="w-32 rounded-md border border-borda px-3 py-2 text-center text-lg focus:ring-2 focus:ring-foco focus:outline-none"
+      />
+    </div>
+  );
 }
+
