@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { BusFront, Copy, MapPin, Share2 } from "lucide-react";
 import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
+import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import FavoriteStar from "@/components/exibicao/FavoriteStar";
 import InlineToast from "@/components/ui/InlineToast";
 import useExibicao from "@/hooks/useExibicao";
@@ -29,6 +30,8 @@ export default function ExibicaoLive({ codigo }) {
   const [segundosParaProximoPonto, setSegundosParaProximoPonto] = useState(INTERVALO_RODIZIO_SEGUNDOS);
   const indicePontoRodizioRef = useRef(0);
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
+  const [buscaGlobal, setBuscaGlobal] = useState("");
+  const [ordenacaoGlobal, setOrdenacaoGlobal] = useState("padrao");
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
   const estadoConexaoAnterior = useRef(null);
@@ -356,6 +359,12 @@ export default function ExibicaoLive({ codigo }) {
           <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
             {controleModoVisualizacao}
           </div>
+          <FiltroOrdenacao
+            busca={buscaGlobal}
+            aoMudarBusca={setBuscaGlobal}
+            ordenacao={ordenacaoGlobal}
+            aoMudarOrdenacao={setOrdenacaoGlobal}
+          />
           <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
           {onibusPorPonto.map(({ ponto, onibus }, indice) => {
             const codigo = ponto.codigo ?? "—";
@@ -372,7 +381,16 @@ export default function ExibicaoLive({ codigo }) {
                 <span>Ponto {indice + 1}</span>
                 {codigoVisivel && <span className="font-roboto-mono text-sm font-normal sm:text-base">({codigo})</span>}
               </button>
-              <ExibicaoTable onibus={onibus} detalhesTecnicos={debugAberto} compacto />
+              <ExibicaoTable
+                onibus={onibus}
+                detalhesTecnicos={debugAberto}
+                compacto
+                busca={buscaGlobal}
+                aoMudarBusca={setBuscaGlobal}
+                ordenacao={ordenacaoGlobal}
+                aoMudarOrdenacao={setOrdenacaoGlobal}
+                mostrarFiltro={false}
+              />
             </section>
             );
           })}
