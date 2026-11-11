@@ -14,7 +14,7 @@ const dentro = (ponto, visao) => ponto.lat <= visao.norte && ponto.lat >= visao.
 // Modo "todos os pontos": busca por nome/endereço/código e lista dos pontos da área visível do mapa.
 // `area` vem de usePontosNaArea, chamado no PontosView porque os mesmos pontos também são desenhados no mapa.
 
-export default function PainelGlobal({ area, visao, posicao, selecionado, copiado, onSelecionar, onCopiar, onIrPara }) {
+export default function PainelGlobal({ area, visao, posicao, selecionado, copiado, marcados, podeMarcar, onAlternarMarca, onSelecionar, onCopiar, onIrPara }) {
   const [texto, setTexto] = useState("");
   const busca = useBuscaPontos(texto);
 
@@ -63,6 +63,9 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
         pontos={busca.consultou ? busca.pontos : []}
         selecionado={selecionado}
         copiado={copiado}
+        marcados={marcados}
+        podeMarcar={podeMarcar}
+        onAlternarMarca={onAlternarMarca}
         onSelecionar={(codigo) => onIrPara(busca.pontos.find((ponto) => ponto.codigo === codigo))}
         onCopiar={onCopiar}
       />
@@ -88,6 +91,9 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
         pontos={visiveis}
         selecionado={selecionado}
         copiado={copiado}
+        marcados={marcados}
+        podeMarcar={podeMarcar}
+        onAlternarMarca={onAlternarMarca}
         onSelecionar={onSelecionar}
         onCopiar={onCopiar}
       />
