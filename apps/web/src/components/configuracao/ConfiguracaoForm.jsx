@@ -36,7 +36,7 @@ function converterExibicao(exibicao) {
   };
 }
 
-export default function ConfiguracaoForm({ codigo, paradaInicial }) {
+export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   const router = useRouter();
   const { usuario, accessToken, estaLogado, carregando } = useAuth();
   const existente = null;
@@ -46,12 +46,12 @@ export default function ConfiguracaoForm({ codigo, paradaInicial }) {
     instituicao: usuario?.fac_id || existente?.instituicao || "",
     semInstituicao: !(usuario?.fac_id || existente?.instituicao),
     token: API_URL ? "" : "mock-sptrans-token",
-    ...(paradaInicial && !existente ? { paradas: [paradaInicial] } : {}),
+    ...(paradasIniciais.length && !existente ? { paradas: paradasIniciais } : {}),
   }));
   const [mensagem, setMensagem] = useState("");
   const [salvamento, setSalvamento] = useState(null);
-  // Um código que veio de fora (página /pontos) já aparece marcado se não tiver 7 ou 9 dígitos, sem esperar o clique em Salvar.
-  const [errosParadas, setErrosParadas] = useState(() => (paradaInicial && ![7, 9].includes(paradaInicial.length) ? [0] : []));
+  // Códigos que vieram de fora (página /pontos) já aparecem marcados se não tiverem 7 ou 9 dígitos, sem esperar o clique em Salvar.
+  const [errosParadas, setErrosParadas] = useState(() => paradasIniciais.map((parada, indice) => ([7, 9].includes(parada.length) ? null : indice)).filter((indice) => indice !== null));
   const [carregandoDados, setCarregandoDados] = useState(Boolean(API_URL && (codigo || accessToken)));
 
   useEffect(() => {

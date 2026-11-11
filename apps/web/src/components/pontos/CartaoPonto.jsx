@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Check, Copy, MapPin, Plus } from "lucide-react";
 import { formatarDistancia } from "@busca-bus/core";
 
-export default function CartaoPonto({ ponto, selecionado, copiado, onSelecionar, onCopiar }) {
+// `selecionado` = destacado no mapa; `marcado` = escolhido para criar a exibição (várias de uma vez, até o limite).
+export default function CartaoPonto({ ponto, selecionado, copiado, marcado = false, podeMarcar = true, onAlternarMarca, onSelecionar, onCopiar }) {
   return (
     <article className={`rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
       <div className="flex items-start justify-between gap-3">
@@ -22,7 +23,13 @@ export default function CartaoPonto({ ponto, selecionado, copiado, onSelecionar,
       <p className="mt-2 text-sm text-texto-suave">
         Código <span className="font-roboto-mono text-base font-bold text-texto">{ponto.codigo}</span>
       </p>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {onAlternarMarca ? (
+          <label className={`flex items-center gap-2 rounded-md border border-borda-forte px-3 py-1.5 text-sm font-semibold text-texto has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-foco ${!marcado && !podeMarcar ? "opacity-60" : "cursor-pointer"}`}>
+            <input type="checkbox" checked={marcado} disabled={!marcado && !podeMarcar} onChange={() => onAlternarMarca(ponto)} className="size-4" />
+            Selecionar<span className="sr-only"> o ponto {ponto.nome || ponto.codigo}</span>
+          </label>
+        ) : null}
         {/* Sempre disponível: se o código não tiver 7 ou 9 dígitos, o formulário avisa (a validação será ajustada numa próxima etapa). */}
         <Link
           href={`/configuracao?parada=${encodeURIComponent(ponto.codigo)}`}

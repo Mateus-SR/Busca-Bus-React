@@ -11,6 +11,7 @@ import usePontosNaArea, { visaoPermiteBusca } from "@/hooks/usePontosNaArea";
 import CartaoPonto from "@/components/pontos/CartaoPonto";
 import ListaPontos from "@/components/pontos/ListaPontos";
 import PainelGlobal from "@/components/pontos/PainelGlobal";
+import BarraSelecao from "@/components/pontos/BarraSelecao";
 
 const PontosMapa = dynamic(() => import("@/components/pontos/PontosMapa"), {
   ssr: false,
@@ -19,6 +20,8 @@ const PontosMapa = dynamic(() => import("@/components/pontos/PontosMapa"), {
 
 const RAIOS = [100, 200, 300];
 const RAIO_PADRAO = 200;
+// Mesmo limite de pontos por exibição do formulário (/configuracao).
+const LIMITE_PONTOS_EXIBICAO = 5;
 // Acima disso o GPS provavelmente está pegando só a região (Wi-Fi/antena) e o ponto mais próximo pode não ser o que parece.
 const PRECISAO_RUIM_METROS = 150;
 const MODOS = [
@@ -34,6 +37,8 @@ export default function PontosView() {
   const [raio, setRaio] = useState(RAIO_PADRAO);
   const [escolhendoManual, setEscolhendoManual] = useState(false);
   const [selecionado, setSelecionado] = useState(null);
+  // Pontos marcados para criar a exibição. Ficam guardados ao arrastar o mapa, trocar de modo ou de busca.
+  const [marcados, setMarcados] = useState([]);
   const [copiado, setCopiado] = useState(null);
   const [avisoCopia, setAvisoCopia] = useState("");
   const [visao, setVisao] = useState(null);
@@ -50,6 +55,17 @@ export default function PontosView() {
   // No modo "todos os pontos" não há local de busca para escolher.
   const escolhendo = !global && (escolhendoManual || geo.status === "negada" || geo.status === "indisponivel");
   const imprecisa = geo.posicao?.precisao > PRECISAO_RUIM_METROS;
+
+  function alternarMarca(ponto) {
+    setMarcados((atuais) => {
+      if (atuais.some((item) => item.codigo === ponto.codigo)) return atuais.filter((item) => item.codigo !== ponto.codigo);
+      if (atuais.length >= LIMITE_PONTOS_EXIBICAO) return atuais;
+      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome }];
+    });
+  }
+
+  const codigosMarcados = new Set(marcados.map((ponto) => ponto.codigo));
+  const podeMarcar = marcados.length < LIMITE_PONTOS_EXIBICAO;
 
   function aoTrocarModo(novo) {
     setModo(novo);
@@ -111,7 +127,7 @@ export default function PontosView() {
 
   return (
     <main className="flex min-h-[calc(100dvh-68px)] flex-col bg-superficie-alt lg:h-[calc(100dvh-68px)] lg:flex-row">
-      <section aria-labelledby="titulo-pontos" className="flex w-full flex-col gap-4 overflow-y-auto p-4 lg:w-[26rem] lg:shrink-0">
+      <section aria-labelledby="titulo-pontos" className={`flex w-full flex-col gap-4 overflow-y-auto p-4 lg:w-[26rem] lg:shrink-0 ${marcados.length ? "pb-56" : ""}`}>
         <div>
           <h1 id="titulo-pontos" className="text-2xl font-extrabold text-texto">{global ? "Todos os pontos" : "Pontos perto de você"}</h1>
           <p className="mt-1 text-sm text-texto-suave">Encontre o código de um ponto de ônibus para criar sua exibição.</p>
@@ -146,7 +162,7 @@ export default function PontosView() {
         ) : null}
 
         {global ? (
-          <PainelGlobal area={area} visao={visao} posicao={geo.posicao} selecionado={selecionado} copiado={copiado} onSelecionar={aoSelecionar} onCopiar={aoCopiar} onIrPara={aoIrPara} />
+          <PainelGlobal area={area} visao={visao} posicao={geo.posicao} selecionado={selecionado} copiado={copiado} marcados={codigosMarcados} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={aoSelecionar} onCopiar={aoCopiar} onIrPara={aoIrPara} />
         ) : (
           <>
             <fieldset>
@@ -176,7 +192,7 @@ export default function PontosView() {
                 {maisProximo ? (
                   <>
                     <p className="text-sm text-texto-suave">O ponto mais próximo está a {formatarDistancia(maisProximo.distancia)}:</p>
-                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} onSelecionar={() => {}} onCopiar={aoCopiar} />
+                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} marcado={codigosMarcados.has(maisProximo.codigo)} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={() => {}} onCopiar={aoCopiar} />
                   </>
                 ) : (
                   <p className="text-sm text-texto-suave">Não encontramos pontos por aqui. Confira se o local escolhido está em São Paulo.</p>
@@ -187,7 +203,7 @@ export default function PontosView() {
               </div>
             ) : null}
 
-            <ListaPontos rotulo="Pontos encontrados, do mais próximo ao mais distante" pontos={pontos} selecionado={selecionado} copiado={copiado} onSelecionar={aoSelecionar} onCopiar={aoCopiar} />
+            <ListaPontos rotulo="Pontos encontrados, do mais próximo ao mais distante" pontos={pontos} selecionado={selecionado} copiado={copiado} marcados={codigosMarcados} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={aoSelecionar} onCopiar={aoCopiar} />
           </>
         )}
 
@@ -218,6 +234,7 @@ export default function PontosView() {
           onVisaoMudou={setVisao}
         />
       </div>
+      <BarraSelecao marcados={marcados} limite={LIMITE_PONTOS_EXIBICAO} onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))} onLimpar={() => setMarcados([])} />
     </main>
   );
 }
