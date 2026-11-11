@@ -6,8 +6,7 @@
   "scripts": {
     "dev": "node --watch src/index.js",
     "build": "node --check src/index.js",
-    "start": "node src/index.js",
-    "importar-gtfs": "node src/scripts/importar-gtfs.js"
+    "start": "node src/index.js"
   },
   "dependencies": {
     "@busca-bus/core": "0.1.0",

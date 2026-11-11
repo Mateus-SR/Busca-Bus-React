@@ -1,6 +1,5 @@
 
 import mongoose from "mongoose";
-import { garantirIndicesPontos } from "./pontos/indices.js";
 
 async function garantirIndice(collection, chave, opcoes = {}) {
   const nome = opcoes.name;
@@ -96,7 +95,6 @@ export async function connectDatabase(config) {
       database.collection("exibicoes").createIndex(
         { usuarioId: 1, ativo: 1 }
       ),
-      garantirIndicesPontos(database.collection("pontos")),
     ]);
 
     console.log("MongoDB conectado com sucesso!");

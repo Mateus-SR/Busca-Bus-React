@@ -8,7 +8,6 @@ import { exibicoesRoutes } from "./routes/exibicoes.js";
 import { meRoutes } from "./routes/me.js";
 import { fatecsRoutes } from "./routes/fatecs.js";
 import { eventosRoutes } from "./routes/eventos.js";
-import { pontosRoutes } from "./routes/pontos.js";
 
 export function createApp(config, db, poller, io = null, servicoEmail = null) {
   const app = express();
@@ -22,7 +21,6 @@ export function createApp(config, db, poller, io = null, servicoEmail = null) {
   app.use("/v1/exibicoes", exibicoesRoutes(db, config, poller, io));
   app.use("/v1/me", meRoutes(config, db));
   app.use("/v1/fatecs", fatecsRoutes(db));
-  app.use("/v1/pontos", pontosRoutes(db));
     app.use("/v1/eventos", eventosRoutes(db, config));
   app.get("/v1/paradas/:codigo/validar", async (req, res, next) => {
     try {
