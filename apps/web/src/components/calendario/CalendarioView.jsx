@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import AgendaDoDia from './AgendaDoDia';
 import EventoBloco from './EventoBloco';
 import EventoPopup from './EventoPopup';
 import MiniCalendario from './MiniCalendario';
@@ -38,6 +39,7 @@ export default function CalendarioView({
 }) {
 	const [hoje, setHoje] = useState(null);
 	const [inicioSemana, setInicioSemana] = useState(null);
+	const [diaFoco, setDiaFoco] = useState(null);
 	const [mesMini, setMesMini] = useState(null);
 	const [miniAberto, setMiniAberto] = useState(false);
 	const [eventoAberto, setEventoAberto] = useState(null);
@@ -56,6 +58,9 @@ export default function CalendarioView({
 		const inicio = inicioDaSemana(agora);
 		setHoje(agora);
 		setInicioSemana(inicio);
+		setDiaFoco(
+			new Date(agora.getFullYear(), agora.getMonth(), agora.getDate())
+		);
 		setMesMini(mesDaSemana(inicio));
 	}, []);
 
@@ -83,7 +88,7 @@ export default function CalendarioView({
 		gatilhoRef.current?.focus();
 	}, []);
 
-	if (!inicioSemana || !mesMini) {
+	if (!inicioSemana || !mesMini || !diaFoco) {
 		return (
 			<div
 				className="mt-6 h-96 animate-pulse rounded bg-gray-100"
@@ -95,17 +100,19 @@ export default function CalendarioView({
 	const dias = diasDaSemana(inicioSemana);
 	const mesInicio = nomeDoMes(dias[0]);
 	const mesFim = nomeDoMes(dias[6]);
-	const tituloMes =
-		mesInicio === mesFim ? mesInicio : `${mesInicio} / ${mesFim}`;
+	const doisMeses = mesInicio !== mesFim;
+	const abreviar = (mes) => mes.slice(0, 3);
 
 	const irParaSemanaDe = (data) => {
-		const inicio = inicioDaSemana(data);
+		const dia = new Date(data.getFullYear(), data.getMonth(), data.getDate());
+		const inicio = inicioDaSemana(dia);
+		setDiaFoco(dia);
 		setInicioSemana(inicio);
 		setMesMini(mesDaSemana(inicio));
 	};
 
 	const mudarSemana = (quantidade) =>
-		irParaSemanaDe(adicionarDias(inicioSemana, quantidade * 7));
+		irParaSemanaDe(adicionarDias(diaFoco, quantidade * 7));
 
 	const mudarMesMini = (quantidade) =>
 		setMesMini(
@@ -114,39 +121,53 @@ export default function CalendarioView({
 
 	return (
 		<section aria-label="Calendário semanal de eventos" className="mt-4">
-			{/* Título + controles */}
-			<div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2">
-				<h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-					{tituloMes}
-				</h1>
-				<span className="mt-2 text-sm font-semibold text-gray-500">
-					{dias[6].getFullYear()}
-				</span>
+			<div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
+				<div className="flex items-baseline gap-2">
+					<h1 className="text-3xl font-extrabold tracking-tight whitespace-nowrap sm:text-4xl">
+						{doisMeses ? (
+							<>
+								<span className="lg:hidden">
+									{abreviar(mesInicio)} / {abreviar(mesFim)}
+								</span>
+								<span className="hidden lg:inline">
+									{mesInicio} / {mesFim}
+								</span>
+							</>
+						) : (
+							mesInicio
+						)}
+					</h1>
+					<span className="text-sm font-semibold text-gray-500">
+						{dias[6].getFullYear()}
+					</span>
+				</div>
 
-				<div className="ml-auto flex items-center gap-1">
+				<div className="flex items-center justify-between sm:ml-auto sm:justify-end sm:gap-1">
 					<button
 						type="button"
 						onClick={() => irParaSemanaDe(new Date())}
-						className="mr-2 cursor-pointer rounded-xl border-2 border-gray-300 px-3.5 py-1.5 text-sm font-bold transition hover:bg-gray-100"
+						className="cursor-pointer rounded-xl border-2 border-gray-300 px-3.5 py-1.5 text-sm font-bold transition hover:bg-gray-100 sm:mr-2"
 					>
 						Hoje
 					</button>
-					<button
-						type="button"
-						onClick={() => mudarSemana(-1)}
-						aria-label="Semana anterior"
-						className="cursor-pointer rounded-full p-1.5 transition hover:bg-gray-200"
-					>
-						<ChevronLeft size={24} strokeWidth={3} />
-					</button>
-					<button
-						type="button"
-						onClick={() => mudarSemana(1)}
-						aria-label="Próxima semana"
-						className="cursor-pointer rounded-full p-1.5 transition hover:bg-gray-200"
-					>
-						<ChevronRight size={24} strokeWidth={3} />
-					</button>
+					<div className="flex gap-1">
+						<button
+							type="button"
+							onClick={() => mudarSemana(-1)}
+							aria-label="Semana anterior"
+							className="cursor-pointer rounded-full p-1.5 transition hover:bg-gray-200"
+						>
+							<ChevronLeft size={24} strokeWidth={3} />
+						</button>
+						<button
+							type="button"
+							onClick={() => mudarSemana(1)}
+							aria-label="Próxima semana"
+							className="cursor-pointer rounded-full p-1.5 transition hover:bg-gray-200"
+						>
+							<ChevronRight size={24} strokeWidth={3} />
+						</button>
+					</div>
 				</div>
 			</div>
 
@@ -179,12 +200,22 @@ export default function CalendarioView({
 					</div>
 				</aside>
 
+				<AgendaDoDia
+					dias={dias}
+					diaFoco={diaFoco}
+					hoje={hoje}
+					eventos={eventos}
+					coresDosDias={coresDosDias}
+					onEscolherDia={setDiaFoco}
+					onAbrir={abrirEvento}
+				/>
+
 				<div
 					ref={rolagemRef}
 					role="region"
 					tabIndex={0}
 					aria-label="Grade de horários da semana"
-					className="max-h-[max(24rem,calc(100dvh-13rem))] overflow-auto border border-gray-500 bg-white"
+					className="hidden max-h-[max(24rem,calc(100dvh-13rem))] overflow-auto border border-gray-500 bg-white md:block"
 				>
 					<div className="min-w-[44rem]">
 						<div
@@ -216,7 +247,6 @@ export default function CalendarioView({
 							})}
 						</div>
 
-						{/* Corpo */}
 						<div className={COLUNAS}>
 							<div
 								className="sticky left-0 z-10 bg-white"
@@ -249,7 +279,6 @@ export default function CalendarioView({
 										/>
 									))}
 
-									{/* Eventos do dia */}
 									{distribuirColunas(eventosDoDia(eventos, dia)).map(
 										({ evento, coluna, totalColunas }) => (
 											<EventoBloco
