@@ -11,9 +11,18 @@ export default function ExibicaoTable({
 	detalhesTecnicos = false,
 	controleEsquerdo = null,
 	compacto = false,
+	busca: buscaControlada,
+	aoMudarBusca,
+	ordenacao: ordenacaoControlada,
+	aoMudarOrdenacao,
+	mostrarFiltro = true,
 }) {
-	const [busca, setBusca] = useState("");
-	const [ordenacao, setOrdenacao] = useState("padrao");
+	const [buscaLocal, setBuscaLocal] = useState("");
+	const [ordenacaoLocal, setOrdenacaoLocal] = useState("padrao");
+	const busca = buscaControlada ?? buscaLocal;
+	const ordenacao = ordenacaoControlada ?? ordenacaoLocal;
+	const mudarBusca = aoMudarBusca ?? setBuscaLocal;
+	const mudarOrdenacao = aoMudarOrdenacao ?? setOrdenacaoLocal;
 
 	const linhasExibidas = useMemo(() => {
 		const buscaLower = busca.toLowerCase();
@@ -44,13 +53,15 @@ export default function ExibicaoTable({
 
 	return (
 		<div>
-			<FiltroOrdenacao
-				busca={busca}
-				aoMudarBusca={setBusca}
-				ordenacao={ordenacao}
-				aoMudarOrdenacao={setOrdenacao}
-				controleEsquerdo={controleEsquerdo}
-			/>
+			{mostrarFiltro && (
+				<FiltroOrdenacao
+					busca={busca}
+					aoMudarBusca={mudarBusca}
+					ordenacao={ordenacao}
+					aoMudarOrdenacao={mudarOrdenacao}
+					controleEsquerdo={controleEsquerdo}
+				/>
+			)}
 
 			{/* Abaixo de lg: cards, sem rolagem horizontal. Mesma lista filtrada/ordenada da tabela. */}
 			<ul className="flex flex-col gap-3 lg:hidden">
