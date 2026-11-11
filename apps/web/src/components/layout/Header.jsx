@@ -11,6 +11,7 @@ const LINKS_NAV = [
     { href: '/', label: 'Início' },
     { href: '/mapa', label: 'Acessar Mapa' },
     { href: '/exibicao', label: 'Acessar Exibição' },
+    { href: '/pontos', label: 'Buscar Pontos' },
     { href: '/calendario', label: 'Calendário' },
     { href: '/sobre', label: 'Sobre' },
 ];

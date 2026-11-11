@@ -7,3 +7,4 @@ export { validarEmail, validarSenha } from "./schemas.js";
 export { normalizarExibicao, normalizarOnibus } from "./dto.js";
 export { ehFalhaTransitoriaApi, ehStatusTransitorioApi, aguardarDisponibilidadeApi } from "./api/disponibilidade.js";
 export { TIPOS_EVENTO, LOCAIS_EVENTO, LOCAIS_COM_NUMERO, ROLES_ADMIN, ehAdmin } from "./calendario.js";
+export { AREA_SAO_PAULO, coordenadaValida, dentroDeSaoPaulo, distanciaMetros, limitesDoRaio, formatarDistancia } from "./geo.js";
