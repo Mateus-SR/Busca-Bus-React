@@ -136,25 +136,21 @@ export default function LoginPage() {
 
   return (
     <AuthBackground>
+      <div className="mb-6 text-sm">
+        <Link
+          href="/"
+          className="inline-flex shrink-0 cursor-pointer items-center gap-1 text-texto transition hover:text-destaque hover:underline"
+        >
+          ← Voltar
+        </Link>
+      </div>
       <h1 className="mb-8 text-center text-3xl font-bold text-texto">Login</h1>
-      <Link
-        href="/"
-        className="absolute top-12 left-6 inline-flex cursor-pointer items-center gap-1 text-sm text-texto transition hover:text-destaque hover:underline"
-      >
-        ← Voltar
-      </Link>
-      <Link
-        href="/reset-senha"
-        className="absolute top-12 right-6 text-sm text-texto underline-offset-2 transition hover:text-destaque hover:underline"
-      >
-        Esqueci minha senha
-      </Link>
       <form onSubmit={entrar}>
         <div className="mb-6">
           <label htmlFor="email" className="mb-2 block text-sm font-medium text-texto-suave">E-mail</label>
           <input id="email" type="email" value={formulario.email} onChange={(e) => atualizar("email", e.target.value)} placeholder="exemplo: erick@neo.com" className="w-full rounded-md border border-borda px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none" />
         </div>
-        <div className="mb-6">
+        <div className="mb-2">
           <label htmlFor="password" className="mb-2 block text-sm font-medium text-texto-suave">
             Senha
           </label>
@@ -182,6 +178,12 @@ export default function LoginPage() {
             </button>
           </div>
         </div>
+        <Link
+          href="/reset-senha"
+          className="mb-6 inline-block text-sm text-texto-suave underline-offset-2 transition hover:text-destaque hover:underline"
+        >
+          Esqueci minha senha
+        </Link>
         <label className="mb-6 flex items-center text-sm text-texto-suave">
           <input
             type="checkbox"
