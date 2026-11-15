@@ -1,8 +1,17 @@
 
 import { UserRound } from "lucide-react";
 
+const AVATARES_PERMITIDOS = new Set([
+  "avatar-02",
+  "avatar-05",
+  "avatar-06",
+  "avatar-07",
+  "avatar-11",
+  "avatar-13",
+]);
+
 export default function Avatar({ avatarId = null, alt = "", className = "" }) {
-  const id = typeof avatarId === "string" && /^avatar-\d{2}$/.test(avatarId)
+  const id = typeof avatarId === "string" && AVATARES_PERMITIDOS.has(avatarId)
     ? avatarId
     : null;
 
@@ -20,7 +29,7 @@ export default function Avatar({ avatarId = null, alt = "", className = "" }) {
 
   return (
     <img
-      src={`/avatars/${id}.svg`}
+      src={`/avatars/${id}.png`}
       alt={alt}
       className={`rounded-full object-cover ${className}`}
     />

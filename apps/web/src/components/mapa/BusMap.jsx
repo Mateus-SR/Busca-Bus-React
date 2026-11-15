@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./leaflet.css";
 import { criarSvgOnibus } from "@/components/mapa/iconeOnibus";
+import { ATRIBUICAO_TILES, CENTRO_INICIAL, LIMITES_SAO_PAULO, URL_TILES } from "@/components/mapa/configMapa";
 import {
   CLASSE_BALAO,
   CLASSE_MARCADOR,
@@ -59,11 +60,6 @@ function criarIconeParada(L, cor) {
   });
 }
 
-const LIMITES_SAO_PAULO = [
-  [-25.35, -53.35],
-  [-19.75, -44.0],
-];
-
 function atualizarOpacidadePontos(mapa, marcadores) {
   const zoom = mapa.getZoom();
   const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.25;
@@ -93,10 +89,8 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         maxBounds: LIMITES_SAO_PAULO,
         maxBoundsViscosity: 1,
         minZoom: 7,
-      }).setView([-23.556, -46.475], 13);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors",
-      }).addTo(mapa);
+      }).setView(CENTRO_INICIAL, 13);
+      L.tileLayer(URL_TILES, { attribution: ATRIBUICAO_TILES }).addTo(mapa);
       mapaRef.current = mapa;
       mapa.on("zoomend", () => atualizarOpacidadePontos(mapa, pontosRef.current));
       setMapaPronto(true);

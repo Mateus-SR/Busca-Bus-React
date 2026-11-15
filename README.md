@@ -278,6 +278,16 @@ As exibições ficam na coleção `exibicoes` (o banco é o definido em `MONGODB
 
 Para a exibição aparecer **no site hospedado**, o código também precisa estar em `apps/web/src/lib/fixtures/exibicoesFixture.js` (veja as [limitações](#estado-atual-e-limitações-conhecidas)).
 
+### Pontos de ônibus (GTFS da SPTrans)
+Os pontos ficam na coleção `pontos` (`_id` = `stop_id` = código do ponto no Olho Vivo, `nome`, `endereco`, `loc` em GeoJSON `[lng, lat]`). Para carregá-la, baixe o GTFS da SPTrans e importe o `stops.txt`:
+
+```bash
+npm run importar-gtfs --workspace apps/server -- caminho/para/stops.txt --simular   # só valida, não grava
+npm run importar-gtfs --workspace apps/server -- caminho/para/stops.txt             # grava no banco da MONGODB_URI
+```
+
+A importação é idempotente (atualiza em vez de duplicar) e descarta linhas sem `stop_id` ou com coordenadas fora de São Paulo. `--remover-ausentes` apaga os pontos que não estão no arquivo. Os índices (`2dsphere` e texto) também são criados na inicialização do servidor. As rotas `/v1/pontos` não guardam nem registram as coordenadas consultadas.
+
 ## Referência da API
 
 ### REST (`/v1`)
@@ -288,6 +298,9 @@ Limite geral de 120 requisições por minuto por IP; as rotas de autenticação 
 | `GET /v1/health` | Estado do servidor (versão, ambiente, banco, memória) |
 | `GET /v1/paradas/:codigo/validar` | Confere se a SPTrans responde para o código da parada |
 | `GET /v1/exibicoes/:codigo` | Dados de uma exibição |
+| `GET /v1/pontos/proximos?lat&lng&raio` | Pontos num raio (padrão 200 m, de 20 a 500 m) ordenados por distância; se vier vazio, inclui `maisProximo` |
+| `GET /v1/pontos?norte&sul&leste&oeste` | Pontos dentro de uma área (lado máximo de 0,1°, até 500 pontos; `truncado` indica corte) |
+| `GET /v1/pontos/busca?q=` | Busca por nome/endereço, ou pelo código quando `q` tem só dígitos |
 | `GET /v1/exibicoes/:codigo/radar` | Snapshot atual (contingência do WebSocket). Aceita `?diagnostico=1` e `?permitirMultiplosPorLinha=true\|false` |
 | `POST /v1/auth/cadastro`, `POST /v1/auth/login` | Criar conta e entrar (exigem `MONGODB_URI` e `JWT_SECRET`) |
 | `/v1/auth/refresh`, `/v1/auth/reset-senha`, `/v1/me/*` | **Ainda não implementados** (respondem 501) |
@@ -327,6 +340,7 @@ Todos rodam a partir da raiz do repositório.
 | `npm run build` | Gera o site estático em `apps/web/out` |
 | `npm run build:server` | Verifica a sintaxe do servidor (`node --check`; não há etapa de compilação) |
 | `npm run start:server` | Inicia o servidor (produção) |
+| `npm run importar-gtfs --workspace apps/server -- <stops.txt>` | Importa os pontos do GTFS para o MongoDB |
 | `npm run lint` | ESLint do site |
 
 Antes de abrir um pull request, rode `npm run lint`, `npm run build` e `npm run build:server`.

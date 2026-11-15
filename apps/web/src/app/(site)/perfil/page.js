@@ -8,23 +8,12 @@ import Avatar from "@/components/ui/Avatar";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 
 const AVATARES = [
-  { id: "avatar-13", nome: "Beca" },
   { id: "avatar-02", nome: "Mateus" },
   { id: "avatar-07", nome: "Laura" },
   { id: "avatar-11", nome: "JP" },
+  { id: "avatar-13", nome: "Beca" },
   { id: "avatar-06", nome: "Pedro" },
-  { id: "avatar-05", nome: "Guilherme" },
-  { id: "avatar-01", nome: "Paula" },
-  { id: "avatar-03", nome: "Marisa" },
-  { id: "avatar-04", nome: "Ana" },
-
-  { id: "avatar-08", nome: "Bia" },
-  { id: "avatar-09", nome: "Samara" },
-  { id: "avatar-10", nome: "Gaby" },
-  { id: "avatar-12", nome: "Henrique" },
-  { id: "avatar-14", nome: "Sofia" },
-  { id: "avatar-15", nome: "Merida" },
-  { id: "avatar-16", nome: "Débora" },
+  { id: "avatar-05", nome: "Rafa" },
 ];
 export default function PerfilPage() {
   const { usuario, estaLogado, carregando, atualizarAvatar, atualizarInstituicao, } = useAuth();
