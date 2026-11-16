@@ -253,14 +253,14 @@ export default function ExibicaoLive({ codigo }) {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
+    <div className="relative w-full max-w-full overflow-x-hidden rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
       {/* Elemento invisível do leitor de tela */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {mensagemVoz}
       </div>
 
       <div className="mb-3 flex flex-col items-center">
-        <div className="relative flex min-h-24 w-full max-w-full flex-col items-center gap-3 lg:flex-row lg:items-start lg:justify-center lg:text-left">
+        <div className={`relative flex ${modoTv ? "min-h-0" : "min-h-24"} w-full max-w-full flex-col items-center gap-3 lg:flex-row lg:items-start lg:justify-center lg:text-left`}>
           {!modoTv && (
             <div className="flex w-full min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
               <div className="flex max-w-full min-w-0 items-center gap-2">
@@ -303,7 +303,7 @@ export default function ExibicaoLive({ codigo }) {
           </div>
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
-        <div className="mb-3 flex justify-end">
+        <div className="mb-3 flex justify-center max-sm:absolute max-sm:top-3 max-sm:right-3 max-sm:z-10">
           <button
             type="button"
             onClick={() => setModoTv((ativo) => !ativo)}
