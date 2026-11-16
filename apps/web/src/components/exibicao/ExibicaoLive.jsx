@@ -5,6 +5,7 @@ import { BusFront, Copy, MapPin, Share2 } from "lucide-react";
 import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import FavoriteStar from "@/components/exibicao/FavoriteStar";
+import NotificacoesExibicao from "@/components/exibicao/NotificacoesExibicao";
 import InlineToast from "@/components/ui/InlineToast";
 import useExibicao from "@/hooks/useExibicao";
 import useRadarOnibus from "@/hooks/useRadarOnibus";
@@ -278,6 +279,12 @@ export default function ExibicaoLive({ codigo }) {
                   <Share2 size={14} aria-hidden="true" />
                   Compartilhar
                 </button>
+                <NotificacoesExibicao
+                  codigo={codigo}
+                  onibus={radar.onibus}
+                  pronto={Boolean(radar.atualizadoEm)}
+                  pontos={radar.pontos}
+                />
               </div>
             </div>
           </div>
