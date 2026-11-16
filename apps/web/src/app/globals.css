@@ -170,6 +170,60 @@ body {
   overflow-x: hidden;
 }
 
+/* Barras de rolagem seguem a paleta do site, inclusive em áreas com rolagem própria.
+   Em Chromium/WebKit, scrollbar-color desativa a personalização pelos pseudo-elementos;
+   por isso os dois mecanismos ficam separados. */
+@supports selector(::-webkit-scrollbar) {
+  *::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+    background: var(--color-superficie-forte);
+  }
+
+  *::-webkit-scrollbar-track,
+  *::-webkit-scrollbar-track-piece,
+  *::-webkit-scrollbar-corner {
+    background: var(--color-superficie-forte);
+    border-radius: 0;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-marca);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    border-radius: 0;
+    background: var(--color-marca-forte);
+  }
+
+  *::-webkit-scrollbar-button,
+  *::-webkit-scrollbar-button:single-button,
+  *::-webkit-scrollbar-button:vertical:decrement,
+  *::-webkit-scrollbar-button:vertical:increment,
+  *::-webkit-scrollbar-button:horizontal:decrement,
+  *::-webkit-scrollbar-button:horizontal:increment,
+  *::-webkit-scrollbar-button:start:decrement,
+  *::-webkit-scrollbar-button:end:increment {
+    display: none;
+    width: 0;
+    height: 0;
+    min-width: 0;
+    min-height: 0;
+    border: 0;
+    background: transparent;
+  }
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-color: var(--color-marca) var(--color-superficie-forte);
+    scrollbar-width: auto;
+  }
+}
+
 /* ============================================================
    ACESSIBILIDADE
    O AccessibilityContext (e o script do layout.js, antes da pintura) grava data-fonte e data-contraste
