@@ -202,11 +202,16 @@ export default function PontosView() {
                 {maisProximo ? (
                   <>
                     <p className="text-sm text-texto-suave">O ponto mais próximo está a {formatarDistancia(maisProximo.distancia)}:</p>
-<<<<<<< Updated upstream
-                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} marcado={codigosMarcados.has(maisProximo.codigo)} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={() => { }} onCopiar={aoCopiar} />
-=======
-                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} marcado={codigosMarcados.has(maisProximo.codigo)} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={() => aoSelecionar(maisProximo.codigo)} onCopiar={aoCopiar} />
->>>>>>> Stashed changes
+                    <CartaoPonto
+                      ponto={maisProximo}
+                      selecionado={selecionado === maisProximo.codigo}
+                      copiado={copiado === maisProximo.codigo}
+                      marcado={codigosMarcados.has(maisProximo.codigo)}
+                      podeMarcar={podeMarcar}
+                      onAlternarMarca={alternarMarca}
+                      onSelecionar={() => aoSelecionar(maisProximo.codigo)}
+                      onCopiar={aoCopiar}
+                    />
                   </>
                 ) : (
                   <p className="text-sm text-texto-suave">Não encontramos pontos por aqui. Confira se o local escolhido está em São Paulo.</p>

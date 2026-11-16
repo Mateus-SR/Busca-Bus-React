@@ -37,14 +37,6 @@ export default function ExibicaoLive({ codigo }) {
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
   const estadoConexaoAnterior = useRef(null);
-<<<<<<< Updated upstream
-  const opcoesRadar = useMemo(() => ({
-    parada: exibicao?.paradas?.[0],
-    paradas: exibicao?.paradas,
-    config: { ...exibicao?.config, permitirMultiplosPorLinha },
-    aguardar: carregandoExibicao || semParadas,
-  }), [exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
-=======
 
   const opcoesRadar = useMemo(
     () => ({
@@ -56,7 +48,6 @@ export default function ExibicaoLive({ codigo }) {
     [exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]
   );
 
->>>>>>> Stashed changes
   useEffect(() => {
     if (!podeVerDetalhesTecnicos) setDebugAberto(false);
   }, [podeVerDetalhesTecnicos]);
@@ -107,18 +98,11 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("completa")}
         aria-pressed={modoVisualizacao === "completa"}
-<<<<<<< Updated upstream
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "completa"
-          ? "bg-marca text-superficie"
-          : "text-texto-suave hover:bg-superficie"
-          }`}
-=======
         className={`rounded-md px-2 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
           modoVisualizacao === "completa"
             ? "bg-marca text-sobre-marca"
             : "text-texto hover:bg-superficie"
         }`}
->>>>>>> Stashed changes
       >
         Todos os pontos
       </button>
@@ -126,18 +110,11 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("por-ponto")}
         aria-pressed={modoVisualizacao === "por-ponto"}
-<<<<<<< Updated upstream
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "por-ponto"
-          ? "bg-marca text-superficie"
-          : "text-texto-suave hover:bg-superficie"
-          }`}
-=======
         className={`rounded-md px-2 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
           modoVisualizacao === "por-ponto"
             ? "bg-marca text-sobre-marca"
             : "text-texto hover:bg-superficie"
         }`}
->>>>>>> Stashed changes
       >
         Separar por ponto
       </button>
@@ -145,18 +122,11 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("rodizio")}
         aria-pressed={modoVisualizacao === "rodizio"}
-<<<<<<< Updated upstream
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "rodizio"
-          ? "bg-marca text-superficie"
-          : "text-texto-suave hover:bg-superficie"
-          }`}
-=======
         className={`rounded-md px-2 py-2 text-xs font-semibold transition sm:px-4 sm:text-sm ${
           modoVisualizacao === "rodizio"
             ? "bg-marca text-sobre-marca"
             : "text-texto hover:bg-superficie"
         }`}
->>>>>>> Stashed changes
       >
         Rodízio por ponto
       </button>
@@ -208,11 +178,6 @@ export default function ExibicaoLive({ codigo }) {
   }, [modoVisualizacao, onibusPorPonto.length]);
 
   const [mensagemVoz, setMensagemVoz] = useState("");
-<<<<<<< Updated upstream
-
-  // useRef guarda a lista de ônibus da última atualização para podermos comparar
-=======
->>>>>>> Stashed changes
   const onibusAnteriores = useRef([]);
 
   useEffect(() => {
@@ -233,24 +198,6 @@ export default function ExibicaoLive({ codigo }) {
 
     if (antigos.length === 0 && onibusAtuais.length > 0) {
       setMensagemVoz(`Rastreamento iniciado. ${onibusAtuais.length} veículos encontrados.`);
-<<<<<<< Updated upstream
-    }
-    // 2. Atualizações seguintes: compara e busca ônibus novos
-    else if (antigos.length > 0) {
-      // Filtra veículos que estão na lista atual, mas NÃO estavam na lista antiga
-      // Na API da SPTrans, o identificador único costuma ser 'prefixo' ou 'p'
-      const novosVeiculos = onibusAtuais.filter(
-        (atual) => !antigos.find((antigo) =>
-          (antigo.id) === (atual.id)
-        )
-      );
-
-      if (novosVeiculos.length > 0) {
-        // Mapeia o número/nome da linha dos novos veículos
-        const linhasNovas = novosVeiculos.map(v => v.codigoLetreiro || v.id || "desconhecida").join(", ");
-
-        // Dispara a voz apenas com a novidade
-=======
     } else if (antigos.length > 0) {
       const novosVeiculos = onibusAtuais.filter(
         (atual) => !antigos.find((antigo) => antigo.id === atual.id)
@@ -258,7 +205,6 @@ export default function ExibicaoLive({ codigo }) {
 
       if (novosVeiculos.length > 0) {
         const linhasNovas = novosVeiculos.map((v) => v.codigoLetreiro || v.id || "desconhecida").join(", ");
->>>>>>> Stashed changes
         setMensagemVoz(
           novosVeiculos.length === 1
             ? `Novo ônibus da linha ${linhasNovas} apareceu no radar.`
@@ -307,67 +253,56 @@ export default function ExibicaoLive({ codigo }) {
   }
 
   return (
-<<<<<<< Updated upstream
-    <div className="overflow-x-auto rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
-
-      {/* Elemento invisível do leitor de tela */}
-=======
     <div className="w-full max-w-full overflow-x-hidden rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
->>>>>>> Stashed changes
+      {/* Elemento invisível do leitor de tela */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {mensagemVoz}
       </div>
 
       <div className="mb-3 flex flex-col items-center">
         <div className="relative flex min-h-24 w-full max-w-full flex-col items-center gap-3 lg:flex-row lg:items-start lg:justify-center lg:text-left">
-<<<<<<< Updated upstream
           {!modoTv && (
-           <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
-            <div className="flex min-w-0 items-center gap-2">
-=======
-          <div className="flex w-full min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
-            <div className="flex max-w-full min-w-0 items-center gap-2">
->>>>>>> Stashed changes
-              <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
-              <FavoriteStar codigo={codigo} />
-            </div>
-            <div className="mt-1 flex flex-col items-center gap-2 text-sm">
-              <span className="font-roboto-mono italic">Código: {codigo}</span>
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={copiarCodigo}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
-                  aria-label="Copiar código da exibição"
-                >
-                  <Copy size={14} aria-hidden="true" />
-                  Copiar
-                </button>
-                <button
-                  type="button"
-                  onClick={compartilhar}
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
-                  aria-label="Compartilhar exibição"
-                >
-                  <Share2 size={14} aria-hidden="true" />
-                  Compartilhar
-                </button>
-                <NotificacoesExibicao
-                  codigo={codigo}
-                  onibus={radar.onibus}
-                  pronto={Boolean(radar.atualizadoEm)}
-                  pontos={pontosAtivos}
-                />
+            <div className="flex w-full min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
+              <div className="flex max-w-full min-w-0 items-center gap-2">
+                <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
+                <FavoriteStar codigo={codigo} />
+              </div>
+              <div className="mt-1 flex flex-col items-center gap-2 text-sm">
+                <span className="font-roboto-mono italic">Código: {codigo}</span>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={copiarCodigo}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
+                    aria-label="Copiar código da exibição"
+                  >
+                    <Copy size={14} aria-hidden="true" />
+                    Copiar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={compartilhar}
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-borda px-2 py-1 text-xs font-semibold text-texto-suave transition hover:bg-superficie-alt"
+                    aria-label="Compartilhar exibição"
+                  >
+                    <Share2 size={14} aria-hidden="true" />
+                    Compartilhar
+                  </button>
+                  <NotificacoesExibicao
+                    codigo={codigo}
+                    onibus={radar.onibus}
+                    pronto={Boolean(radar.atualizadoEm)}
+                    pontos={pontosAtivos}
+                  />
+                </div>
               </div>
             </div>
-          </div>
           )}
           <div className="w-full lg:absolute lg:top-0 lg:right-0 lg:w-[min(36%,32rem)]">
             <EventosProximos />
           </div>
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
-<<<<<<< Updated upstream
         <div className="mb-3 flex justify-end">
           <button
             type="button"
@@ -379,18 +314,6 @@ export default function ExibicaoLive({ codigo }) {
             {modoTv ? <MonitorOff size={22} /> : <Monitor size={22} />}
           </button>
         </div>
-        {podeVerDetalhesTecnicos && debugAberto && radar.pontos.length > 0 && (
-          <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-texto-mudo flex-col">
-            {radar.pontos.map((item, indice) => (
-              <span key={item.codigo ?? indice} className="flex flex-wrap justify-center gap-x-2">
-                <span className="font-roboto-mono">
-                  Ponto {item.codigo ?? "—"}
-                </span>
-                <span>{item.nome || "Sem nome cadastrado"}</span>
-                {item.posicao && (
-                  <span className="font-roboto-mono" title="Latitude, longitude">
-                    {item.posicao.lat.toFixed(5)}, {item.posicao.lng.toFixed(5)}
-=======
         {podeVerDetalhesTecnicos && debugAberto && pontosAtivos.length > 0 && (
           <div className="mt-2 flex flex-col flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-texto-mudo">
             {pontosAtivos.map((item, indice) => {
@@ -400,7 +323,6 @@ export default function ExibicaoLive({ codigo }) {
                 <span key={item.codigo ?? indice} className="flex flex-wrap justify-center gap-x-2">
                   <span className="font-roboto-mono">
                     Ponto {item.codigo ?? "—"}
->>>>>>> Stashed changes
                   </span>
                   <span>{item.nome || "Sem nome cadastrado"}</span>
                   {typeof lat === "number" && typeof lng === "number" && (
@@ -423,33 +345,6 @@ export default function ExibicaoLive({ codigo }) {
           </button>
         )}
       </div>
-<<<<<<< Updated upstream
-      {podeVerDetalhesTecnicos && <VisaoDesenvolvedor
-        aberto={debugAberto}
-        diagnostico={radar.diagnostico}
-        historico={radar.historicoDiagnostico}
-        eventosOnibus={radar.eventosOnibus}
-        configuracao={exibicao?.config}
-        permitirMultiplosPorLinha={radar.configuracao?.permitirMultiplosPorLinha ?? permitirMultiplosPorLinha}
-        onPermitirMultiplosPorLinha={(permitir) => {
-          setPermitirMultiplosPorLinha(permitir);
-          radar.configurar({ ...exibicao?.config, permitirMultiplosPorLinha: permitir });
-        }}
-        onLimpar={radar.limparDiagnostico}
-        conexao={radar.conexao}
-        eventosConexao={radar.eventosConexao}
-        onSimular={radar.simular}
-        onAtualizar={async () => {
-          const resposta = await radar.atualizar();
-          // Sem socket não há a quem pedir: reconectar é o único jeito de buscar dados novos.
-          if (resposta.semSocket) {
-            setAtualizacaoSolicitada((valor) => valor + 1);
-            return { ok: true, reconectando: true };
-          }
-          return resposta;
-        }}
-      />}
-=======
 
       {podeVerDetalhesTecnicos && (
         <VisaoDesenvolvedor
@@ -477,7 +372,6 @@ export default function ExibicaoLive({ codigo }) {
           }}
         />
       )}
->>>>>>> Stashed changes
 
       {mostrarSemParadas && (
         <p role="status" className="mb-3 text-center text-sm text-erro">
@@ -489,8 +383,9 @@ export default function ExibicaoLive({ codigo }) {
       {!mostrarSemParadas && (
         <p
           role="status"
-          className={`mb-3 text-center text-sm font-semibold ${radar.erro ? "text-erro" : radar.estadoConexao === "conectado" ? "text-sucesso" : "text-texto-mudo"
-            }`}
+          className={`mb-3 text-center text-sm font-semibold ${
+            radar.erro ? "text-erro" : radar.estadoConexao === "conectado" ? "text-sucesso" : "text-texto-mudo"
+          }`}
         >
           {radar.erro || (radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`)}
         </p>
@@ -504,8 +399,7 @@ export default function ExibicaoLive({ codigo }) {
           mostrarFiltro={!modoTv}
         />
       ) : modoVisualizacao === "por-ponto" ? (
-<<<<<<< Updated upstream
-        <div>
+        <div className="min-w-0">
           {!modoTv && (
             <>
               <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
@@ -519,18 +413,6 @@ export default function ExibicaoLive({ codigo }) {
               />
             </>
           )}
-=======
-        <div className="min-w-0">
-          <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
-            {controleModoVisualizacao}
-          </div>
-          <FiltroOrdenacao
-            busca={buscaGlobal}
-            aoMudarBusca={setBuscaGlobal}
-            ordenacao={ordenacaoGlobal}
-            aoMudarOrdenacao={setOrdenacaoGlobal}
-          />
->>>>>>> Stashed changes
           <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
             {onibusPorPonto.map(({ ponto, onibus }, indice) => {
               const codigo = ponto.codigo ?? "—";
@@ -598,8 +480,9 @@ export default function ExibicaoLive({ codigo }) {
                     return (
                       <span
                         key={indice}
-                        className={`h-1 w-full rounded-full transition-colors duration-1000 ${indice < progresso ? "bg-erro" : "bg-texto-mudo/40"
-                          }`}
+                        className={`h-1 w-full rounded-full transition-colors duration-1000 ${
+                          indice < progresso ? "bg-erro" : "bg-texto-mudo/40"
+                        }`}
                       />
                     );
                   })}
@@ -610,10 +493,11 @@ export default function ExibicaoLive({ codigo }) {
                   strokeWidth={2.5}
                   className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 fill-yellow-400 text-erro transition-[left] duration-1000 linear"
                   style={{
-                    left: `clamp(12.5px, calc(${((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
-                      INTERVALO_RODIZIO_SEGUNDOS) *
+                    left: `clamp(12.5px, calc(${
+                      ((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
+                        INTERVALO_RODIZIO_SEGUNDOS) *
                       100
-                      }% - 12.5px), calc(100% - 12.5px))`,
+                    }% - 12.5px), calc(100% - 12.5px))`,
                   }}
                 />
                 <MapPin
