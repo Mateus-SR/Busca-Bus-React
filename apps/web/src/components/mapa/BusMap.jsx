@@ -16,21 +16,20 @@ import {
   infoPontoDoOnibus,
 } from "@/components/mapa/pontosMapa";
 
-function obterPosicao(onibus) {
-  if (onibus.posicao) return [onibus.posicao.lat, onibus.posicao.lng];
-  return [onibus.latitude, onibus.longitude];
+function obterPosicao(item) {
+  if (!item) return [null, null];
+  if (item.posicao) return [item.posicao.lat, item.posicao.lng];
+  return [item.latitude ?? item.lat ?? null, item.longitude ?? item.lng ?? null];
 }
 
 function tamanhoIcone(zoom) {
   return Math.max(24, Math.min(38, 26 + (zoom - 15) * 2));
 }
 
-// Só o que muda o desenho do ícone entra na chave; sem ela, o ícone era recriado a cada atualização e a cada zoom.
 function chaveIcone(onibus, info, zoom) {
   return `${onibus.codigoLetreiro ?? onibus.codigo ?? ""}|${info.cor}|${info.numero ?? ""}|${tamanhoIcone(zoom)}`;
 }
 
-// Balão branco com borda vermelha fixa (identidade do app); a cor do ponto fica só no ícone e na bolinha numerada.
 function criarIcone(L, onibus, info, zoom = 16) {
   const codigo = escaparHtml(onibus.codigoLetreiro ?? onibus.codigo ?? "Ônibus");
   const tamanho = tamanhoIcone(zoom);
@@ -40,7 +39,6 @@ function criarIcone(L, onibus, info, zoom = 16) {
     html: `<span class="${CLASSE_BALAO}">${numero}<span>${codigo}</span></span>${criarSvgOnibus(info.cor, tamanho)}`,
     iconSize: [Math.max(80, tamanho), tamanho],
     iconAnchor: [Math.max(80, tamanho) / 2, tamanho],
-    // O detalhe (sentido) abre ao lado do ônibus, sem cobrir o balão.
     tooltipAnchor: [tamanho / 2 + 4, -tamanho / 2],
   });
 }
@@ -74,15 +72,15 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
   const mapaRef = useRef(null);
   const marcadoresRef = useRef(new Map());
   const chavesIconeRef = useRef(new Map());
-  const marcadorParadaRef = useRef(null);
   const pontosRef = useRef(new Map());
+  const centralizouPontosRef = useRef(false);
   const [mapaPronto, setMapaPronto] = useState(false);
 
   useEffect(() => {
     let cancelado = false;
     const marcadores = marcadoresRef.current;
     const chavesIcone = chavesIconeRef.current;
-    const pontos = pontosRef.current;
+    const pontosMap = pontosRef.current;
     import("leaflet").then(({ default: L }) => {
       if (cancelado || !containerRef.current) return;
       const mapa = L.map(containerRef.current, {
@@ -93,6 +91,7 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
       L.tileLayer(URL_TILES, { attribution: ATRIBUICAO_TILES }).addTo(mapa);
       mapaRef.current = mapa;
       mapa.on("zoomend", () => atualizarOpacidadePontos(mapa, pontosRef.current));
+      setTimeout(() => mapa.invalidateSize(), 100);
       setMapaPronto(true);
     });
 
@@ -101,19 +100,20 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
       marcadores.forEach((marcador) => marcador.remove());
       marcadores.clear();
       chavesIcone.clear();
-      marcadorParadaRef.current?.remove();
-      marcadorParadaRef.current = null;
-      pontos.forEach((marcador) => marcador.remove());
-      pontos.clear();
+      pontosMap.forEach((marcador) => marcador.remove());
+      pontosMap.clear();
       mapaRef.current?.remove();
       mapaRef.current = null;
+      centralizouPontosRef.current = false;
       setMapaPronto(false);
     };
   }, []);
 
+  // Renderização dos ônibus (independente de haver pontos ou não)
   useEffect(() => {
-    if (!mapaRef.current) return;
+    if (!mapaRef.current || !mapaPronto) return;
     import("leaflet").then(({ default: L }) => {
+      if (!mapaRef.current) return;
       const atuais = new Set();
       onibus.forEach((onibusAtual) => {
         const posicao = obterPosicao(onibusAtual);
@@ -149,11 +149,11 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
   }, [onibus, pontos, mapaPronto]);
 
   useEffect(() => {
-    if (!mapaRef.current) return undefined;
+    if (!mapaRef.current || !mapaPronto) return undefined;
     let cancelado = false;
     let aoAmpliar;
     import("leaflet").then(({ default: L }) => {
-      if (cancelado) return;
+      if (cancelado || !mapaRef.current) return;
       aoAmpliar = () => {
         marcadoresRef.current.forEach((marcador, id) => {
           const item = onibus.find((atual) => String(atual.id) === id);
@@ -174,27 +174,47 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
     };
   }, [onibus, pontos, mapaPronto]);
 
+  // Renderização dos pontos/paradas (sempre exibidos, mesmo quando `onibus` está vazio)
   useEffect(() => {
-    if (!mapaRef.current || (!ponto?.posicao && !pontos.length)) return;
+    if (!mapaRef.current || !mapaPronto) return;
     import("leaflet").then(({ default: L }) => {
-      const lista = pontos.length ? pontos : [ponto];
-      lista.forEach((item, indice) => {
-        if (!item?.posicao || pontosRef.current.has(String(item.codigo))) return;
-        const { lat, lng } = item.posicao;
-        if (![lat, lng].every((valor) => typeof valor === "number")) return;
-        const cor = corDoPonto(indice);
-        const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
-          .addTo(mapaRef.current)
-          .bindTooltip(
-            `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
-            { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO },
-          );
-        pontosRef.current.set(String(item.codigo), marcador);
-        atualizarOpacidadePontos(mapaRef.current, pontosRef.current.values());
-        if (indice === 0) mapaRef.current.setView([lat, lng], 16);
+      if (!mapaRef.current) return;
+      const lista = pontos.length ? pontos : (ponto ? [ponto] : []);
+      const codigosAtuais = new Set(lista.map((item) => String(item.codigo)));
+
+      // Remove paradas que saíram da lista
+      pontosRef.current.forEach((marcador, cod) => {
+        if (!codigosAtuais.has(cod)) {
+          marcador.remove();
+          pontosRef.current.delete(cod);
+        }
       });
+
+      lista.forEach((item, indice) => {
+        const cod = String(item.codigo);
+        const [lat, lng] = obterPosicao(item);
+        if (typeof lat !== "number" || typeof lng !== "number") return;
+
+        if (!pontosRef.current.has(cod)) {
+          const cor = corDoPonto(indice);
+          const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
+            .addTo(mapaRef.current)
+            .bindTooltip(
+              `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
+              { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO },
+            );
+          pontosRef.current.set(cod, marcador);
+        }
+
+        if (indice === 0 && !centralizouPontosRef.current) {
+          centralizouPontosRef.current = true;
+          mapaRef.current.setView([lat, lng], 16);
+        }
+      });
+
+      atualizarOpacidadePontos(mapaRef.current, pontosRef.current.values());
     });
   }, [codigo, ponto, pontos, mapaPronto]);
 
-  return <div ref={containerRef} data-codigo={codigo} className="h-full min-h-[420px] w-full" />;
+  return <div ref={containerRef} data-codigo={codigo} className="h-full min-h-[280px] w-full" />;
 }
