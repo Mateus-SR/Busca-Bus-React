@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Save } from "lucide-react";
+import { Plus, Minus, Save, Info } from "lucide-react";
 import { criarClienteApi } from "@busca-bus/core/cliente";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +50,7 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   }));
   const [mensagem, setMensagem] = useState("");
   const [salvamento, setSalvamento] = useState(null);
+  const [mostrarAjudaCodigo, setMostrarAjudaCodigo] = useState(false);
   // Códigos que vieram de fora (página /pontos) já aparecem marcados se não tiverem 7 ou 9 dígitos, sem esperar o clique em Salvar.
   const [errosParadas, setErrosParadas] = useState(() => paradasIniciais.map((parada, indice) => ([7, 9].includes(parada.length) ? null : indice)).filter((indice) => indice !== null));
   const [carregandoDados, setCarregandoDados] = useState(Boolean(API_URL && (codigo || accessToken)));
@@ -274,12 +275,32 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
         </div>
 
         <div>
-          <div className="mb-2 flex justify-between text-sm font-medium text-texto-suave">
+          <div className="relative mb-2 flex justify-between text-sm font-medium text-texto-suave">
             <label>Código do ponto de ônibus</label>
 
-            <span className="cursor-pointer underline transition hover:text-destaque">
+            <button
+              type="button"
+              onClick={() => setMostrarAjudaCodigo((atual) => !atual)}
+              className="cursor-pointer underline transition hover:text-destaque"
+            >
               Onde achar o código
-            </span>
+            </button>
+            {mostrarAjudaCodigo && (
+              <div className="absolute right-0 bottom-full z-50 mb-2 w-80 rounded-xl border border-borda bg-superficie p-4 text-justify text-sm leading-relaxed font-normal text-texto shadow-xl">
+                <div className="mb-3 flex items-center gap-2 text-left font-semibold">
+                  <Info size={18} className="shrink-0 text-destaque" />
+                  Onde encontrar o código?
+                </div>
+
+                <p>
+                  Você pode encontrar o código do ponto no folheto colado ao totem indicativo de parada.
+                </p>
+
+                <p className="mt-2">
+                  Acima das informações do folheto, procure um número grande. Esse é o código do ponto que você deve informar no Busca-Bus.
+                </p>
+              </div>
+            )}
           </div>
 
           {formulario.paradas.map((parada, indice) => {
@@ -302,8 +323,8 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
                   placeholder="exemplo: 650004840"
                   inputMode="numeric"
                   className={`mb-2 w-full rounded-md border px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none ${errosParadas.includes(indice)
-                      ? "border-erro bg-erro/10"
-                      : "border-borda"
+                    ? "border-erro bg-erro/10"
+                    : "border-borda"
                     }`}
                 />
 
