@@ -57,18 +57,30 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   const [errosParadas, setErrosParadas] = useState(() => paradasIniciais.map((parada, indice) => ([7, 9].includes(parada.length) ? null : indice)).filter((indice) => indice !== null));
   const [carregandoDados, setCarregandoDados] = useState(Boolean(API_URL && (codigo || accessToken)));
 
+
   function adicionarToast(texto, cor = "") {
     const id = Date.now() + Math.random();
 
     setToasts((atuais) => [
       ...atuais,
-      { id, texto, cor },
+      { id, texto, cor, saindo: false },
     ]);
 
     setTimeout(() => {
-      setToasts((atuais) => atuais.filter((toast) => toast.id !== id));
-    }, 2500);
+      setToasts((atuais) =>
+        atuais.map((toast) =>
+          toast.id === id ? { ...toast, saindo: true } : toast
+        )
+      );
+    }, 3000);
+
+    setTimeout(() => {
+      setToasts((atuais) =>
+        atuais.filter((toast) => toast.id !== id)
+      );
+    }, 3700);
   }
+
 
 
   useEffect(() => {
