@@ -165,7 +165,7 @@ export default function PontosView() {
           <PainelGlobal area={area} visao={visao} posicao={geo.posicao} selecionado={selecionado} copiado={copiado} marcados={codigosMarcados} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={aoSelecionar} onCopiar={aoCopiar} onIrPara={aoIrPara} />
         ) : (
           <>
-            <fieldset>
+            <fieldset className="lg:hidden">
               <legend className="mb-1 text-sm font-semibold text-texto-suave">Distância da busca</legend>
               <div className="flex gap-2">
                 {RAIOS.map((valor) => (
@@ -192,7 +192,7 @@ export default function PontosView() {
                 {maisProximo ? (
                   <>
                     <p className="text-sm text-texto-suave">O ponto mais próximo está a {formatarDistancia(maisProximo.distancia)}:</p>
-                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} marcado={codigosMarcados.has(maisProximo.codigo)} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={() => {}} onCopiar={aoCopiar} />
+                    <CartaoPonto ponto={maisProximo} selecionado={false} copiado={copiado === maisProximo.codigo} marcado={codigosMarcados.has(maisProximo.codigo)} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={() => { }} onCopiar={aoCopiar} />
                   </>
                 ) : (
                   <p className="text-sm text-texto-suave">Não encontramos pontos por aqui. Confira se o local escolhido está em São Paulo.</p>
@@ -233,6 +233,37 @@ export default function PontosView() {
           foco={foco}
           onVisaoMudou={setVisao}
         />
+
+        {!global && (
+          <fieldset className="absolute bottom-5 left-1/2 z-[1000] hidden -translate-x-1/2 rounded-xl border border-borda bg-superficie p-3 shadow-lg lg:block">
+            <div className="mb-2 text-sm font-semibold text-texto-suave">
+              Distância da busca
+            </div>
+
+            <div className="flex gap-2">
+              {RAIOS.map((valor) => (
+                <label
+                  key={valor}
+                  className={`flex cursor-pointer items-center justify-center rounded-md border px-6 py-2 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-foco ${raio === valor
+                    ? "border-marca bg-marca text-sobre-marca hover:brightness-90 contraste:border-acento contraste:bg-acento contraste:text-superficie"
+                    : "border-borda-forte bg-superficie text-texto hover:bg-superficie-alt"
+                    }`}
+                >
+                  <input
+                    type="radio"
+                    name="raio-desktop"
+                    value={valor}
+                    checked={raio === valor}
+                    onChange={() => setRaio(valor)}
+                    className="sr-only"
+                  />
+                  {valor} m
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+
       </div>
       <BarraSelecao marcados={marcados} limite={LIMITE_PONTOS_EXIBICAO} onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))} onLimpar={() => setMarcados([])} />
     </main>
