@@ -13,9 +13,10 @@ npm run dev      # start the web workspace (localhost:3000)
 npm run build    # build the web workspace
 npm run start    # serve the web build
 npm run lint     # lint the web workspace
+npm test         # run the packages/core tests (node --test)
 ```
 
-There is no test runner configured in this repo.
+Tests exist only in `packages/core` (`test/`, built-in `node --test`, no extra dependency); the web workspace has no test runner.
 
 ## Architecture
 

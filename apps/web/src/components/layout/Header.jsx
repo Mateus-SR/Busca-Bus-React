@@ -95,7 +95,7 @@ export default function Header() {
                             </Link>
                             <Link
                                 href="/cadastro"
-                                className="rounded-xl border-[3px] border-sobre-marca px-3.5 py-2 font-bold text-sobre-marca transition-all duration-200 ease-out hover:bg-sobre-marca/50"
+                                className="inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-xl border-[3px] border-sobre-marca px-3.5 py-2 font-bold text-sobre-marca transition-all duration-200 ease-out hover:bg-sobre-marca/50"
                             >
                                 Criar conta
                             </Link>

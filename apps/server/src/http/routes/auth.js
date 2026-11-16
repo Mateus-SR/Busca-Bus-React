@@ -175,13 +175,125 @@ export function authRoutes({ config, db, servicoEmail }) {
     }
   });
 
-  router.post("/refresh", (_req, res) =>
-    res.status(501).json({
-      erro: "Rotação de sessão será habilitada na próxima etapa.",
-    })
-  );
 
-  router.post("/logout", (_req, res) => res.status(204).end());
+  router.post("/refresh", async (req, res, next) => {
+    if (
+      Usuario.db.readyState !== 1 ||
+      !sessoes ||
+      !config.jwtSecret
+    ) {
+      return unavailable(res);
+    }
+
+    try {
+      const refreshToken = String(req.body?.refreshToken || "");
+
+      if (!refreshToken) {
+        return res.status(401).json({
+          erro: "Token de renovação não informado.",
+        });
+      }
+
+      const refreshHash = crypto
+        .createHash("sha256")
+        .update(refreshToken)
+        .digest("hex");
+
+      const sessao = await sessoes.findOne({
+        refreshHash,
+        expiraEm: { $gt: new Date() },
+      });
+
+      if (!sessao) {
+        return res.status(401).json({
+          erro: "Sessão inválida ou expirada. Faça login novamente.",
+        });
+      }
+
+      const novoRefreshToken = crypto
+        .randomBytes(32)
+        .toString("base64url");
+
+      const novoRefreshHash = crypto
+        .createHash("sha256")
+        .update(novoRefreshToken)
+        .digest("hex");
+
+      const resultado = await sessoes.updateOne(
+        {
+          _id: sessao._id,
+          refreshHash,
+          expiraEm: { $gt: new Date() },
+        },
+        {
+          $set: {
+            refreshHash: novoRefreshHash,
+            atualizadoEm: new Date(),
+          },
+        }
+      );
+
+      if (resultado.modifiedCount !== 1) {
+        return res.status(401).json({
+          erro: "Sessão inválida ou já utilizada. Faça login novamente.",
+        });
+      }
+
+      const usuario = await Usuario.findById(sessao.usuarioId);
+
+      if (!usuario) {
+        await sessoes.deleteOne({ _id: sessao._id });
+
+        return res.status(401).json({
+          erro: "Usuário não encontrado.",
+        });
+      }
+
+      const accessToken = jwt.sign(
+        {
+          sub: usuario._id.toString(),
+          role: usuario.role,
+          sid: sessao._id.toString(),
+        },
+        config.jwtSecret,
+        { expiresIn: "15m" }
+      );
+
+      return res.json({
+        accessToken,
+        refreshToken: novoRefreshToken,
+        usuario: publicUser(usuario),
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+
+
+  router.post("/logout", async (req, res, next) => {
+    if (!sessoes) {
+      return unavailable(res);
+    }
+
+    try {
+      const refreshToken = String(req.body?.refreshToken || "");
+
+      if (refreshToken) {
+        const refreshHash = crypto
+          .createHash("sha256")
+          .update(refreshToken)
+          .digest("hex");
+
+        await sessoes.deleteOne({ refreshHash });
+      }
+
+      return res.status(204).end();
+    } catch (error) {
+      return next(error);
+    }
+  });
+
 
   router.post("/esqueci-senha", async (req, res, next) => {
     if (

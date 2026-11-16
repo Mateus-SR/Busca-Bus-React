@@ -129,11 +129,10 @@ export default function InstituicaoSelect({
           onClick={() =>
             !semInstituicao && setDropdownAberto((aberto) => !aberto)
           }
-          className={`w-full rounded-md border border-borda px-4 py-3 text-left ${
-            semInstituicao
+          className={`w-full rounded-md border border-borda px-4 py-3 text-left transition ${semInstituicao
               ? "cursor-not-allowed bg-superficie-alt text-texto-desabilitado"
-              : "bg-superficie"
-          }`}
+              : "cursor-pointer bg-superficie hover:border-destaque"
+            }`}
         >
           {semInstituicao
             ? "Nenhuma instituição selecionada"
@@ -173,7 +172,7 @@ export default function InstituicaoSelect({
                   type="button"
                   key={item.id_fac}
                   onClick={() => selecionarInstituicao(item.id_fac)}
-                  className="block w-full px-4 py-2 text-left text-texto hover:bg-superficie-alt"
+                  className="block w-full cursor-pointer px-4 py-2 text-left text-texto transition hover:bg-superficie-alt hover:text-destaque"
                 >
                   {item.nome_fac}
                 </button>
@@ -182,12 +181,12 @@ export default function InstituicaoSelect({
         )}
       </div>
 
-      <label className="mt-3 flex items-center text-sm text-texto-suave">
+      <label className="mt-3 flex cursor-pointer items-center text-sm text-texto-suave">
         <input
           type="checkbox"
           checked={semInstituicao}
           onChange={alternarSemInstituicao}
-          className="mr-2"
+          className="mr-2 cursor-pointer"
         />
         Não faço parte de uma instituição / Prefiro não informar
       </label>

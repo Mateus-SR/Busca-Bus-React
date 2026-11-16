@@ -9,6 +9,7 @@ import { meRoutes } from "./routes/me.js";
 import { fatecsRoutes } from "./routes/fatecs.js";
 import { eventosRoutes } from "./routes/eventos.js";
 import { pontosRoutes } from "./routes/pontos.js";
+import { avaliacoesRoutes } from "./routes/avaliacoes.js";
 
 export function createApp(config, db, poller, io = null, servicoEmail = null) {
   const app = express();
@@ -36,5 +37,6 @@ export function createApp(config, db, poller, io = null, servicoEmail = null) {
     console.error(error);
     res.status(500).json({ erro: "Erro interno do servidor." });
   });
+  app.use("/v1/avaliacoes", avaliacoesRoutes(db, config));
   return app;
 }

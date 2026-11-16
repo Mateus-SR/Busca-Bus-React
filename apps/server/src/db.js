@@ -97,6 +97,14 @@ export async function connectDatabase(config) {
         { usuarioId: 1, ativo: 1 }
       ),
       garantirIndicesPontos(database.collection("pontos")),
+      garantirIndice(
+        database.collection("avaliacoes"),
+        { usuarioId: 1 },
+        {
+          name: "avaliacao_usuario_unica",
+          unique: true,
+        },
+      ),
     ]);
 
     console.log("MongoDB conectado com sucesso!");
