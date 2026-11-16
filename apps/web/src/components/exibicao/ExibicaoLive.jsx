@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { BusFront, Copy, MapPin, Share2 } from "lucide-react";
+import { BusFront, Copy, MapPin, Share2, Monitor, MonitorOff } from "lucide-react";
 import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import FavoriteStar from "@/components/exibicao/FavoriteStar";
@@ -26,6 +26,7 @@ export default function ExibicaoLive({ codigo }) {
   const podeVerDetalhesTecnicos = Boolean(usuario?.role === "admin"
     || (usuario?.id && exibicao?.usuarioId && String(usuario.id) === String(exibicao.usuarioId)));
   const [modoVisualizacao, setModoVisualizacao] = useState("completa");
+  const [modoTv, setModoTv] = useState(false);
   const [pontoComCodigoVisivel, setPontoComCodigoVisivel] = useState(null);
   const [indicePontoRodizio, setIndicePontoRodizio] = useState(0);
   const [segundosParaProximoPonto, setSegundosParaProximoPonto] = useState(INTERVALO_RODIZIO_SEGUNDOS);
@@ -41,7 +42,7 @@ export default function ExibicaoLive({ codigo }) {
     paradas: exibicao?.paradas,
     config: { ...exibicao?.config, permitirMultiplosPorLinha },
     aguardar: carregandoExibicao || semParadas,
-  }),[exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
+  }), [exibicao?.paradas, exibicao?.config, permitirMultiplosPorLinha, carregandoExibicao, semParadas]);
   useEffect(() => {
     if (!podeVerDetalhesTecnicos) setDebugAberto(false);
   }, [podeVerDetalhesTecnicos]);
@@ -76,11 +77,10 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("completa")}
         aria-pressed={modoVisualizacao === "completa"}
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
-          modoVisualizacao === "completa"
-            ? "bg-marca text-superficie"
-            : "text-texto-suave hover:bg-superficie"
-        }`}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "completa"
+          ? "bg-marca text-superficie"
+          : "text-texto-suave hover:bg-superficie"
+          }`}
       >
         Todos os pontos
       </button>
@@ -88,11 +88,10 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("por-ponto")}
         aria-pressed={modoVisualizacao === "por-ponto"}
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
-          modoVisualizacao === "por-ponto"
-            ? "bg-marca text-superficie"
-            : "text-texto-suave hover:bg-superficie"
-        }`}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "por-ponto"
+          ? "bg-marca text-superficie"
+          : "text-texto-suave hover:bg-superficie"
+          }`}
       >
         Separar por ponto
       </button>
@@ -100,11 +99,10 @@ export default function ExibicaoLive({ codigo }) {
         type="button"
         onClick={() => setModoVisualizacao("rodizio")}
         aria-pressed={modoVisualizacao === "rodizio"}
-        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${
-          modoVisualizacao === "rodizio"
-            ? "bg-marca text-superficie"
-            : "text-texto-suave hover:bg-superficie"
-        }`}
+        className={`flex-1 rounded-md px-3 py-2 text-sm font-semibold transition sm:flex-none sm:px-4 ${modoVisualizacao === "rodizio"
+          ? "bg-marca text-superficie"
+          : "text-texto-suave hover:bg-superficie"
+          }`}
       >
         Rodízio por ponto
       </button>
@@ -153,9 +151,9 @@ export default function ExibicaoLive({ codigo }) {
     const intervalo = setInterval(atualizarRodizio, 250);
     return () => clearInterval(intervalo);
   }, [modoVisualizacao, onibusPorPonto.length]);
-  
+
   const [mensagemVoz, setMensagemVoz] = useState("");
-  
+
   // useRef guarda a lista de ônibus da última atualização para podermos comparar
   const onibusAnteriores = useRef([]);
 
@@ -178,13 +176,13 @@ export default function ExibicaoLive({ codigo }) {
     // 1. Primeiro carregamento: avisa o total inicial
     if (antigos.length === 0 && onibusAtuais.length > 0) {
       setMensagemVoz(`Rastreamento iniciado. ${onibusAtuais.length} veículos encontrados.`);
-    } 
+    }
     // 2. Atualizações seguintes: compara e busca ônibus novos
     else if (antigos.length > 0) {
       // Filtra veículos que estão na lista atual, mas NÃO estavam na lista antiga
       // Na API da SPTrans, o identificador único costuma ser 'prefixo' ou 'p'
       const novosVeiculos = onibusAtuais.filter(
-        (atual) => !antigos.find((antigo) => 
+        (atual) => !antigos.find((antigo) =>
           (antigo.id) === (atual.id)
         )
       );
@@ -192,11 +190,11 @@ export default function ExibicaoLive({ codigo }) {
       if (novosVeiculos.length > 0) {
         // Mapeia o número/nome da linha dos novos veículos
         const linhasNovas = novosVeiculos.map(v => v.codigoLetreiro || v.id || "desconhecida").join(", ");
-        
+
         // Dispara a voz apenas com a novidade
         setMensagemVoz(
-          novosVeiculos.length === 1 
-            ? `Novo ônibus da linha ${linhasNovas} apareceu no radar.` 
+          novosVeiculos.length === 1
+            ? `Novo ônibus da linha ${linhasNovas} apareceu no radar.`
             : `Novos ônibus detectados nas linhas: ${linhasNovas}.`
         );
       }
@@ -244,7 +242,7 @@ export default function ExibicaoLive({ codigo }) {
 
   return (
     <div className="overflow-x-auto rounded-2xl bg-superficie p-3 shadow-lg sm:p-6">
-      
+
       {/* Elemento invisível do leitor de tela */}
       <div aria-live="polite" aria-atomic="true" className="sr-only">
         {mensagemVoz}
@@ -253,7 +251,8 @@ export default function ExibicaoLive({ codigo }) {
       {/* Interface visual */}
       <div className="mb-3 flex flex-col items-center">
         <div className="relative flex min-h-24 w-full max-w-full flex-col items-center gap-3 lg:flex-row lg:items-start lg:justify-center lg:text-left">
-          <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
+          {!modoTv && (
+           <div className="flex min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
             <div className="flex min-w-0 items-center gap-2">
               <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
               <FavoriteStar codigo={codigo} />
@@ -288,11 +287,23 @@ export default function ExibicaoLive({ codigo }) {
               </div>
             </div>
           </div>
+          )}
           <div className="w-full lg:absolute lg:top-0 lg:right-0 lg:w-[min(36%,32rem)]">
             <EventosProximos />
           </div>
         </div>
         <InlineToast key={mensagemAcao?.id} mensagem={mensagemAcao} />
+        <div className="mb-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setModoTv((ativo) => !ativo)}
+            className="cursor-pointer rounded-lg border border-borda p-2 text-texto-suave transition hover:bg-superficie-alt hover:text-texto"
+            aria-label={modoTv ? "Desativar modo TV" : "Ativar modo TV"}
+            title={modoTv ? "Desativar modo TV" : "Ativar modo TV"}
+          >
+            {modoTv ? <MonitorOff size={22} /> : <Monitor size={22} />}
+          </button>
+        </div>
         {podeVerDetalhesTecnicos && debugAberto && radar.pontos.length > 0 && (
           <div className="mt-2 flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-texto-mudo flex-col">
             {radar.pontos.map((item, indice) => (
@@ -337,7 +348,7 @@ export default function ExibicaoLive({ codigo }) {
           return resposta;
         }}
       />}
-      
+
       {mostrarSemParadas && (
         <p role="status" className="mb-3 text-center text-sm text-erro">
           {erroExibicao
@@ -348,9 +359,8 @@ export default function ExibicaoLive({ codigo }) {
       {!mostrarSemParadas && (
         <p
           role="status"
-          className={`mb-3 text-center text-sm font-semibold ${
-            radar.erro ? "text-erro" : radar.estadoConexao === "conectado" ? "text-sucesso" : "text-texto-mudo"
-          }`}
+          className={`mb-3 text-center text-sm font-semibold ${radar.erro ? "text-erro" : radar.estadoConexao === "conectado" ? "text-sucesso" : "text-texto-mudo"
+            }`}
         >
           {radar.erro || (radar.estadoConexao === "iniciando" ? "Conectando ao radar..." : `Radar ${radar.estadoConexao}.`)}
         </p>
@@ -359,58 +369,65 @@ export default function ExibicaoLive({ codigo }) {
         <ExibicaoTable
           onibus={radar?.onibus ?? []}
           detalhesTecnicos={debugAberto}
-          controleEsquerdo={controleModoVisualizacao}
+          controleEsquerdo={modoTv ? null : controleModoVisualizacao}
+          mostrarFiltro={!modoTv}
         />
       ) : modoVisualizacao === "por-ponto" ? (
         <div>
-          <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
-            {controleModoVisualizacao}
-          </div>
-          <FiltroOrdenacao
-            busca={buscaGlobal}
-            aoMudarBusca={setBuscaGlobal}
-            ordenacao={ordenacaoGlobal}
-            aoMudarOrdenacao={setOrdenacaoGlobal}
-          />
-          <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
-          {onibusPorPonto.map(({ ponto, onibus }, indice) => {
-            const codigo = ponto.codigo ?? "—";
-            const codigoVisivel = pontoComCodigoVisivel === codigo;
-            return (
-            <section key={codigo} className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
-              <button
-                type="button"
-                onClick={() => setPontoComCodigoVisivel(codigoVisivel ? null : codigo)}
-                aria-expanded={codigoVisivel}
-                className="mb-3 flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-base font-bold hover:text-acento sm:text-lg"
-                title="Mostrar código do ponto"
-              >
-                <span>Ponto {indice + 1}</span>
-                {codigoVisivel && <span className="font-roboto-mono text-sm font-normal sm:text-base">({codigo})</span>}
-              </button>
-              <ExibicaoTable
-                onibus={onibus}
-                detalhesTecnicos={debugAberto}
-                compacto
+          {!modoTv && (
+            <>
+              <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
+                {controleModoVisualizacao}
+              </div>
+              <FiltroOrdenacao
                 busca={buscaGlobal}
                 aoMudarBusca={setBuscaGlobal}
                 ordenacao={ordenacaoGlobal}
                 aoMudarOrdenacao={setOrdenacaoGlobal}
-                mostrarFiltro={false}
               />
-            </section>
-            );
-          })}
-          {!onibusPorPonto.length && (
-            <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
+            </>
           )}
+          <div className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-2">
+            {onibusPorPonto.map(({ ponto, onibus }, indice) => {
+              const codigo = ponto.codigo ?? "—";
+              const codigoVisivel = pontoComCodigoVisivel === codigo;
+              return (
+                <section key={codigo} className="min-w-0 overflow-hidden rounded-xl border border-borda bg-superficie-alt p-3 sm:p-4">
+                  <button
+                    type="button"
+                    onClick={() => setPontoComCodigoVisivel(codigoVisivel ? null : codigo)}
+                    aria-expanded={codigoVisivel}
+                    className="mb-3 flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-base font-bold hover:text-acento sm:text-lg"
+                    title="Mostrar código do ponto"
+                  >
+                    <span>Ponto {indice + 1}</span>
+                    {codigoVisivel && <span className="font-roboto-mono text-sm font-normal sm:text-base">({codigo})</span>}
+                  </button>
+                  <ExibicaoTable
+                    onibus={onibus}
+                    detalhesTecnicos={debugAberto}
+                    compacto
+                    busca={buscaGlobal}
+                    aoMudarBusca={setBuscaGlobal}
+                    ordenacao={ordenacaoGlobal}
+                    aoMudarOrdenacao={setOrdenacaoGlobal}
+                    mostrarFiltro={false}
+                  />
+                </section>
+              );
+            })}
+            {!onibusPorPonto.length && (
+              <p className="py-6 text-center text-texto-mudo">Nenhum ponto cadastrado.</p>
+            )}
           </div>
         </div>
       ) : (
         <div className="min-w-0">
-          <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
-            {controleModoVisualizacao}
-          </div>
+          {!modoTv && (
+            <div className="mb-4 flex justify-center" role="group" aria-label="Modo de exibição dos ônibus">
+              {controleModoVisualizacao}
+            </div>
+          )}
           {onibusPorPonto.length > 1 && (
             <div className="mx-auto mb-4 max-w-xl" role="status" aria-live="polite">
               <div className="mb-1 flex items-center justify-between gap-3 text-xs font-semibold text-texto-mudo sm:text-sm">
@@ -437,9 +454,8 @@ export default function ExibicaoLive({ codigo }) {
                     return (
                       <span
                         key={indice}
-                        className={`h-1 w-full rounded-full transition-colors duration-1000 ${
-                          indice < progresso ? "bg-erro" : "bg-texto-mudo/40"
-                        }`}
+                        className={`h-1 w-full rounded-full transition-colors duration-1000 ${indice < progresso ? "bg-erro" : "bg-texto-mudo/40"
+                          }`}
                       />
                     );
                   })}
@@ -450,11 +466,10 @@ export default function ExibicaoLive({ codigo }) {
                   strokeWidth={2.5}
                   className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 fill-yellow-400 text-erro transition-[left] duration-1000 linear"
                   style={{
-                    left: `clamp(12.5px, calc(${
-                      ((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
-                        INTERVALO_RODIZIO_SEGUNDOS) *
+                    left: `clamp(12.5px, calc(${((INTERVALO_RODIZIO_SEGUNDOS - segundosParaProximoPonto) /
+                      INTERVALO_RODIZIO_SEGUNDOS) *
                       100
-                    }% - 12.5px), calc(100% - 12.5px))`,
+                      }% - 12.5px), calc(100% - 12.5px))`,
                   }}
                 />
                 <MapPin
