@@ -4,9 +4,11 @@
 import { createPortal } from "react-dom";
 import useMontado from "@/hooks/useMontado";
 import { useEffect, useState } from "react";
+import { usePainelHeader } from "@/contexts/PainelHeaderContext";
 
 export default function InlineToast({ mensagens = [], mensagem = null }) {
   const montado = useMontado();
+  const { headerOculto } = usePainelHeader();
 
   const mensagemUnica = mensagens.length === 0 && Boolean(mensagem);
   const [saindo, setSaindo] = useState(false);
@@ -64,7 +66,10 @@ export default function InlineToast({ mensagens = [], mensagem = null }) {
   );
 
   return createPortal(
-    <div className="fixed top-[4.5rem] right-4 z-[1100] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 sm:top-20 sm:right-5">
+    <div
+      className={`fixed right-4 z-[1100] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 transition-[top] duration-500 ease-in-out sm:right-5 ${headerOculto ? "top-4" : "top-[4.5rem] sm:top-20"
+        }`}
+    >
       {estilosAnimacao}
 
       {lista.map((item, index) => (

@@ -171,11 +171,10 @@ export default function FeedbackForm({ aoSalvar, iniciarEditando = false }) {
             className="cursor-pointer focus:outline-none transition-transform hover:scale-110"
           >
             <Star
-              className={`w-8 h-8 ${
-                (valor ?? 0) >= estrela
-                  ? "fill-yellow-400 text-yellow-400"
-                  : "fill-transparent text-current opacity-30 hover:opacity-100"
-              }`}
+              className={`w-8 h-8 ${(valor ?? 0) >= estrela
+                ? "fill-yellow-400 text-yellow-400"
+                : "fill-transparent text-current opacity-30 hover:opacity-100"
+                }`}
             />
           </button>
         ))}
@@ -252,7 +251,11 @@ export default function FeedbackForm({ aoSalvar, iniciarEditando = false }) {
           placeholder="Ex: Consegui não perder o ônibus na chuva..."
           className="w-full p-3 bg-transparent border-2 border-current/20 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-y"
         />
+        <p className="text-xs text-texto-suave text-right">
+          Máximo de 1.000 caracteres.
+        </p>
       </div>
+
 
       <div className="space-y-3">
         <label className="block text-base font-bold">
@@ -278,6 +281,9 @@ export default function FeedbackForm({ aoSalvar, iniciarEditando = false }) {
           placeholder="Deixe aqui suas ideias..."
           className="w-full p-3 bg-transparent border-2 border-current/20 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-y"
         />
+        <p className="text-xs text-texto-suave text-right">
+          Máximo de 1.000 caracteres.
+        </p>
       </div>
 
       {erro && (
@@ -301,8 +307,8 @@ export default function FeedbackForm({ aoSalvar, iniciarEditando = false }) {
           {enviando
             ? "Salvando..."
             : jaAvaliou
-            ? "Salvar Alterações"
-            : "Enviar Avaliação"}
+              ? "Salvar Alterações"
+              : "Enviar Avaliação"}
         </button>
 
         {editando && (
