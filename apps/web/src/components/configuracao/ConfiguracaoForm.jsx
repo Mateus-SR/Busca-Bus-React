@@ -152,7 +152,10 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
       return indices;
     }, []);
     setErrosParadas([...paradasVazias, ...indicesInvalidos, ...indicesDuplicados]);
-    if (!formulario.token.trim()) return setMensagem("Token da API é obrigatório.");
+    if (!formulario.token.trim()) {
+      adicionarToast("O token da API é obrigatório.", "border-erro text-erro");
+      return;
+    }
     if (paradasVazias.length) {
       return setMensagem("Preencha todos os códigos de ponto ou remova os campos vazios.");
     }
@@ -197,7 +200,16 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
       );
       setSalvamento({ codigo: codigo || "Nova01", atualizado: Boolean(codigo), destino });
     } catch (error) {
-      setMensagem("Não foi possível salvar a exibição.");
+      if (error.codigo === "REDE") {
+        adicionarToast("Não foi possível conectar ao servidor.", "border-erro text-erro");
+      } else if (error.status === 401 || error.status === 403) {
+        adicionarToast("Sua sessão expirou ou você não tem permissão.", "border-erro text-erro");
+      } else {
+        adicionarToast(
+          error.message || "Não foi possível salvar a configuração.",
+          "border-erro text-erro"
+        );
+      }
     }
   }
 
