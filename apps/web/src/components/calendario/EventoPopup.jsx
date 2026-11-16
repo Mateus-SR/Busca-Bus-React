@@ -93,13 +93,13 @@ export default function EventoPopup({
 
 	return (
 		<div
-			className="fixed inset-0 z-[1400] flex items-center justify-center bg-black/30 px-4 py-6"
+			className="fixed inset-0 z-1400 flex items-center justify-center bg-black/30 px-4 py-6"
 			onClick={onClose}
 			role="presentation"
 		>
 			<div
 				ref={dialogoRef}
-				className="font-inter relative w-full max-w-sm rounded-2xl bg-gray-200 p-5 text-black shadow-xl"
+				className="font-inter relative max-h-full w-full max-w-sm overflow-y-auto rounded-2xl bg-gray-200 p-5 text-black shadow-xl"
 				onClick={(e) => e.stopPropagation()}
 				role="dialog"
 				aria-modal="true"
@@ -161,7 +161,7 @@ export default function EventoPopup({
 
 				{confirmacaoAberta && (
 					<div
-						className="fixed inset-0 z-[1500] flex items-center justify-center bg-black/50 px-4 py-6"
+						className="fixed inset-0 z-1500 flex items-center justify-center bg-black/50 px-4 py-6"
 						role="presentation"
 						onClick={() => !excluindo && setConfirmacaoAberta(false)}
 					>
@@ -171,17 +171,24 @@ export default function EventoPopup({
 							aria-modal="true"
 							aria-labelledby="confirmar-exclusao-titulo"
 							aria-describedby="confirmar-exclusao-descricao"
-							className="font-inter w-full max-w-sm rounded-2xl bg-white p-6 text-black shadow-xl"
+							className="font-inter max-h-full w-full max-w-sm overflow-y-auto rounded-2xl bg-white p-6 text-black shadow-xl"
 							onClick={(e) => e.stopPropagation()}
 						>
 							<h2 id="confirmar-exclusao-titulo" className="text-lg font-bold">
 								Excluir evento?
 							</h2>
-							<p id="confirmar-exclusao-descricao" className="mt-2 text-sm text-gray-700">
-								Tem certeza de que deseja excluir “{evento.titulo}”? Esta ação não pode ser desfeita.
+							<p
+								id="confirmar-exclusao-descricao"
+								className="mt-2 text-sm text-gray-700"
+							>
+								Tem certeza de que deseja excluir “{evento.titulo}”? Esta ação
+								não pode ser desfeita.
 							</p>
 							{erroExclusao && (
-								<p role="alert" className="mt-3 text-sm font-semibold text-red-700">
+								<p
+									role="alert"
+									className="mt-3 text-sm font-semibold text-red-700"
+								>
 									{erroExclusao}
 								</p>
 							)}

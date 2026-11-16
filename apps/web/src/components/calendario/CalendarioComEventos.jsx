@@ -7,12 +7,14 @@ import { ehAdmin } from '@busca-bus/core';
 import { useAuth } from '@/contexts/AuthContext';
 import { excluirEvento, listarEventos, listarFatecs } from '@/lib/eventosApi';
 import CalendarioView from './CalendarioView';
+import SeletorFatec from './SeletorFatec';
 
 export default function CalendarioComEventos() {
 	const { usuario, carregando, accessToken } = useAuth();
 	const [eventos, setEventos] = useState(null);
 	const [fatecs, setFatecs] = useState([]);
 	const [erro, setErro] = useState('');
+	const [fatecEscolhidaId, setFatecEscolhidaId] = useState(null);
 
 	const carregar = useCallback(async () => {
 		try {
@@ -39,12 +41,17 @@ export default function CalendarioComEventos() {
 
 	const removerEvento = async (idEvento) => {
 		await excluirEvento(accessToken, idEvento);
-		setEventos((atuais) => atuais.filter((evento) => evento.id_evento !== idEvento));
+		setEventos((atuais) =>
+			atuais.filter((evento) => evento.id_evento !== idEvento)
+		);
 	};
 
 	if (erro) {
 		return (
-			<div role="alert" className="border-borda mt-6 rounded-xl border p-6 text-center">
+			<div
+				role="alert"
+				className="border-borda mt-6 rounded-xl border p-6 text-center"
+			>
 				<p className="text-erro font-semibold">{erro}</p>
 				<button
 					type="button"
@@ -58,20 +65,33 @@ export default function CalendarioComEventos() {
 	}
 
 	if (!eventos || carregando) {
-		return <div className="mt-6 h-96 animate-pulse rounded bg-gray-100" aria-hidden="true" />;
+		return (
+			<div
+				className="mt-6 h-96 animate-pulse rounded bg-gray-100"
+				aria-hidden="true"
+			/>
+		);
 	}
 
-	const fatec =
+	const fatecPadrao =
 		fatecs.find((item) => item.id_fac === usuario?.fac_id) ??
 		fatecs.find((item) => /zona leste/i.test(item.nome_fac));
-	const eventosDaFatec = fatec ? eventos.filter((evento) => evento.fac_id === fatec.id_fac) : eventos;
+	const fatec =
+		fatecs.find((item) => item.id_fac === fatecEscolhidaId) ?? fatecPadrao;
+	const eventosDaFatec = fatec
+		? eventos.filter((evento) => evento.fac_id === fatec.id_fac)
+		: eventos;
 
 	return (
 		<>
 			<div className="flex flex-wrap items-center justify-between gap-3">
-				<div className="text-sptrans text-sm font-black tracking-[0.18em] uppercase">
-					{fatec ? fatec.nome_fac : 'Eventos das Fatecs'}
-				</div>
+				{fatec && fatecs.length > 1 ? (
+					<SeletorFatec fatecs={fatecs} selecionadaId={fatec.id_fac} onEscolher={setFatecEscolhidaId} />
+				) : (
+					<div className="text-sptrans text-sm font-black tracking-[0.18em] uppercase">
+						{fatec ? fatec.nome_fac : 'Eventos das Fatecs'}
+					</div>
+				)}
 
 				{ehAdmin(usuario?.role) && (
 					<Link
