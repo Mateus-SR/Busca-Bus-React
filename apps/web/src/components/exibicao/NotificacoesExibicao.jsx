@@ -9,9 +9,11 @@ import {
   chaveDoOnibus,
   listarSeguidas,
 } from "@busca-bus/core";
+import AvisosDoSistema from "@/components/exibicao/AvisosDoSistema";
 import ToastsNotificacao from "@/components/exibicao/ToastsNotificacao";
 import useMontado from "@/hooks/useMontado";
 import useNotificacoesOnibus from "@/hooks/useNotificacoesOnibus";
+import { mostrarNotificacaoSistema } from "@/lib/notificacoesSistema";
 import { useSeguidasStore } from "@/store/useSeguidasStore";
 
 const MAXIMO_TOASTS = 3;
@@ -52,8 +54,11 @@ export default function NotificacoesExibicao({ codigo, onibus, pronto, pontos })
   const fecharToast = useCallback((id) => setToasts((atuais) => atuais.filter((toast) => toast.id !== id)), []);
 
   const entregar = useCallback((notificacoes, { abaVisivel }) => {
-    // Com a aba oculta o toast ninguém veria; a notificação do sistema (camada 2) cuida desse caso.
-    if (!abaVisivel) return;
+    // Aba visível: toast. Aba oculta: notificação do sistema (se a pessoa ativou). Nunca as duas ao mesmo tempo.
+    if (!abaVisivel) {
+      for (const notificacao of notificacoes) void mostrarNotificacaoSistema(notificacao);
+      return;
+    }
     const agora = Date.now();
     setToasts((atuais) => {
       const tags = new Set(notificacoes.map((notificacao) => notificacao.tag));
@@ -102,14 +107,17 @@ export default function NotificacoesExibicao({ codigo, onibus, pronto, pontos })
   }, [aberto, fechar]);
 
   // Só para testar a entrega sem esperar o radar: não existe no build de produção.
-  function simularAviso() {
+  // Com `aoVivo` falso, o aviso sai depois de 5 s como se a aba estivesse oculta (dá tempo de trocar de aba).
+  function simularAviso(abaVisivel) {
     const linha = seguidas[0] ?? linhasNoRadar[0] ?? { codigoLetreiro: "273D-10", sentidoLinha: "Metrô Arthur Alvim" };
-    entregar([{
+    const disparar = () => entregar([{
       tag: `simulado:${Date.now()}`,
       titulo: `Linha ${linha.codigoLetreiro} · chegando`,
       corpo: `Sentido ${linha.sentidoLinha} · previsão simulada`,
       eventos: [],
-    }], { abaVisivel: true });
+    }], { abaVisivel });
+    if (abaVisivel) disparar();
+    else setTimeout(disparar, 5000);
   }
 
   return (
@@ -163,6 +171,8 @@ export default function NotificacoesExibicao({ codigo, onibus, pronto, pontos })
               Escolha uma linha e o sentido para receber avisos aqui, neste dispositivo, enquanto esta página estiver
               aberta. Nada é enviado ao servidor.
             </p>
+
+            <AvisosDoSistema />
 
             <h3 className="mt-5 text-sm font-extrabold uppercase">Linhas que você segue</h3>
             {seguidas.length === 0 ? (
@@ -239,13 +249,22 @@ export default function NotificacoesExibicao({ codigo, onibus, pronto, pontos })
             )}
 
             {process.env.NODE_ENV !== "production" && (
-              <button
-                type="button"
-                onClick={simularAviso}
-                className="mt-5 cursor-pointer text-xs text-texto-desabilitado underline hover:text-texto-suave"
-              >
-                Simular aviso (só em desenvolvimento)
-              </button>
+              <div className="mt-5 flex flex-wrap gap-x-4 gap-y-1">
+                <button
+                  type="button"
+                  onClick={() => simularAviso(true)}
+                  className="cursor-pointer text-xs text-texto-desabilitado underline hover:text-texto-suave"
+                >
+                  Simular aviso (só em desenvolvimento)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => simularAviso(false)}
+                  className="cursor-pointer text-xs text-texto-desabilitado underline hover:text-texto-suave"
+                >
+                  Simular aviso com a aba oculta, em 5 s (só em desenvolvimento)
+                </button>
+              </div>
             )}
           </div>
         </div>,
