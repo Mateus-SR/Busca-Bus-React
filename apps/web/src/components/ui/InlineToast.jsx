@@ -3,9 +3,31 @@
 
 import { createPortal } from "react-dom";
 import useMontado from "@/hooks/useMontado";
+import { useEffect, useState } from "react";
 
 export default function InlineToast({ mensagens = [], mensagem = null }) {
   const montado = useMontado();
+
+  const mensagemUnica = mensagens.length === 0 && Boolean(mensagem);
+  const [saindo, setSaindo] = useState(false);
+  const [visivel, setVisivel] = useState(true);
+
+  useEffect(() => {
+    if (!mensagemUnica) return;
+
+    const timeoutSaida = setTimeout(() => {
+      setSaindo(true);
+    }, 3000);
+
+    const timeoutRemover = setTimeout(() => {
+      setVisivel(false);
+    }, 3700);
+
+    return () => {
+      clearTimeout(timeoutSaida);
+      clearTimeout(timeoutRemover);
+    };
+  }, [mensagemUnica, mensagem?.id]);
 
   const lista = mensagens.length > 0
     ? mensagens
@@ -13,7 +35,7 @@ export default function InlineToast({ mensagens = [], mensagem = null }) {
       ? [mensagem]
       : [];
 
-  if (!montado || lista.length === 0) return null;
+  if (!montado || lista.length === 0 || (mensagemUnica && !visivel)) return null;
 
   const estilosAnimacao = (
     <style>{`
@@ -52,7 +74,7 @@ export default function InlineToast({ mensagens = [], mensagem = null }) {
           aria-live="polite"
           className={`rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-2xl ${item.cor || ""}`}
           style={{
-            animation: item.saindo
+            animation: (mensagemUnica ? saindo : item.saindo)
               ? "toastSaida 0.7s ease-in forwards"
               : "toastEntrada 0.25s ease-out both",
           }}
