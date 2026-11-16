@@ -70,6 +70,18 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
     }, 2500);
   }
 
+
+  useEffect(() => {
+    if (!mensagem) return;
+
+    const timeout = setTimeout(() => {
+      setMensagem("");
+    }, 3500);
+
+    return () => clearTimeout(timeout);
+  }, [mensagem]);
+
+
   useEffect(() => {
     if (!API_URL || !accessToken) {
       setCarregandoDados(false);
@@ -397,11 +409,12 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
           </button>
         </div>
 
-        {mensagem && (
-          <p className="mt-5 text-center font-semibold text-acento">
-            {mensagem}
-          </p>
-        )}
+        <p
+          className={`mt-5 text-center font-semibold text-acento transition-opacity duration-1000 ${mensagem ? "opacity-100" : "opacity-0"
+            }`}
+        >
+          {mensagem || "\u00A0"}
+        </p>
       </form>
 
       <ConfirmarSalvamentoModal
