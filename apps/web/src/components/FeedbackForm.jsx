@@ -1,15 +1,14 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star, Send, CheckCircle2 } from "lucide-react";
+import { Star, Send, CheckCircle2, Pencil } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-export default function FeedbackForm() {
-  const { accessToken } = useAuth();
+export default function FeedbackForm({ aoSalvar, iniciarEditando = false }) {
+  const { accessToken, carregando, renovarSessao, logout } = useAuth();
 
   const [satisfacaoGeral, setSatisfacaoGeral] = useState(null);
   const [navegacao, setNavegacao] = useState(null);
@@ -19,22 +18,56 @@ export default function FeedbackForm() {
 
   const [verificando, setVerificando] = useState(true);
   const [jaAvaliou, setJaAvaliou] = useState(false);
+  const [editando, setEditando] = useState(iniciarEditando);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
 
+  // Faz requisição autenticada renovando o token automaticamente se der 401
+  async function fetchAutenticado(url, opcoes = {}) {
+    let tokenAtual =
+      accessToken ||
+      localStorage.getItem("accessToken") ||
+      sessionStorage.getItem("accessToken");
+
+    let resposta = await fetch(url, {
+      ...opcoes,
+      headers: {
+        ...opcoes.headers,
+        Authorization: `Bearer ${tokenAtual}`,
+      },
+    });
+
+    if (resposta.status === 401 && renovarSessao) {
+      const novoToken = await renovarSessao();
+      if (novoToken) {
+        resposta = await fetch(url, {
+          ...opcoes,
+          headers: {
+            ...opcoes.headers,
+            Authorization: `Bearer ${novoToken}`,
+          },
+        });
+      } else {
+        await logout();
+      }
+    }
+
+    return resposta;
+  }
+
   useEffect(() => {
-    if (!accessToken) return;
+    if (carregando) return;
+
+    if (!accessToken) {
+      setVerificando(false);
+      return;
+    }
 
     let cancelado = false;
 
     async function verificarAvaliacao() {
       try {
-        const resposta = await fetch(`${API_URL}/v1/avaliacoes/minha`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
+        const resposta = await fetchAutenticado(`${API_URL}/v1/avaliacoes/minha`);
         const dados = await resposta.json().catch(() => ({}));
 
         if (!resposta.ok) {
@@ -42,7 +75,16 @@ export default function FeedbackForm() {
         }
 
         if (!cancelado) {
-          setJaAvaliou(dados.jaAvaliou);
+          const avaliacaoExistente = dados.avaliacao;
+          setJaAvaliou(Boolean(dados.jaAvaliou || avaliacaoExistente));
+
+          if (avaliacaoExistente) {
+            setSatisfacaoGeral(avaliacaoExistente.satisfacaoGeral ?? null);
+            setNavegacao(avaliacaoExistente.navegacao ?? null);
+            setAjudaViagem(avaliacaoExistente.ajudaViagem ?? "");
+            setAvaliacaoProjeto(avaliacaoExistente.avaliacaoProjeto ?? null);
+            setSugestoes(avaliacaoExistente.sugestoes ?? "");
+          }
         }
       } catch (error) {
         if (!cancelado) {
@@ -60,7 +102,7 @@ export default function FeedbackForm() {
     return () => {
       cancelado = true;
     };
-  }, [accessToken]);
+  }, [accessToken, carregando]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -78,11 +120,10 @@ export default function FeedbackForm() {
     setEnviando(true);
 
     try {
-      const resposta = await fetch(`${API_URL}/v1/avaliacoes`, {
+      const resposta = await fetchAutenticado(`${API_URL}/v1/avaliacoes`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           satisfacaoGeral,
@@ -106,6 +147,10 @@ export default function FeedbackForm() {
       }
 
       setJaAvaliou(true);
+      setEditando(false);
+      if (aoSalvar) {
+        await aoSalvar(dados.avaliacao);
+      }
     } catch (error) {
       setErro(error.message);
     } finally {
@@ -123,7 +168,7 @@ export default function FeedbackForm() {
             onClick={() => alterarValor(estrela)}
             aria-label={`${estrela} de 5 estrelas`}
             aria-pressed={valor === estrela}
-            className="focus:outline-none transition-transform hover:scale-110"
+            className="cursor-pointer focus:outline-none transition-transform hover:scale-110"
           >
             <Star
               className={`w-8 h-8 ${
@@ -138,7 +183,7 @@ export default function FeedbackForm() {
     );
   }
 
-  if (verificando) {
+  if (carregando || verificando) {
     return (
       <div className="p-8 text-center bg-superficie rounded-2xl">
         Verificando sua avaliação...
@@ -146,7 +191,7 @@ export default function FeedbackForm() {
     );
   }
 
-  if (jaAvaliou) {
+  if (jaAvaliou && !editando) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-superficie rounded-2xl border-2 border-current/10 text-center">
         <CheckCircle2 className="w-16 h-16 text-green-500 mb-4" />
@@ -156,6 +201,17 @@ export default function FeedbackForm() {
         <p className="opacity-70 mt-2">
           Muito obrigado por ajudar a melhorar o BuscaBus.
         </p>
+        <button
+          type="button"
+          onClick={() => {
+            setErro("");
+            setEditando(true);
+          }}
+          className="mt-5 cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-current/20 hover:bg-superficie-alt text-sm font-bold transition"
+        >
+          <Pencil className="w-4 h-4" />
+          Editar minha avaliação
+        </button>
       </div>
     );
   }
@@ -230,19 +286,38 @@ export default function FeedbackForm() {
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={
-          enviando ||
-          satisfacaoGeral === null ||
-          navegacao === null ||
-          avaliacaoProjeto === null
-        }
-        className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        <Send className="w-4 h-4" />
-        {enviando ? "Enviando..." : "Enviar Avaliação"}
-      </button>
+      <div className="flex flex-wrap gap-3">
+        <button
+          type="submit"
+          disabled={
+            enviando ||
+            satisfacaoGeral === null ||
+            navegacao === null ||
+            avaliacaoProjeto === null
+          }
+          className="cursor-pointer w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Send className="w-4 h-4" />
+          {enviando
+            ? "Salvando..."
+            : jaAvaliou
+            ? "Salvar Alterações"
+            : "Enviar Avaliação"}
+        </button>
+
+        {editando && (
+          <button
+            type="button"
+            onClick={() => {
+              setErro("");
+              setEditando(false);
+            }}
+            className="cursor-pointer w-full sm:w-auto px-6 py-3 border-2 border-current/20 hover:bg-superficie-alt font-bold rounded-xl transition-colors"
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   );
 }

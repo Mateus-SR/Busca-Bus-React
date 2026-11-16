@@ -44,6 +44,7 @@ export function exigirAutenticacao(config, sessoes) {
     }
   };
 }
+
 export function exigirAdmin(config, sessoes) {
   const autenticado = exigirAutenticacao(config, sessoes);
 

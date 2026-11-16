@@ -1,4 +1,3 @@
-
 "use client";
 
 import { createContext, useContext, useEffect, useState, useRef } from "react";
@@ -132,7 +131,6 @@ export function AuthProvider({ children }) {
     setAccessToken(dados.accessToken);
     return dados;
   }
-
 
   async function logout() {
     const refreshToken =
@@ -269,7 +267,6 @@ export function AuthProvider({ children }) {
     };
   }, [accessToken]);
 
-
   async function verificarSessao(token = accessToken) {
     if (!token) return false;
 
@@ -305,7 +302,6 @@ export function AuthProvider({ children }) {
       return false;
     }
   }
-
 
   async function atualizarAvatar(avatarId) {
     if (!accessToken) throw new Error("Sua sessão expirou. Entre novamente.");
@@ -368,6 +364,7 @@ export function AuthProvider({ children }) {
         accessToken,
         login,
         logout,
+        renovarSessao,
         atualizarAvatar,
         atualizarInstituicao,
         estaLogado: !!usuario,

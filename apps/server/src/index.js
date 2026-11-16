@@ -27,6 +27,7 @@ if (config.smtpHost && config.smtpUser && config.smtpPass) {
 } else {
   console.warn("[email] Configurações SMTP não encontradas.");
 }
+
 const db = await connectDatabase(config);
 const clienteSptransReal = criarClienteSptrans(config);
 const simulador = config.simulacaoHabilitada
