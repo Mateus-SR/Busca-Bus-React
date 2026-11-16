@@ -33,7 +33,7 @@ export default function ExibicaoLive({ codigo }) {
   const indicePontoRodizioRef = useRef(0);
   const [permitirMultiplosPorLinha, setPermitirMultiplosPorLinha] = useState(false);
   const [buscaGlobal, setBuscaGlobal] = useState("");
-  const [ordenacaoGlobal, setOrdenacaoGlobal] = useState("padrao");
+  const [ordenacaoGlobal, setOrdenacaoGlobal] = useState("tempo");
   const [atualizacaoSolicitada, setAtualizacaoSolicitada] = useState(0);
   const [mensagemAcao, setMensagemAcao] = useState(null);
   const estadoConexaoAnterior = useRef(null);

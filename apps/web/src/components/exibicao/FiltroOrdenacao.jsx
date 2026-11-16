@@ -24,9 +24,8 @@ export default function FiltroOrdenacao({
 					onChange={(e) => aoMudarOrdenacao(e.target.value)}
 					className="w-full cursor-pointer rounded-full border border-borda bg-superficie px-4 py-3 text-center text-sm font-bold text-texto-suave focus:ring-2 focus:ring-acento focus:outline-none sm:py-2"
 				>
-					<option value="padrao">Ordenar: Padrão</option>
-					<option value="nome">Nome (A-Z)</option>
 					<option value="tempo">Horário</option>
+					<option value="nome">Ordem alfabética (A-Z)</option>
 				</select>
 			</div>
 		</div>
