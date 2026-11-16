@@ -8,6 +8,7 @@ import { criarClienteApi } from "@busca-bus/core/cliente";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmarSalvamentoModal from "@/components/configuracao/ConfirmarSalvamentoModal";
+import InlineToast from "@/components/ui/InlineToast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIMITE_NOME_EXIBICAO = 25;
@@ -38,6 +39,7 @@ function converterExibicao(exibicao) {
 
 export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   const router = useRouter();
+  const [toasts, setToasts] = useState([]);
   const { usuario, accessToken, estaLogado, carregando } = useAuth();
   const existente = null;
   const [formulario, setFormulario] = useState(() => ({
@@ -54,6 +56,19 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   // Códigos que vieram de fora (página /pontos) já aparecem marcados se não tiverem 7 ou 9 dígitos, sem esperar o clique em Salvar.
   const [errosParadas, setErrosParadas] = useState(() => paradasIniciais.map((parada, indice) => ([7, 9].includes(parada.length) ? null : indice)).filter((indice) => indice !== null));
   const [carregandoDados, setCarregandoDados] = useState(Boolean(API_URL && (codigo || accessToken)));
+
+  function adicionarToast(texto, cor = "") {
+    const id = Date.now() + Math.random();
+
+    setToasts((atuais) => [
+      ...atuais,
+      { id, texto, cor },
+    ]);
+
+    setTimeout(() => {
+      setToasts((atuais) => atuais.filter((toast) => toast.id !== id));
+    }, 2500);
+  }
 
   useEffect(() => {
     if (!API_URL || !accessToken) {
@@ -144,11 +159,18 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
           ? await cliente.atualizarExibicao(codigo, dados, accessToken)
           : await cliente.criarExibicao(dados, accessToken);
         const codigoCriado = resposta.exibicao.codigo;
+        adicionarToast(
+          codigo ? "Configuração atualizada com sucesso!" : "Configuração salva com sucesso!"
+        );
+
         setSalvamento({ codigo: codigoCriado, atualizado: Boolean(codigo) });
         return;
       }
       const destino = `/exibicao?codigo=${encodeURIComponent(codigo || "Nova01")}`;
       setMensagem(codigo ? "Exibição atualizada com sucesso!" : "Exibição criada com sucesso!");
+      adicionarToast(
+        codigo ? "Configuração atualizada com sucesso!" : "Configuração salva com sucesso!"
+      );
       setSalvamento({ codigo: codigo || "Nova01", atualizado: Boolean(codigo), destino });
     } catch (error) {
       setMensagem("Não foi possível salvar a exibição.");
@@ -156,16 +178,22 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   }
 
   function adicionar() {
-    if (formulario.paradas.length < 5) atualizar("paradas", [...formulario.paradas, ""]);
+    if (formulario.paradas.length < 5) {
+      atualizar("paradas", [...formulario.paradas, ""]);
+      adicionarToast("Ponto adicionado com sucesso!");
+    }
   }
 
   function remover() {
-    if (formulario.paradas.length > 1) atualizar("paradas", formulario.paradas.slice(0, -1));
+    if (formulario.paradas.length > 1) {
+      atualizar("paradas", formulario.paradas.slice(0, -1));
+      adicionarToast("Ponto removido com sucesso!");
+    }
   }
-
 
   return (
     <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-borda bg-superficie p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10">
+      <InlineToast mensagens={toasts} />
       <h1 className="mb-8 text-center text-2xl font-bold text-texto sm:text-3xl">
         Configuração
       </h1>

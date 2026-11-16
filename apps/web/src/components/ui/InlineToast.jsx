@@ -1,34 +1,33 @@
+
 "use client";
 
-import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import useMontado from "@/hooks/useMontado";
 
-const DURACAO_MS = 1800;
+export default function InlineToast({ mensagens = [], mensagem = null }) {
+  const montado = useMontado();
 
-export default function InlineToast({ mensagem }) {
-	const [visivel, setVisivel] = useState(true);
-	const montado = useMontado();
+  const lista = mensagens.length > 0
+    ? mensagens
+    : mensagem
+      ? [mensagem]
+      : [];
 
-	useEffect(() => {
-		if (!mensagem) return;
+  if (!montado || lista.length === 0) return null;
 
-		const timeout = setTimeout(() => setVisivel(false), DURACAO_MS);
-		return () => clearTimeout(timeout);
-	}, [mensagem]);
-
-	if (!mensagem || !montado) return null;
-
-	return createPortal(
-		<div
-			role="status"
-			aria-live="polite"
-			className={`fixed top-4 right-4 z-[9999] w-[calc(100vw-2rem)] max-w-sm rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl transition-opacity duration-300 sm:top-5 sm:right-5 ${mensagem.cor || ""} ${
-				visivel ? "opacity-100" : "pointer-events-none opacity-0"
-			}`}
-		>
-			{mensagem.texto}
-		</div>,
-		document.body,
-	);
+  return createPortal(
+    <div className="fixed top-[4.5rem] right-4 z-[1100] flex w-[calc(100vw-2rem)] max-w-sm flex-col gap-2 sm:top-20 sm:right-5">
+      {lista.map((item, index) => (
+        <div
+          key={item.id ?? index}
+          role="status"
+          aria-live="polite"
+          className={`rounded-xl border border-borda-suave bg-superficie px-4 py-3 text-left text-sm font-semibold text-texto-forte shadow-xl ${item.cor || ""}`}
+        >
+          {item.texto}
+        </div>
+      ))}
+    </div>,
+    document.body
+  );
 }
