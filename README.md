@@ -69,8 +69,8 @@ Monorepo com [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) (
 │   │   └── src/
 │   │       ├── app/
 │   │       │   ├── (site)/   # Páginas públicas: início, exibição, mapa, configuração, favoritos, sobre...
-│   │       │   └── (auth)/   # login, cadastro, reset-senha (sem o cabeçalho do site)
-│   │       ├── components/   # Por domínio: layout, ui, home, exibicao, configuracao, listas, mapa, auth
+│   │       │   └── (auth)/   # login, cadastro e redefinir-senha (sem o cabeçalho do site)
+│   │       ├── components/   # Por domínio: layout, ui, home, exibicao, configuracao, listas, mapa, pontos, calendario, auth
 │   │       ├── contexts/     # Auth (mock), acessibilidade, loading, cabeçalho
 │   │       ├── hooks/        # useExibicao, useRadarOnibus (conexão Socket.IO + fallback REST)
 │   │       ├── lib/fixtures/ # Dados fictícios temporários (exibições, instituições, usuário, mapa)
@@ -172,6 +172,7 @@ O servidor cria os índices necessários ao iniciar. Veja o [formato das exibiç
 | `TEST_DISPLAY_CODE` | Não | `dev` | Código da exibição de teste local (sem MongoDB). |
 | `TEST_STOP_CODE` / `TEST_STOP_CODES` | Não | `650004840` | Parada(s) da exibição de teste local; `TEST_STOP_CODES` aceita vários códigos separados por vírgula. |
 | `ENCRYPTION_KEY`, `APP_URL` | Não | — | Reservadas para recursos futuros; o servidor atual lê, mas ainda não usa. |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM` | Não | `465` / `false` / — | Configuração opcional para envio de e-mails; `EMAIL_FROM` usa `SMTP_USER` quando não informado. |
 
 ### Site (`apps/web/.env.local`, ou variável do ambiente de build)
 | Variável | Obrigatória | Descrição |
@@ -207,7 +208,8 @@ O repositório já traz um **Blueprint do Render** (`render.yaml`, na raiz) com 
    - `MONGODB_DB`: já vem com o valor `Bus` pelo Blueprint; altere se o seu banco tiver outro nome (diferencia maiúsculas de minúsculas).
    - `SPTRANS_DEFAULT_TOKEN`: seu token do Olho Vivo.
    - `ALLOWED_ORIGINS`: a URL do site estático (ex.: `https://busca-bus-web.onrender.com`, sem barra final).
-   - `ENCRYPTION_KEY`, `APP_URL`, `EMAIL_API_KEY`: podem ficar em branco por enquanto (reservadas).
+   - `ENCRYPTION_KEY` e `APP_URL` podem ficar em branco por enquanto (reservadas).
+   - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS` e `EMAIL_FROM` são opcionais e habilitam o envio de e-mails.
    - `JWT_SECRET` é gerada automaticamente pelo Render.
 4. Quando o servidor estiver no ar, copie a URL dele (ex.: `https://busca-bus-server.onrender.com`) e, no serviço **busca-bus-web**, defina `NEXT_PUBLIC_API_URL` com essa URL.
 5. Faça um **novo deploy** do site (a variável é embutida no build do Next.js).
@@ -324,10 +326,10 @@ Limites por conexão: 30 eventos a cada 10 s e mensagens de até 64 KB.
 ## Estado atual e limitações conhecidas
 - **Rotas por query string.** O site é exportado como estático (`output: "export"`), então qualquer código de exibição funciona sem gerar página nova: `/exibicao?codigo=XXXXXX`, `/mapa?codigo=XXXXXX` e `/configuracao?editar=XXXXXX`. As páginas leem o parâmetro com `useSearchParams` dentro de `<Suspense>`.
 - **Login do site é simulado.** O `AuthContext` usa um usuário de mentira guardado no `localStorage`. A API de login existe no servidor, mas o site ainda não a usa.
-- **Favoritos, configuração, listas e mapa usam fixtures** (`apps/web/src/lib/fixtures/`). Sem `NEXT_PUBLIC_API_URL`, a exibição também mostra ônibus fictícios.
+- **Favoritos, configuração, listas e mapa ainda usam fixtures** (`apps/web/src/lib/fixtures/`) em partes do fluxo. Sem `NEXT_PUBLIC_API_URL`, a exibição também mostra ônibus fictícios; com a variável definida, ela tenta usar o servidor por WebSocket e fallback REST.
 - **Sem rota para criar exibições** (veja [Exibições no MongoDB](#exibições-no-mongodb)); recuperação de senha e renovação de sessão ainda não estão implementadas.
 - **`apps/mobile` é só um esqueleto** (componentes e stores iniciais); ainda não há app para executar.
-- **Não há testes automatizados** configurados. A validação é feita com lint, build e verificação manual.
+- **Os testes automatizados estão concentrados em `packages/core/test`** e usam o executor nativo `node --test`. O site e o servidor são validados com lint, build e verificação manual.
 
 ## Comandos
 Todos rodam a partir da raiz do repositório.
@@ -340,10 +342,11 @@ Todos rodam a partir da raiz do repositório.
 | `npm run build` | Gera o site estático em `apps/web/out` |
 | `npm run build:server` | Verifica a sintaxe do servidor (`node --check`; não há etapa de compilação) |
 | `npm run start:server` | Inicia o servidor (produção) |
+| `npm test` | Executa os testes automatizados de `packages/core` |
 | `npm run importar-gtfs --workspace apps/server -- <stops.txt>` | Importa os pontos do GTFS para o MongoDB |
 | `npm run lint` | ESLint do site |
 
-Antes de abrir um pull request, rode `npm run lint`, `npm run build` e `npm run build:server`.
+Antes de abrir um pull request, rode `npm test`, `npm run lint`, `npm run build` e `npm run build:server`.
 
 ## Referências
 - [CLAUDE.md](CLAUDE.md): arquitetura e convenções detalhadas

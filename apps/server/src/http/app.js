@@ -18,13 +18,16 @@ export function createApp(config, db, poller, io = null, servicoEmail = null) {
   app.use(cors({ origin: config.allowedOrigins.length ? config.allowedOrigins : true, credentials: false }));
   app.use(express.json({ limit: "64kb" }));
   app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: "draft-8", legacyHeaders: false }));
+
   app.use("/v1/health", healthRoute(config, db));
   app.use("/v1/auth", rateLimit({ windowMs: 15 * 60_000, limit: 30 }), authRoutes({ config, db, servicoEmail }));
   app.use("/v1/exibicoes", exibicoesRoutes(db, config, poller, io));
   app.use("/v1/me", meRoutes(config, db));
   app.use("/v1/fatecs", fatecsRoutes(db));
   app.use("/v1/pontos", pontosRoutes(db));
-    app.use("/v1/eventos", eventosRoutes(db, config));
+  app.use("/v1/eventos", eventosRoutes(db, config));
+  app.use("/v1/avaliacoes", avaliacoesRoutes(db, config));
+
   app.get("/v1/paradas/:codigo/validar", async (req, res, next) => {
     try {
       const snapshot = await poller.consultar(req.params.codigo);
@@ -33,10 +36,11 @@ export function createApp(config, db, poller, io = null, servicoEmail = null) {
       return next(error);
     }
   });
+
   app.use((error, _req, res, _next) => {
     console.error(error);
     res.status(500).json({ erro: "Erro interno do servidor." });
   });
-  app.use("/v1/avaliacoes", avaliacoesRoutes(db, config));
+
   return app;
 }

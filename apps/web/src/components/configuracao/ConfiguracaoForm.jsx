@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Minus, Plus, Save } from "lucide-react";
+import { Plus, Minus, Save, Info } from "lucide-react";
 import { criarClienteApi } from "@busca-bus/core/cliente";
 import InstituicaoSelect from "@/components/ui/InstituicaoSelect";
 import { useAuth } from "@/contexts/AuthContext";
 import ConfirmarSalvamentoModal from "@/components/configuracao/ConfirmarSalvamentoModal";
+import InlineToast from "@/components/ui/InlineToast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const LIMITE_NOME_EXIBICAO = 25;
@@ -38,6 +39,7 @@ function converterExibicao(exibicao) {
 
 export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   const router = useRouter();
+  const [toasts, setToasts] = useState([]);
   const { usuario, accessToken, estaLogado, carregando } = useAuth();
   const existente = null;
   const [formulario, setFormulario] = useState(() => ({
@@ -50,9 +52,47 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
   }));
   const [mensagem, setMensagem] = useState("");
   const [salvamento, setSalvamento] = useState(null);
+  const [mostrarAjudaCodigo, setMostrarAjudaCodigo] = useState(false);
   // Códigos que vieram de fora (página /pontos) já aparecem marcados se não tiverem 7 ou 9 dígitos, sem esperar o clique em Salvar.
   const [errosParadas, setErrosParadas] = useState(() => paradasIniciais.map((parada, indice) => ([7, 9].includes(parada.length) ? null : indice)).filter((indice) => indice !== null));
   const [carregandoDados, setCarregandoDados] = useState(Boolean(API_URL && (codigo || accessToken)));
+
+
+  function adicionarToast(texto, cor = "") {
+    const id = Date.now() + Math.random();
+
+    setToasts((atuais) => [
+      ...atuais,
+      { id, texto, cor, saindo: false },
+    ]);
+
+    setTimeout(() => {
+      setToasts((atuais) =>
+        atuais.map((toast) =>
+          toast.id === id ? { ...toast, saindo: true } : toast
+        )
+      );
+    }, 3000);
+
+    setTimeout(() => {
+      setToasts((atuais) =>
+        atuais.filter((toast) => toast.id !== id)
+      );
+    }, 3700);
+  }
+
+
+
+  useEffect(() => {
+    if (!mensagem) return;
+
+    const timeout = setTimeout(() => {
+      setMensagem("");
+    }, 3500);
+
+    return () => clearTimeout(timeout);
+  }, [mensagem]);
+
 
   useEffect(() => {
     if (!API_URL || !accessToken) {
@@ -112,7 +152,10 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
       return indices;
     }, []);
     setErrosParadas([...paradasVazias, ...indicesInvalidos, ...indicesDuplicados]);
-    if (!formulario.token.trim()) return setMensagem("Token da API é obrigatório.");
+    if (!formulario.token.trim()) {
+      adicionarToast("O token da API é obrigatório.", "border-erro text-erro");
+      return;
+    }
     if (paradasVazias.length) {
       return setMensagem("Preencha todos os códigos de ponto ou remova os campos vazios.");
     }
@@ -143,28 +186,50 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
           ? await cliente.atualizarExibicao(codigo, dados, accessToken)
           : await cliente.criarExibicao(dados, accessToken);
         const codigoCriado = resposta.exibicao.codigo;
+        adicionarToast(
+          codigo ? "Configuração atualizada com sucesso!" : "Configuração salva com sucesso!"
+        );
+
         setSalvamento({ codigo: codigoCriado, atualizado: Boolean(codigo) });
         return;
       }
       const destino = `/exibicao?codigo=${encodeURIComponent(codigo || "Nova01")}`;
       setMensagem(codigo ? "Exibição atualizada com sucesso!" : "Exibição criada com sucesso!");
+      adicionarToast(
+        codigo ? "Configuração atualizada com sucesso!" : "Configuração salva com sucesso!"
+      );
       setSalvamento({ codigo: codigo || "Nova01", atualizado: Boolean(codigo), destino });
     } catch (error) {
-      setMensagem("Não foi possível salvar a exibição.");
+      if (error.codigo === "REDE") {
+        adicionarToast("Não foi possível conectar ao servidor.", "border-erro text-erro");
+      } else if (error.status === 401 || error.status === 403) {
+        adicionarToast("Sua sessão expirou ou você não tem permissão.", "border-erro text-erro");
+      } else {
+        adicionarToast(
+          error.message || "Não foi possível salvar a configuração.",
+          "border-erro text-erro"
+        );
+      }
     }
   }
 
   function adicionar() {
-    if (formulario.paradas.length < 5) atualizar("paradas", [...formulario.paradas, ""]);
+    if (formulario.paradas.length < 5) {
+      atualizar("paradas", [...formulario.paradas, ""]);
+      adicionarToast("Ponto adicionado com sucesso!");
+    }
   }
 
   function remover() {
-    if (formulario.paradas.length > 1) atualizar("paradas", formulario.paradas.slice(0, -1));
+    if (formulario.paradas.length > 1) {
+      atualizar("paradas", formulario.paradas.slice(0, -1));
+      adicionarToast("Ponto removido com sucesso!");
+    }
   }
-
 
   return (
     <div className="relative mx-2 my-4 w-auto max-w-4xl rounded-xl border border-borda bg-superficie p-4 shadow-2xl sm:mx-auto sm:my-8 sm:p-10">
+      <InlineToast mensagens={toasts} />
       <h1 className="mb-8 text-center text-2xl font-bold text-texto sm:text-3xl">
         Configuração
       </h1>
@@ -274,12 +339,32 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
         </div>
 
         <div>
-          <div className="mb-2 flex justify-between text-sm font-medium text-texto-suave">
+          <div className="relative mb-2 flex justify-between text-sm font-medium text-texto-suave">
             <label>Código do ponto de ônibus</label>
 
-            <span className="cursor-pointer underline transition hover:text-destaque">
+            <button
+              type="button"
+              onClick={() => setMostrarAjudaCodigo((atual) => !atual)}
+              className="cursor-pointer underline transition hover:text-destaque"
+            >
               Onde achar o código
-            </span>
+            </button>
+            {mostrarAjudaCodigo && (
+              <div className="absolute right-0 bottom-full z-50 mb-2 w-80 rounded-xl border border-borda bg-superficie p-4 text-justify text-sm leading-relaxed font-normal text-texto shadow-xl">
+                <div className="mb-3 flex items-center gap-2 text-left font-semibold">
+                  <Info size={18} className="shrink-0 text-destaque" />
+                  Onde encontrar o código?
+                </div>
+
+                <p>
+                  Você pode encontrar o código do ponto no folheto colado ao totem indicativo de parada.
+                </p>
+
+                <p className="mt-2">
+                  Acima das informações do folheto, procure um número grande. Esse é o código do ponto que você deve informar no Busca-Bus.
+                </p>
+              </div>
+            )}
           </div>
 
           {formulario.paradas.map((parada, indice) => {
@@ -302,8 +387,8 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
                   placeholder="exemplo: 650004840"
                   inputMode="numeric"
                   className={`mb-2 w-full rounded-md border px-4 py-3 text-lg focus:ring-2 focus:ring-foco focus:outline-none ${errosParadas.includes(indice)
-                      ? "border-erro bg-erro/10"
-                      : "border-borda"
+                    ? "border-erro bg-erro/10"
+                    : "border-borda"
                     }`}
                 />
 
@@ -348,11 +433,12 @@ export default function ConfiguracaoForm({ codigo, paradasIniciais = [] }) {
           </button>
         </div>
 
-        {mensagem && (
-          <p className="mt-5 text-center font-semibold text-acento">
-            {mensagem}
-          </p>
-        )}
+        <p
+          className={`mt-5 text-center font-semibold text-acento transition-opacity duration-1000 ${mensagem ? "opacity-100" : "opacity-0"
+            }`}
+        >
+          {mensagem || "\u00A0"}
+        </p>
       </form>
 
       <ConfirmarSalvamentoModal

@@ -18,7 +18,7 @@ export default function ExibicaoTable({
 	mostrarFiltro = true,
 }) {
 	const [buscaLocal, setBuscaLocal] = useState("");
-	const [ordenacaoLocal, setOrdenacaoLocal] = useState("padrao");
+	const [ordenacaoLocal, setOrdenacaoLocal] = useState("tempo");
 	const busca = buscaControlada ?? buscaLocal;
 	const ordenacao = ordenacaoControlada ?? ordenacaoLocal;
 	const mudarBusca = aoMudarBusca ?? setBuscaLocal;
@@ -35,8 +35,6 @@ export default function ExibicaoTable({
 						.includes(buscaLower)
 				)
 			: onibus;
-
-		if (ordenacao === "padrao") return filtradas;
 
 		const ordenadas = [...filtradas].sort((a, b) => {
 			if (ordenacao === "nome") {

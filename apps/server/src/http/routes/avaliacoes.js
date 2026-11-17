@@ -1,87 +1,134 @@
-
 import { Router } from "express";
 import mongoose from "mongoose";
+import Avaliacao from "../../models/Avaliacao.js";
 import { exigirAutenticacao } from "../authMiddleware.js";
 
 export function avaliacoesRoutes(db, config) {
   const router = Router();
-  const avaliacoes = db?.collection("avaliacoes");
-  const protegido = exigirAutenticacao(config, db?.collection("sessoes"));
+  const sessoes =
+    db?.sessoes ||
+    db?.collections?.sessoes ||
+    mongoose.connection.collection("sessoes");
+  const autenticado = exigirAutenticacao(config, sessoes);
 
-  router.get("/minha", protegido, async (req, res, next) => {
-    if (!avaliacoes) {
-      return res.status(503).json({ erro: "Banco de dados indisponível." });
-    }
-
+  // 1. Listar todas as avaliações + médias gerais (Pública: GET /v1/avaliacoes)
+  router.get("/", async (_req, res, next) => {
     try {
-      const existente = await avaliacoes.findOne({
-        usuarioId: new mongoose.Types.ObjectId(req.usuarioId),
-      });
+      const avaliacoes = await Avaliacao.aggregate([
+        { $sort: { updatedAt: -1, createdAt: -1 } },
+        {
+          $lookup: {
+            from: "Users",
+            localField: "usuarioId",
+            foreignField: "_id",
+            as: "usuario",
+          },
+        },
+        {
+          $unwind: {
+            path: "$usuario",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            usuarioId: 1,
+            satisfacaoGeral: 1,
+            navegacao: 1,
+            avaliacaoProjeto: 1,
+            ajudaViagem: 1,
+            sugestoes: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            nomeUsuario: {
+              $ifNull: ["$usuario.nome", { $ifNull: ["$usuario.name", "Estudante BuscaBus"] }],
+            },
+          },
+        },
+      ]);
 
-      return res.json({
-        jaAvaliou: Boolean(existente),
+      const total = avaliacoes.length;
+      const calcularMedia = (campo) =>
+        total > 0
+          ? Number((avaliacoes.reduce((acc, item) => acc + (item[campo] || 0), 0) / total).toFixed(1))
+          : 0;
+
+      return res.status(200).json({
+        avaliacoes,
+        resumo: {
+          total,
+          mediaSatisfacaoGeral: calcularMedia("satisfacaoGeral"),
+          mediaNavegacao: calcularMedia("navegacao"),
+          mediaAvaliacaoProjeto: calcularMedia("avaliacaoProjeto"),
+        },
       });
     } catch (error) {
       return next(error);
     }
   });
 
-  router.post("/", protegido, async (req, res, next) => {
-    if (!avaliacoes) {
-      return res.status(503).json({ erro: "Banco de dados indisponível." });
-    }
-
+  // 2. Buscar avaliação do usuário logado (Protegida: GET /v1/avaliacoes/minha)
+  router.get("/minha", autenticado, async (req, res, next) => {
     try {
+      const usuarioId = new mongoose.Types.ObjectId(req.usuarioId);
+      const minhaAvaliacao = await Avaliacao.findOne({ usuarioId }).lean();
+
+      return res.status(200).json({
+        jaAvaliou: Boolean(minhaAvaliacao),
+        avaliacao: minhaAvaliacao || null,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  // 3. Criar ou Editar avaliação do usuário logado (Protegida: POST /v1/avaliacoes)
+  router.post("/", autenticado, async (req, res, next) => {
+    try {
+      const usuarioId = new mongoose.Types.ObjectId(req.usuarioId);
+
       const {
         satisfacaoGeral,
         navegacao,
+        avaliacaoProjeto,
         ajudaViagem,
-        avaliacaoProjeto,
         sugestoes,
-      } = req.body || {};
+      } = req.body;
 
-      const notas = [satisfacaoGeral, navegacao, avaliacaoProjeto];
-
-      if (!notas.every((nota) => Number.isInteger(nota) && nota >= 1 && nota <= 5)) {
+      const notas = [satisfacaoGeral, navegacao, avaliacaoProjeto].map(Number);
+      if (notas.some((n) => isNaN(n) || n < 1 || n > 5)) {
         return res.status(400).json({
-          erro: "Todas as notas devem estar entre 1 e 5.",
+          erro: "Preencha todas as notas (de 1 a 5) antes de enviar.",
         });
       }
 
-      if (
-        typeof ajudaViagem !== "string" ||
-        typeof sugestoes !== "string" ||
-        ajudaViagem.length > 1000 ||
-        sugestoes.length > 1000
-      ) {
-        return res.status(400).json({
-          erro: "Os textos devem ter no máximo 1000 caracteres.",
-        });
-      }
+      const avaliacaoSalva = await Avaliacao.findOneAndUpdate(
+        { usuarioId },
+        {
+          $set: {
+            usuarioId,
+            satisfacaoGeral: Number(satisfacaoGeral),
+            navegacao: Number(navegacao),
+            avaliacaoProjeto: Number(avaliacaoProjeto),
+            ajudaViagem: ajudaViagem ? String(ajudaViagem).trim() : "",
+            sugestoes: sugestoes ? String(sugestoes).trim() : "",
+          },
+          $setOnInsert: {
+            createdAt: new Date(),
+          },
+        },
+        {
+          new: true,
+          upsert: true,
+        }
+      );
 
-      const novaAvaliacao = {
-        usuarioId: new mongoose.Types.ObjectId(req.usuarioId),
-        satisfacaoGeral,
-        navegacao,
-        ajudaViagem: ajudaViagem.trim(),
-        avaliacaoProjeto,
-        sugestoes: sugestoes.trim(),
-        createdAt: new Date(),
-      };
-
-      const resultado = await avaliacoes.insertOne(novaAvaliacao);
-
-      return res.status(201).json({
-        mensagem: "Avaliação enviada com sucesso.",
-        id: resultado.insertedId,
+      return res.status(200).json({
+        mensagem: "Avaliação salva com sucesso!",
+        avaliacao: avaliacaoSalva,
       });
     } catch (error) {
-      if (error.code === 11000) {
-        return res.status(409).json({
-          erro: "Você já enviou sua avaliação.",
-        });
-      }
-
       return next(error);
     }
   });
