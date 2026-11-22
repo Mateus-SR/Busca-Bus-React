@@ -13,7 +13,7 @@ function coordsPonto(ponto) {
   return [lat, lng];
 }
 
-export default function PontosMapa({ centro, precisao, raio, pontos = [], selecionado, onSelecionar, escolhendo, onEscolherLocal, foco, onVisaoMudou }) {
+export default function PontosMapa({ centro, precisao, raio, pontos = [], selecionado, onSelecionar, escolhendo, onEscolherLocal, foco, onVisaoMudou, marcados }) {
   const containerRef = useRef(null);
   const mapaRef = useRef(null);
   const camadaCentroRef = useRef(null);
@@ -109,11 +109,13 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
         const coords = coordsPonto(ponto);
         if (!coords) return;
         const ativo = String(ponto.codigo) === String(selecionado);
+        // Pontos escolhidos para a exibição ficam com a cor de destaque e um pouco maiores, mesmo sem estarem selecionados.
+        const escolhido = ativo || Boolean(marcados?.has(String(ponto.codigo)));
         const marcador = L.circleMarker(coords, {
-          radius: ativo ? 11 : 7,
-          color: ativo ? contornoSelecionado : contorno,
-          weight: ativo ? 3 : 2,
-          fillColor: ativo ? corSelecionado : cor,
+          radius: ativo ? 11 : escolhido ? 9 : 7,
+          color: escolhido ? contornoSelecionado : contorno,
+          weight: escolhido ? 3 : 2,
+          fillColor: escolhido ? corSelecionado : cor,
           fillOpacity: 1,
           bubblingMouseEvents: false,
         })
@@ -131,7 +133,7 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
     return () => {
       cancelado = true;
     };
-  }, [mapaPronto, pontos, selecionado]);
+  }, [mapaPronto, pontos, selecionado, marcados]);
 
   useEffect(() => {
     const ponto = selecionado && pontosPorCodigoRef.current.get(String(selecionado));
@@ -144,7 +146,9 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
   useEffect(() => {
     if (mapaPronto && foco) {
       mapaRef.current.invalidateSize();
-      mapaRef.current.setView([foco.lat, foco.lng], foco.zoom ?? 17);
+      // `limites` ([[sul, oeste], [norte, leste]]) enquadra vários pontos de uma vez.
+      if (foco.limites) mapaRef.current.fitBounds(foco.limites, { padding: [40, 40], maxZoom: 17 });
+      else mapaRef.current.setView([foco.lat, foco.lng], foco.zoom ?? 17);
     }
   }, [mapaPronto, foco]);
 

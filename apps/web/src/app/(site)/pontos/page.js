@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import PontosView from "@/components/pontos/PontosView";
 
 export const metadata = {
@@ -6,5 +7,10 @@ export const metadata = {
 };
 
 export default function PontosPage() {
-  return <PontosView />;
+  // PontosView lê a URL (?parada=, ?voltar=) com useSearchParams, que exige um limite de Suspense.
+  return (
+    <Suspense fallback={<main className="min-h-screen" />}>
+      <PontosView />
+    </Suspense>
+  );
 }

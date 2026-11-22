@@ -7,7 +7,7 @@ import { formatarDistancia } from "@busca-bus/core";
 // `selecionado` = destacado no mapa; `marcado` = escolhido para criar a exibição (várias de uma vez, até o limite).
 export default function CartaoPonto({ ponto, selecionado, copiado, marcado = false, podeMarcar = true, onAlternarMarca, onSelecionar, onCopiar }) {
   return (
-    <article className={`rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
+    <article id={`ponto-${ponto.codigo}`} className={`scroll-mt-4 rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-base font-bold break-words text-texto">{ponto.nome || "Ponto sem nome"}</h3>
@@ -30,7 +30,6 @@ export default function CartaoPonto({ ponto, selecionado, copiado, marcado = fal
             Selecionar<span className="sr-only"> o ponto {ponto.nome || ponto.codigo}</span>
           </label>
         ) : null}
-        {/* Sempre disponível: se o código não tiver 7 ou 9 dígitos, o formulário avisa (a validação será ajustada numa próxima etapa). */}
         <Link
           href={`/configuracao?parada=${encodeURIComponent(ponto.codigo)}`}
           aria-label={`Criar exibição com o ponto ${ponto.nome || ponto.codigo}`}

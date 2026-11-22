@@ -20,15 +20,21 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
 
   const visiveis = useMemo(() => {
     if (!visao || !visaoPermiteBusca(visao)) return [];
+    const selecionadoNaArea = selecionado ? area.pontos.find((ponto) => String(ponto.codigo) === String(selecionado)) : null;
     const referencia = posicao ?? { lat: (visao.norte + visao.sul) / 2, lng: (visao.leste + visao.oeste) / 2 };
-    return area.pontos
+    const ordenados = area.pontos
       .filter((ponto) => dentro(ponto, visao))
       .map((ponto) => ({ ponto, metros: distanciaMetros(referencia, ponto) }))
       .sort((a, b) => a.metros - b.metros)
       .slice(0, LIMITE_LISTA)
       // A distância só aparece quando a referência é a pessoa; do centro do mapa ela não diz nada útil.
       .map(({ ponto, metros }) => (posicao ? { ...ponto, distancia: metros } : ponto));
-  }, [area.pontos, visao, posicao]);
+    // Ponto clicado no mapa que ficou fora dos mais próximos: entra no topo para a lista conseguir mostrá-lo em foco.
+    if (selecionadoNaArea && !ordenados.some((ponto) => String(ponto.codigo) === String(selecionado)) && dentro(selecionadoNaArea, visao)) {
+      return [posicao ? { ...selecionadoNaArea, distancia: distanciaMetros(referencia, selecionadoNaArea) } : selecionadoNaArea, ...ordenados];
+    }
+    return ordenados;
+  }, [area.pontos, visao, posicao, selecionado]);
 
   const aproximar = !visaoPermiteBusca(visao);
 

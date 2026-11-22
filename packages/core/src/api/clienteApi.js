@@ -91,6 +91,10 @@ export function criarClienteApi(baseUrl) {
       comQuery("/v1/pontos", { norte, sul, leste, oeste }),
       { signal: opcoes.signal },
     ),
+    obterPontosPorCodigos: (codigos, opcoes = {}) => requisicao(
+      `/v1/pontos/codigos?${new URLSearchParams(codigos.map((codigo) => ["codigo", String(codigo)]))}`,
+      { signal: opcoes.signal },
+    ),
     buscarPontos: (termo, opcoes = {}) => requisicao(comQuery("/v1/pontos/busca", { q: termo }), { signal: opcoes.signal }),
     obterRadar: (codigo, opcoes = {}) => {
       const parametros = new URLSearchParams();

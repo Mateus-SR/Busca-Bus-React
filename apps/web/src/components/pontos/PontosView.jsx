@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Crosshair, LocateFixed } from "lucide-react";
-import { formatarDistancia } from "@busca-bus/core";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Crosshair, LocateFixed } from "lucide-react";
+import { LIMITE_PARADAS_EXIBICAO, codigoParadaValido, formatarDistancia, limparCodigoParada } from "@busca-bus/core";
+import { criarClienteApi } from "@busca-bus/core/cliente";
 import useGeolocalizacao from "@/hooks/useGeolocalizacao";
 import usePontosProximos from "@/hooks/usePontosProximos";
 import usePontosNaArea, { visaoPermiteBusca } from "@/hooks/usePontosNaArea";
@@ -12,15 +14,17 @@ import CartaoPonto from "@/components/pontos/CartaoPonto";
 import ListaPontos from "@/components/pontos/ListaPontos";
 import PainelGlobal from "@/components/pontos/PainelGlobal";
 import BarraSelecao from "@/components/pontos/BarraSelecao";
+import { montarHrefCriador } from "@/components/pontos/hrefCriador";
 
 const PontosMapa = dynamic(() => import("@/components/pontos/PontosMapa"), {
   ssr: false,
   loading: () => <div className="flex h-full min-h-[240px] items-center justify-center">Carregando mapa...</div>,
 });
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RAIOS = [100, 200, 300];
 const RAIO_PADRAO = 200;
-const LIMITE_PONTOS_EXIBICAO = 5;
+const LIMITE_PONTOS_EXIBICAO = LIMITE_PARADAS_EXIBICAO;
 const PRECISAO_RUIM_METROS = 150;
 const MODOS = [
   { id: "proximos", rotulo: "Perto de mim" },
@@ -29,14 +33,29 @@ const MODOS = [
 
 const botao = "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold transition focus:ring-2 focus:ring-foco focus:outline-none sm:px-4";
 
+// Pontos que já estão no formulário do criador (?parada=...). Só dígitos válidos, sem repetir, até o limite da exibição.
+function codigosDaUrl(parametros) {
+  return [...new Set(parametros.getAll("parada").map(limparCodigoParada).filter(codigoParadaValido))].slice(0, LIMITE_PONTOS_EXIBICAO);
+}
+
 export default function PontosView() {
+  const router = useRouter();
+  const parametros = useSearchParams();
+  // `voltar=configuracao` indica que a pessoa chegou aqui a partir do criador de exibição (e `editar` qual exibição ela edita).
+  const [origemCriador] = useState(() => parametros.get("voltar") === "configuracao");
+  const [codigoEdicao] = useState(() => parametros.get("editar"));
+  const [codigosIniciais] = useState(() => codigosDaUrl(parametros));
   const geo = useGeolocalizacao();
-  const [modo, setModo] = useState("proximos");
+  const [modo, setModo] = useState(codigosIniciais.length ? "todos" : "proximos");
   const [raio, setRaio] = useState(RAIO_PADRAO);
   const [escolhendoManual, setEscolhendoManual] = useState(false);
   const [selecionado, setSelecionado] = useState(null);
   const [pontoFocado, setPontoFocado] = useState(null);
-  const [marcados, setMarcados] = useState([]);
+  const [marcados, setMarcados] = useState(() => codigosIniciais.map((codigo) => ({ codigo, nome: "" })));
+  const [avisoCriador, setAvisoCriador] = useState("");
+  const [criandoTemporaria, setCriandoTemporaria] = useState(false);
+  const [erroTemporaria, setErroTemporaria] = useState("");
+  const [rolarParaLista, setRolarParaLista] = useState(null);
   const [copiado, setCopiado] = useState(null);
   const [avisoCopia, setAvisoCopia] = useState("");
   const [visao, setVisao] = useState(null);
@@ -49,6 +68,44 @@ export default function PontosView() {
 
   useEffect(() => () => window.clearTimeout(temporizadorRef.current), []);
 
+  // Pontos vindos do criador: busca as coordenadas para desenhá-los no mapa e enquadrá-los.
+  useEffect(() => {
+    if (!API_URL || !codigosIniciais.length) return undefined;
+    const controlador = new AbortController();
+    criarClienteApi(API_URL)
+      .obterPontosPorCodigos(codigosIniciais, { signal: controlador.signal })
+      .then(({ pontos: achados = [] }) => {
+        setMarcados((atuais) => atuais.map((item) => {
+          const ponto = achados.find((achado) => String(achado.codigo) === item.codigo);
+          return ponto ? { ...item, nome: ponto.nome, lat: ponto.lat, lng: ponto.lng } : item;
+        }));
+        const semCadastro = codigosIniciais.filter((codigo) => !achados.some((achado) => String(achado.codigo) === codigo));
+        setAvisoCriador(semCadastro.length ? `Não encontramos no mapa: ${semCadastro.join(", ")}. Eles continuam na seleção.` : "");
+        if (!achados.length) return;
+        const latitudes = achados.map((ponto) => ponto.lat);
+        const longitudes = achados.map((ponto) => ponto.lng);
+        setFoco({
+          id: Date.now(),
+          lat: achados[0].lat,
+          lng: achados[0].lng,
+          zoom: 17,
+          limites: achados.length > 1 ? [[Math.min(...latitudes), Math.min(...longitudes)], [Math.max(...latitudes), Math.max(...longitudes)]] : undefined,
+        });
+      })
+      .catch((falha) => {
+        if (falha?.name !== "AbortError") setAvisoCriador("Não foi possível mostrar no mapa os pontos do formulário agora.");
+      });
+    return () => controlador.abort();
+  }, [codigosIniciais]);
+
+  // Clique num ponto do mapa: leva a lista lateral até o cartão dele (o destaque já vem do `selecionado`).
+  useEffect(() => {
+    if (!rolarParaLista) return;
+    const cartao = document.getElementById(`ponto-${rolarParaLista.codigo}`);
+    const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    cartao?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "center" });
+  }, [rolarParaLista]);
+
   const escolhendo = !global && (escolhendoManual || geo.status === "negada" || geo.status === "indisponivel");
   const imprecisa = geo.posicao?.precisao > PRECISAO_RUIM_METROS;
 
@@ -56,11 +113,11 @@ export default function PontosView() {
     setMarcados((atuais) => {
       if (atuais.some((item) => item.codigo === ponto.codigo)) return atuais.filter((item) => item.codigo !== ponto.codigo);
       if (atuais.length >= LIMITE_PONTOS_EXIBICAO) return atuais;
-      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome }];
+      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome, lat: ponto.lat, lng: ponto.lng }];
     });
   }
 
-  const codigosMarcados = new Set(marcados.map((ponto) => ponto.codigo));
+  const codigosMarcados = useMemo(() => new Set(marcados.map((ponto) => ponto.codigo)), [marcados]);
   const podeMarcar = marcados.length < LIMITE_PONTOS_EXIBICAO;
 
   function aoTrocarModo(novo) {
@@ -85,6 +142,24 @@ export default function PontosView() {
   function aoSelecionar(codigo) {
     setSelecionado(codigo);
     areaMapaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function aoSelecionarNoMapa(codigo) {
+    setSelecionado(codigo);
+    setRolarParaLista({ codigo, id: Date.now() });
+  }
+
+  async function aoCriarTemporaria() {
+    if (criandoTemporaria || !marcados.length) return;
+    setCriandoTemporaria(true);
+    setErroTemporaria("");
+    try {
+      const { exibicao } = await criarClienteApi(API_URL).criarExibicaoTemporaria(marcados.map((ponto) => ponto.codigo));
+      router.push(`/exibicao?codigo=${encodeURIComponent(exibicao.codigo)}`);
+    } catch (falha) {
+      setErroTemporaria(falha?.message || "Não foi possível criar a exibição temporária.");
+      setCriandoTemporaria(false);
+    }
   }
 
   function aoIrPara(ponto) {
@@ -117,14 +192,18 @@ export default function PontosView() {
   const pontosNoMapa = useMemo(() => {
     const base = global ? area.pontos : pontos;
     const extras = [];
-    if (global && pontoFocado && !base.some((p) => String(p.codigo) === String(pontoFocado.codigo))) {
+    // Pontos escolhidos continuam desenhados mesmo quando saem da área consultada.
+    marcados.forEach((marcado) => {
+      if (typeof marcado.lat === "number" && !base.some((p) => String(p.codigo) === marcado.codigo)) extras.push(marcado);
+    });
+    if (global && pontoFocado && ![...base, ...extras].some((p) => String(p.codigo) === String(pontoFocado.codigo))) {
       extras.push(pontoFocado);
     }
     if (!global && !base.length && maisProximo) {
       extras.push(maisProximo);
     }
     return extras.length ? [...base, ...extras] : base;
-  }, [global, area.pontos, pontos, pontoFocado, maisProximo]);
+  }, [global, area.pontos, pontos, pontoFocado, maisProximo, marcados]);
 
   let resumo = "";
   if (geo.status === "solicitando") resumo = "Obtendo sua localização...";
@@ -142,6 +221,17 @@ export default function PontosView() {
           <h1 id="titulo-pontos" className="text-xl font-extrabold text-texto sm:text-2xl">{global ? "Todos os pontos" : "Pontos perto de você"}</h1>
           <p className="mt-1 text-sm text-texto-suave">Encontre o código de um ponto de ônibus para criar sua exibição.</p>
         </div>
+
+        {origemCriador ? (
+          <div className="flex flex-col gap-2 rounded-md border border-borda-forte bg-superficie p-3 text-sm text-texto">
+            <p>Você está escolhendo pontos para o criador de exibição. Os do formulário aparecem marcados no mapa.</p>
+            <Link href={montarHrefCriador(marcados, { origemCriador, codigoEdicao })} className="flex w-fit items-center gap-1.5 font-bold underline focus:ring-2 focus:ring-foco focus:outline-none">
+              <ArrowLeft size={16} aria-hidden="true" />
+              Voltar ao criador de exibição
+            </Link>
+            {avisoCriador ? <p role="status" className="text-texto-suave">{avisoCriador}</p> : null}
+          </div>
+        ) : null}
 
         <div role="group" aria-label="Modo de busca" className="grid grid-cols-2 gap-2">
           {MODOS.map((opcao) => (
@@ -246,7 +336,8 @@ export default function PontosView() {
           raio={global ? null : raio}
           pontos={pontosNoMapa}
           selecionado={selecionado}
-          onSelecionar={setSelecionado}
+          onSelecionar={aoSelecionarNoMapa}
+          marcados={codigosMarcados}
           escolhendo={escolhendo}
           onEscolherLocal={aoEscolherLocal}
           foco={foco}
@@ -284,7 +375,17 @@ export default function PontosView() {
         )}
 
       </div>
-      <BarraSelecao marcados={marcados} limite={LIMITE_PONTOS_EXIBICAO} onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))} onLimpar={() => setMarcados([])} />
+      <BarraSelecao
+        marcados={marcados}
+        limite={LIMITE_PONTOS_EXIBICAO}
+        onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))}
+        onLimpar={() => setMarcados([])}
+        origemCriador={origemCriador}
+        codigoEdicao={codigoEdicao}
+        onCriarTemporaria={API_URL ? aoCriarTemporaria : undefined}
+        criandoTemporaria={criandoTemporaria}
+        erroTemporaria={erroTemporaria}
+      />
     </main>
   );
 }
