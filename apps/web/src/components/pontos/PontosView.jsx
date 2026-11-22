@@ -31,6 +31,30 @@ const MODOS = [
   { id: "todos", rotulo: "Todos os pontos" },
 ];
 
+// Por quanto tempo, depois de clicar num ponto do mapa, a lista lateral reajusta a rolagem se o cartão sair da tela.
+const JANELA_REFOCO_MS = 4000;
+
+// No desktop a lista rola dentro do painel lateral; no celular quem rola é a página.
+const painelRola = (secao) => Boolean(secao) && secao.scrollHeight > secao.clientHeight;
+
+function cartaoVisivel(cartao, secao) {
+  const retangulo = cartao.getBoundingClientRect();
+  const limites = painelRola(secao) ? secao.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+  return retangulo.top >= limites.top && retangulo.bottom <= limites.bottom;
+}
+
+// Rola só o painel (e não os ancestrais, como scrollIntoView faria, deslocando o layout inteiro no desktop).
+function centralizarCartao(cartao, secao, suave) {
+  const comportamento = suave ? "smooth" : "auto";
+  if (!painelRola(secao)) {
+    cartao.scrollIntoView({ behavior: comportamento, block: "center" });
+    return;
+  }
+  const alvo = cartao.getBoundingClientRect();
+  const painel = secao.getBoundingClientRect();
+  secao.scrollBy({ top: alvo.top + alvo.height / 2 - (painel.top + painel.height / 2), behavior: comportamento });
+}
+
 const botao = "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold transition focus:ring-2 focus:ring-foco focus:outline-none sm:px-4";
 
 // Pontos que já estão no formulário do criador (?parada=...). Só dígitos válidos, sem repetir, até o limite da exibição.
@@ -62,6 +86,8 @@ export default function PontosView() {
   const [foco, setFoco] = useState(null);
   const temporizadorRef = useRef(null);
   const areaMapaRef = useRef(null);
+  const secaoRef = useRef(null);
+  const ultimoFocoRef = useRef(null);
   const global = modo === "todos";
   const proximos = usePontosProximos(global ? null : geo.posicao, raio);
   const area = usePontosNaArea(visao, global);
@@ -99,12 +125,21 @@ export default function PontosView() {
   }, [codigosIniciais]);
 
   // Clique num ponto do mapa: leva a lista lateral até o cartão dele (o destaque já vem do `selecionado`).
+  // Depois do clique o mapa se move e a área é consultada de novo, então a lista pode mudar (e empurrar o cartão): por
+  // alguns segundos, a cada mudança da lista, confere se o cartão continua inteiro na tela e, se não, volta a centralizá-lo.
+  const { pontos: pontosDaArea, carregando: carregandoArea } = area;
   useEffect(() => {
     if (!rolarParaLista) return;
     const cartao = document.getElementById(rolarParaLista.alvo);
+    if (!cartao) return;
+    const primeira = ultimoFocoRef.current !== rolarParaLista.id;
+    if (!primeira && Date.now() - rolarParaLista.id > JANELA_REFOCO_MS) return;
+    if (!primeira && cartaoVisivel(cartao, secaoRef.current)) return;
     const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    cartao?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "center" });
-  }, [rolarParaLista]);
+    // Os reajustes são instantâneos: uma rolagem suave nova interromperia a anterior.
+    centralizarCartao(cartao, secaoRef.current, primeira && !reduzir);
+    if (primeira) ultimoFocoRef.current = rolarParaLista.id;
+  }, [rolarParaLista, pontosDaArea, carregandoArea, visao]);
 
   const escolhendo = !global && (escolhendoManual || geo.status === "negada" || geo.status === "indisponivel");
   const imprecisa = geo.posicao?.precisao > PRECISAO_RUIM_METROS;
@@ -222,7 +257,7 @@ export default function PontosView() {
 
   return (
     <main className="flex min-h-[calc(100dvh-68px)] w-full max-w-full flex-col overflow-x-hidden bg-superficie-alt lg:h-[calc(100dvh-68px)] lg:flex-row lg:overflow-hidden">
-      <section aria-labelledby="titulo-pontos" className={`flex w-full min-w-0 flex-col gap-4 p-4 lg:w-[26rem] lg:shrink-0 lg:overflow-y-auto ${marcados.length ? "pb-56" : "pb-8"}`}>
+      <section ref={secaoRef} aria-labelledby="titulo-pontos" className={`flex w-full min-w-0 flex-col gap-4 p-4 lg:w-[26rem] lg:shrink-0 lg:overflow-y-auto ${marcados.length ? "pb-56" : "pb-8"}`}>
         <div>
           <h1 id="titulo-pontos" className="text-xl font-extrabold text-texto sm:text-2xl">{global ? "Todos os pontos" : "Pontos perto de você"}</h1>
           <p className="mt-1 text-sm text-texto-suave">Encontre o código de um ponto de ônibus para criar sua exibição.</p>

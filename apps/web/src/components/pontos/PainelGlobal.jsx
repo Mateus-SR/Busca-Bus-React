@@ -20,20 +20,21 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
 
   const visiveis = useMemo(() => {
     if (!visao || !visaoPermiteBusca(visao)) return [];
-    const selecionadoNaArea = selecionado ? area.pontos.find((ponto) => String(ponto.codigo) === String(selecionado)) : null;
     const referencia = posicao ?? { lat: (visao.norte + visao.sul) / 2, lng: (visao.leste + visao.oeste) / 2 };
-    const ordenados = area.pontos
-      .filter((ponto) => dentro(ponto, visao))
+    // A distância só aparece quando a referência é a pessoa; do centro do mapa ela não diz nada útil.
+    const comDistancia = (ponto) => (posicao ? { ...ponto, distancia: distanciaMetros(referencia, ponto) } : ponto);
+    const ehSelecionado = (ponto) => selecionado != null && String(ponto.codigo) === String(selecionado);
+    const naArea = area.pontos.filter((ponto) => dentro(ponto, visao));
+    const demais = naArea
+      .filter((ponto) => !ehSelecionado(ponto))
       .map((ponto) => ({ ponto, metros: distanciaMetros(referencia, ponto) }))
       .sort((a, b) => a.metros - b.metros)
       .slice(0, LIMITE_LISTA)
-      // A distância só aparece quando a referência é a pessoa; do centro do mapa ela não diz nada útil.
-      .map(({ ponto, metros }) => (posicao ? { ...ponto, distancia: metros } : ponto));
-    // Ponto clicado no mapa que ficou fora dos mais próximos: entra no topo para a lista conseguir mostrá-lo em foco.
-    if (selecionadoNaArea && !ordenados.some((ponto) => String(ponto.codigo) === String(selecionado)) && dentro(selecionadoNaArea, visao)) {
-      return [posicao ? { ...selecionadoNaArea, distancia: distanciaMetros(referencia, selecionadoNaArea) } : selecionadoNaArea, ...ordenados];
-    }
-    return ordenados;
+      .map(({ ponto }) => comDistancia(ponto));
+    // O ponto selecionado fica fixo no topo: a ordem dos outros muda a cada arrasto do mapa (e o próprio clique já
+    // centraliza o mapa nele), e sem isso o cartão trocaria de lugar e sairia da tela justo quando é pra estar em foco.
+    const selecionadoNaArea = naArea.find(ehSelecionado);
+    return selecionadoNaArea ? [comDistancia(selecionadoNaArea), ...demais] : demais;
   }, [area.pontos, visao, posicao, selecionado]);
 
   const aproximar = !visaoPermiteBusca(visao);
