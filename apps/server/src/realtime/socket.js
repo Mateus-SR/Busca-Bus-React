@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { ehAdmin } from "@busca-bus/core";
 import { Usuario } from "../../models/Usuario.js";
-import { EVENTOS_SOCKET } from "@busca-bus/core";
+import { EVENTOS_SOCKET, codigoParadaValido } from "@busca-bus/core";
 import { montarListaPontos } from "../sptrans/normalizar.js";
 
 const CONFIG_PADRAO = {
@@ -187,7 +187,7 @@ export function createSocketServer(httpServer, config, poller, simulador = null,
       const candidatas = Array.isArray(dados.paradas) && dados.paradas.length
         ? dados.paradas
         : [dados.parada || config.testStopCode];
-      const paradas = [...new Set(candidatas.map((item) => String(item)).filter((item) => /^\d{7,9}$/.test(item)))]
+      const paradas = [...new Set(candidatas.map((item) => String(item)).filter((item) => codigoParadaValido(item)))]
         .slice(0, MAX_PARADAS);
       if (!paradas.length) return responder(ack, { ok: false, erro: "Código de parada inválido." });
       sairDaSala(socket, codigo);

@@ -49,6 +49,12 @@ export function criarClienteApi(baseUrl) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dados),
     }),
+    // Sem login: cria uma exibição que expira sozinha (padrões definidos no servidor).
+    criarExibicaoTemporaria: (paradas) => requisicao("/v1/exibicoes/temporaria", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paradas }),
+    }),
     obterExibicoesUsuario: (token) => requisicao("/v1/exibicoes/usuario", { token }),
     excluirExibicao: (codigo, token) => requisicao(`/v1/exibicoes/${encodeURIComponent(codigo)}`, {
       method: "DELETE",

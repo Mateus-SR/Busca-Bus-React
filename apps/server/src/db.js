@@ -96,6 +96,12 @@ export async function connectDatabase(config) {
       database.collection("exibicoes").createIndex(
         { usuarioId: 1, ativo: 1 }
       ),
+      // Exibições temporárias: o Mongo apaga o documento quando `expira_em` passa (documentos sem o campo não são afetados).
+      garantirIndice(
+        database.collection("exibicoes"),
+        { expira_em: 1 },
+        { name: "exibicoes_expiracao", expireAfterSeconds: 0 },
+      ),
       garantirIndicesPontos(database.collection("pontos")),
       garantirIndice(
         database.collection("avaliacoes"),

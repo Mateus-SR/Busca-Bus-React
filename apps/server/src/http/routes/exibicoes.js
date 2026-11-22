@@ -2,7 +2,14 @@ import { Router } from "express";
 import { randomInt } from "node:crypto";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { ehAdmin } from "@busca-bus/core";
+import rateLimit from "express-rate-limit";
+import {
+  CONFIG_EXIBICAO_TEMPORARIA,
+  LIMITE_PARADAS_EXIBICAO,
+  VALIDADE_EXIBICAO_TEMPORARIA_HORAS,
+  codigoParadaValido,
+  ehAdmin,
+} from "@busca-bus/core";
 import { Usuario } from "../../../models/Usuario.js";
 import { criarExibicoesRepo } from "../../repos/exibicoes.js";
 import { montarListaPontos } from "../../sptrans/normalizar.js";
@@ -14,10 +21,25 @@ const LIMITES = {
   distanciaMaxMin: { min: 5, max: 60 },
 };
 const LIMITE_NOME_EXIBICAO = 25;
+// Intervalo mínimo entre duas criações do mesmo usuário (evita duplicar por duplo clique ou reenvio).
+const INTERVALO_MINIMO_CRIACAO_MS = 5_000;
 const ALFABETO_CODIGO_EXIBICAO = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-";
 
 function gerarCodigoExibicao(tamanho = 6) {
   return Array.from({ length: tamanho }, () => ALFABETO_CODIGO_EXIBICAO[randomInt(ALFABETO_CODIGO_EXIBICAO.length)]).join("");
+}
+
+function validarParadas(paradas) {
+  if (!Array.isArray(paradas) || paradas.length < 1 || paradas.length > LIMITE_PARADAS_EXIBICAO) {
+    return [`Informe de 1 a ${LIMITE_PARADAS_EXIBICAO} pontos de ônibus.`];
+  }
+  if (paradas.some((codigo) => !codigoParadaValido(codigo))) {
+    return ["Os códigos de parada devem ter de 1 a 9 dígitos."];
+  }
+  if (new Set(paradas.map((codigo) => String(codigo))).size !== paradas.length) {
+    return ["Não é permitido repetir o mesmo código de parada."];
+  }
+  return [];
 }
 
 function validarEntrada(body) {
@@ -28,13 +50,7 @@ function validarEntrada(body) {
   if (nome.length > LIMITE_NOME_EXIBICAO) {
     erros.push(`O nome da exibição deve ter no máximo ${LIMITE_NOME_EXIBICAO} caracteres.`);
   }
-  if (!Array.isArray(paradas) || paradas.length < 1 || paradas.length > 5) {
-    erros.push("Informe de 1 a 5 pontos de ônibus.");
-  } else if (paradas.some((codigo) => !/^(?:\d{7}|\d{9})$/.test(String(codigo)))) {
-    erros.push("Os códigos de parada devem ter 7 ou 9 dígitos.");
-  } else if (new Set(paradas.map((codigo) => String(codigo))).size !== paradas.length) {
-    erros.push("Não é permitido repetir o mesmo código de parada.");
-  }
+  erros.push(...validarParadas(paradas));
   for (const [campo, limite] of Object.entries(LIMITES)) {
     const valor = Number(config[campo]);
     if (!Number.isInteger(valor) || valor < limite.min || valor > limite.max) {
@@ -102,17 +118,71 @@ export function exibicoesRoutes(db, config, poller, io = null) {
     }
     return exibicao;
   };
+  // Último instante de criação por usuário. Reservar antes de qualquer `await` fecha a brecha de dois envios
+  // simultâneos passarem juntos; vale por instância do servidor (suficiente para barrar duplo clique/reenvio).
+  const ultimaCriacaoPorUsuario = new Map();
+  function reservarCriacao(usuarioId) {
+    const agora = Date.now();
+    for (const [id, instante] of ultimaCriacaoPorUsuario) {
+      if (agora - instante >= INTERVALO_MINIMO_CRIACAO_MS) ultimaCriacaoPorUsuario.delete(id);
+    }
+    const anterior = ultimaCriacaoPorUsuario.get(String(usuarioId));
+    if (anterior !== undefined) return Math.ceil((INTERVALO_MINIMO_CRIACAO_MS - (agora - anterior)) / 1000);
+    ultimaCriacaoPorUsuario.set(String(usuarioId), agora);
+    return 0;
+  }
+  async function gerarCodigoLivre() {
+    let codigo;
+    do {
+      codigo = gerarCodigoExibicao();
+    } while (await repo.porCodigo(codigo));
+    return codigo;
+  }
+  // Sem login, então o limite por IP é o que segura abuso: poucas por janela de 10 min.
+  const limitarTemporarias = rateLimit({
+    windowMs: 10 * 60_000,
+    limit: 10,
+    standardHeaders: "draft-8",
+    legacyHeaders: false,
+    message: { erro: "Muitas exibições temporárias criadas. Tente novamente em alguns minutos." },
+  });
+  router.post("/temporaria", limitarTemporarias, async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
+      const erros = validarParadas(req.body?.paradas);
+      if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
+      const agora = new Date();
+      const exibicao = {
+        codigo: await gerarCodigoLivre(),
+        nome: "Exibição temporária",
+        instituicaoId: null,
+        paradas: req.body.paradas.map((codigo) => String(codigo)),
+        config: { ...CONFIG_EXIBICAO_TEMPORARIA },
+        ativo: true,
+        temporaria: true,
+        criadoEm: agora.toISOString(),
+        expiraEm: new Date(agora.getTime() + VALIDADE_EXIBICAO_TEMPORARIA_HORAS * 3_600_000).toISOString(),
+      };
+      await repo.criar(exibicao);
+      return res.status(201).json({ exibicao });
+    } catch (error) {
+      return next(error);
+    }
+  });
   router.post("/", protegido, async (req, res, next) => {
+    let reservou = false;
     try {
       if (!repo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
       const erros = validarEntrada(req.body);
       if (erros.length) return res.status(400).json({ erro: erros.join(" ") });
-      let codigo;
-      do {
-        codigo = gerarCodigoExibicao();
-      } while (await repo.porCodigo(codigo));
+      const espera = reservarCriacao(req.usuarioId);
+      if (espera) {
+        res.set("Retry-After", String(espera));
+        return res.status(429).json({ erro: `Aguarde ${espera} s antes de criar outra exibição.` });
+      }
+      reservou = true;
       const exibicao = {
-        codigo,
+        codigo: await gerarCodigoLivre(),
         usuarioId: req.usuarioId,
         ativo: true,
         criadoEm: new Date().toISOString(),
@@ -121,6 +191,8 @@ export function exibicoesRoutes(db, config, poller, io = null) {
       await repo.criar(exibicao);
       return res.status(201).json({ exibicao });
     } catch (error) {
+      // Falha antes de gravar: libera para a pessoa tentar de novo sem esperar.
+      if (reservou) ultimaCriacaoPorUsuario.delete(String(req.usuarioId));
       return next(error);
     }
   });
