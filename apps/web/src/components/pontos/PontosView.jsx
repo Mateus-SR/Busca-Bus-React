@@ -3,51 +3,176 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { Crosshair, LocateFixed } from "lucide-react";
-import { formatarDistancia } from "@busca-bus/core";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, Crosshair, LocateFixed, Search, X } from "lucide-react";
+import { LIMITE_PARADAS_EXIBICAO, codigoParadaValido, formatarDistancia, limparCodigoParada } from "@busca-bus/core";
+import { criarClienteApi } from "@busca-bus/core/cliente";
 import useGeolocalizacao from "@/hooks/useGeolocalizacao";
+import useMediaQuery from "@/hooks/useMediaQuery";
+import usePainelArrastavel from "@/hooks/usePainelArrastavel";
 import usePontosProximos from "@/hooks/usePontosProximos";
 import usePontosNaArea, { visaoPermiteBusca } from "@/hooks/usePontosNaArea";
 import CartaoPonto from "@/components/pontos/CartaoPonto";
 import ListaPontos from "@/components/pontos/ListaPontos";
 import PainelGlobal from "@/components/pontos/PainelGlobal";
+import AlcaPainel from "@/components/pontos/AlcaPainel";
 import BarraSelecao from "@/components/pontos/BarraSelecao";
+import { montarHrefCriador } from "@/components/pontos/hrefCriador";
 
 const PontosMapa = dynamic(() => import("@/components/pontos/PontosMapa"), {
   ssr: false,
   loading: () => <div className="flex h-full min-h-[240px] items-center justify-center">Carregando mapa...</div>,
 });
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RAIOS = [100, 200, 300];
 const RAIO_PADRAO = 200;
-const LIMITE_PONTOS_EXIBICAO = 5;
+const LIMITE_PONTOS_EXIBICAO = LIMITE_PARADAS_EXIBICAO;
 const PRECISAO_RUIM_METROS = 150;
 const MODOS = [
-  { id: "proximos", rotulo: "Perto de mim" },
-  { id: "todos", rotulo: "Todos os pontos" },
+  { id: "proximos", rotulo: "Perto de mim", curto: "Perto de mim" },
+  { id: "todos", rotulo: "Todos os pontos", curto: "Todos" },
 ];
+
+// Layout de celular (abaixo de `lg`): mapa em tela cheia e painel inferior arrastável por cima dele.
+const ALTURA_PAINEL_RECOLHIDO = 68;
+const FRACAO_PAINEL_MEDIO = 0.45;
+const FOLGA_MAPA_PAINEL_EXPANDIDO = 56;
+// Faixa do topo do mapa ocupada pelos controles flutuantes (busca + modo/localização) ou só pelo segundo grupo.
+const MARGEM_MAPA_CONTROLES_GLOBAL = 120;
+const MARGEM_MAPA_CONTROLES = 64;
+
+// Por quanto tempo, depois de clicar num ponto do mapa, a lista lateral reajusta a rolagem se o cartão sair da tela.
+const JANELA_REFOCO_MS = 4000;
+
+// No desktop a lista rola dentro do painel lateral; no celular quem rola é a página.
+const painelRola = (secao) => Boolean(secao) && secao.scrollHeight > secao.clientHeight;
+
+function cartaoVisivel(cartao, secao) {
+  const retangulo = cartao.getBoundingClientRect();
+  const limites = painelRola(secao) ? secao.getBoundingClientRect() : { top: 0, bottom: window.innerHeight };
+  return retangulo.top >= limites.top && retangulo.bottom <= limites.bottom;
+}
+
+// Rola só o painel (e não os ancestrais, como scrollIntoView faria, deslocando o layout inteiro no desktop).
+function centralizarCartao(cartao, secao, suave) {
+  const comportamento = suave ? "smooth" : "auto";
+  if (!painelRola(secao)) {
+    cartao.scrollIntoView({ behavior: comportamento, block: "center" });
+    return;
+  }
+  const alvo = cartao.getBoundingClientRect();
+  const painel = secao.getBoundingClientRect();
+  secao.scrollBy({ top: alvo.top + alvo.height / 2 - (painel.top + painel.height / 2), behavior: comportamento });
+}
 
 const botao = "flex items-center justify-center gap-2 rounded-md px-3 py-2.5 text-sm font-bold transition focus:ring-2 focus:ring-foco focus:outline-none sm:px-4";
 
+// Pontos que já estão no formulário do criador (?parada=...). Só dígitos válidos, sem repetir, até o limite da exibição.
+function codigosDaUrl(parametros) {
+  return [...new Set(parametros.getAll("parada").map(limparCodigoParada).filter(codigoParadaValido))].slice(0, LIMITE_PONTOS_EXIBICAO);
+}
+
 export default function PontosView() {
+  const router = useRouter();
+  const parametros = useSearchParams();
+  // `voltar=configuracao` indica que a pessoa chegou aqui a partir do criador de exibição (e `editar` qual exibição ela edita).
+  const [origemCriador] = useState(() => parametros.get("voltar") === "configuracao");
+  const [codigoEdicao] = useState(() => parametros.get("editar"));
+  const [codigosIniciais] = useState(() => codigosDaUrl(parametros));
   const geo = useGeolocalizacao();
-  const [modo, setModo] = useState("proximos");
+  const [modo, setModo] = useState(codigosIniciais.length ? "todos" : "proximos");
   const [raio, setRaio] = useState(RAIO_PADRAO);
   const [escolhendoManual, setEscolhendoManual] = useState(false);
   const [selecionado, setSelecionado] = useState(null);
   const [pontoFocado, setPontoFocado] = useState(null);
-  const [marcados, setMarcados] = useState([]);
+  const [marcados, setMarcados] = useState(() => codigosIniciais.map((codigo) => ({ codigo, nome: "" })));
+  const [avisoCriador, setAvisoCriador] = useState("");
+  const [criandoTemporaria, setCriandoTemporaria] = useState(false);
+  const [erroTemporaria, setErroTemporaria] = useState("");
+  const [rolarParaLista, setRolarParaLista] = useState(null);
   const [copiado, setCopiado] = useState(null);
   const [avisoCopia, setAvisoCopia] = useState("");
   const [visao, setVisao] = useState(null);
   const [foco, setFoco] = useState(null);
   const temporizadorRef = useRef(null);
-  const areaMapaRef = useRef(null);
+  const mainRef = useRef(null);
+  const secaoRef = useRef(null);
+  const conteudoRef = useRef(null);
+  const ultimoFocoRef = useRef(null);
+  const desktop = useMediaQuery("(min-width: 1024px)");
+  const [textoBusca, setTextoBusca] = useState("");
+  const [alturaBarra, setAlturaBarra] = useState(0);
+  const [alturaMain, setAlturaMain] = useState(0);
+  const barra = marcados.length ? alturaBarra : 0;
+  const limitesPainel = useMemo(() => {
+    if (!alturaMain) return null;
+    const disponivel = Math.max(alturaMain - barra, ALTURA_PAINEL_RECOLHIDO * 2);
+    const medio = Math.max(Math.round(disponivel * FRACAO_PAINEL_MEDIO), ALTURA_PAINEL_RECOLHIDO + 96);
+    return { recolhido: ALTURA_PAINEL_RECOLHIDO, medio, expandido: Math.max(disponivel - FOLGA_MAPA_PAINEL_EXPANDIDO, medio) };
+  }, [alturaMain, barra]);
+  const painel = usePainelArrastavel(limitesPainel);
   const global = modo === "todos";
   const proximos = usePontosProximos(global ? null : geo.posicao, raio);
   const area = usePontosNaArea(visao, global);
 
   useEffect(() => () => window.clearTimeout(temporizadorRef.current), []);
+
+  // Altura útil da tela (menos o cabeçalho), da qual saem as posições do painel inferior no celular.
+  useEffect(() => {
+    const principal = mainRef.current;
+    if (!principal) return undefined;
+    const observador = new ResizeObserver(() => setAlturaMain(principal.clientHeight));
+    observador.observe(principal);
+    return () => observador.disconnect();
+  }, []);
+
+  // Pontos vindos do criador: busca as coordenadas para desenhá-los no mapa e enquadrá-los.
+  useEffect(() => {
+    if (!API_URL || !codigosIniciais.length) return undefined;
+    const controlador = new AbortController();
+    criarClienteApi(API_URL)
+      .obterPontosPorCodigos(codigosIniciais, { signal: controlador.signal })
+      .then(({ pontos: achados = [] }) => {
+        setMarcados((atuais) => atuais.map((item) => {
+          const ponto = achados.find((achado) => String(achado.codigo) === item.codigo);
+          return ponto ? { ...item, nome: ponto.nome, endereco: ponto.endereco, lat: ponto.lat, lng: ponto.lng } : item;
+        }));
+        const semCadastro = codigosIniciais.filter((codigo) => !achados.some((achado) => String(achado.codigo) === codigo));
+        setAvisoCriador(semCadastro.length ? `Não encontramos no mapa: ${semCadastro.join(", ")}. Eles continuam na seleção.` : "");
+        if (!achados.length) return;
+        const latitudes = achados.map((ponto) => ponto.lat);
+        const longitudes = achados.map((ponto) => ponto.lng);
+        setFoco({
+          id: Date.now(),
+          lat: achados[0].lat,
+          lng: achados[0].lng,
+          zoom: 17,
+          limites: achados.length > 1 ? [[Math.min(...latitudes), Math.min(...longitudes)], [Math.max(...latitudes), Math.max(...longitudes)]] : undefined,
+        });
+      })
+      .catch((falha) => {
+        if (falha?.name !== "AbortError") setAvisoCriador("Não foi possível mostrar no mapa os pontos do formulário agora.");
+      });
+    return () => controlador.abort();
+  }, [codigosIniciais]);
+
+  // Clique num ponto do mapa: leva a lista lateral até o cartão dele (o destaque já vem do `selecionado`).
+  // Depois do clique o mapa se move e a área é consultada de novo, então a lista pode mudar (e empurrar o cartão): por
+  // alguns segundos, a cada mudança da lista, confere se o cartão continua inteiro na tela e, se não, volta a centralizá-lo.
+  const { pontos: pontosDaArea, carregando: carregandoArea } = area;
+  useEffect(() => {
+    if (!rolarParaLista) return;
+    const cartao = document.getElementById(rolarParaLista.alvo);
+    if (!cartao) return;
+    const primeira = ultimoFocoRef.current !== rolarParaLista.id;
+    if (!primeira && Date.now() - rolarParaLista.id > JANELA_REFOCO_MS) return;
+    if (!primeira && cartaoVisivel(cartao, secaoRef.current)) return;
+    const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    // Os reajustes são instantâneos: uma rolagem suave nova interromperia a anterior.
+    centralizarCartao(cartao, secaoRef.current, primeira && !reduzir);
+    if (primeira) ultimoFocoRef.current = rolarParaLista.id;
+  }, [rolarParaLista, pontosDaArea, carregandoArea, visao]);
 
   const escolhendo = !global && (escolhendoManual || geo.status === "negada" || geo.status === "indisponivel");
   const imprecisa = geo.posicao?.precisao > PRECISAO_RUIM_METROS;
@@ -56,15 +181,23 @@ export default function PontosView() {
     setMarcados((atuais) => {
       if (atuais.some((item) => item.codigo === ponto.codigo)) return atuais.filter((item) => item.codigo !== ponto.codigo);
       if (atuais.length >= LIMITE_PONTOS_EXIBICAO) return atuais;
-      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome }];
+      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome, endereco: ponto.endereco, lat: ponto.lat, lng: ponto.lng }];
     });
   }
 
-  const codigosMarcados = new Set(marcados.map((ponto) => ponto.codigo));
+  const codigosMarcados = useMemo(() => new Set(marcados.map((ponto) => ponto.codigo)), [marcados]);
   const podeMarcar = marcados.length < LIMITE_PONTOS_EXIBICAO;
+
+  // Celular: ao escolher um ponto, o painel sobe/desce até a posição média e volta ao topo, onde está o cartão do ponto.
+  function mostrarPontoNoPainel() {
+    if (desktop) return;
+    painel.setEstado((atual) => (atual === "medio" ? atual : "medio"));
+    conteudoRef.current?.scrollTo({ top: 0 });
+  }
 
   function aoTrocarModo(novo) {
     setModo(novo);
+    setTextoBusca("");
     setEscolhendoManual(false);
     setSelecionado(null);
     setPontoFocado(null);
@@ -82,9 +215,43 @@ export default function PontosView() {
     geo.solicitar();
   }
 
+  // Celular: para tocar no mapa e escolher o local, o painel precisa sair da frente.
+  function aoAlternarEscolherLocal() {
+    if (!escolhendoManual && !desktop) painel.setEstado("recolhido");
+    setEscolhendoManual((atual) => !atual);
+  }
+
   function aoSelecionar(codigo) {
     setSelecionado(codigo);
-    areaMapaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    mostrarPontoNoPainel();
+  }
+
+  // Ponto que já está na exibição aparece (com todas as opções) na seção "Pontos da exibição"; os demais, na lista de resultados.
+  function aoSelecionarNoMapa(codigo) {
+    setSelecionado(codigo);
+    if (!desktop) {
+      mostrarPontoNoPainel();
+      return;
+    }
+    const jaNaExibicao = marcados.some((ponto) => String(ponto.codigo) === String(codigo));
+    setRolarParaLista({ alvo: jaNaExibicao ? `ponto-exibicao-${codigo}` : `ponto-${codigo}`, id: Date.now() });
+  }
+
+  function removerMarca(codigo) {
+    setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo));
+  }
+
+  async function aoCriarTemporaria() {
+    if (criandoTemporaria || !marcados.length) return;
+    setCriandoTemporaria(true);
+    setErroTemporaria("");
+    try {
+      const { exibicao } = await criarClienteApi(API_URL).criarExibicaoTemporaria(marcados.map((ponto) => ponto.codigo));
+      router.push(`/exibicao?codigo=${encodeURIComponent(exibicao.codigo)}`);
+    } catch (falha) {
+      setErroTemporaria(falha?.message || "Não foi possível criar a exibição temporária.");
+      setCriandoTemporaria(false);
+    }
   }
 
   function aoIrPara(ponto) {
@@ -92,7 +259,7 @@ export default function PontosView() {
     setSelecionado(ponto.codigo);
     setPontoFocado(ponto);
     setFoco({ id: Date.now(), lat: ponto.lat, lng: ponto.lng, zoom: 17 });
-    areaMapaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    mostrarPontoNoPainel();
   }
 
   async function aoCopiar(codigo) {
@@ -117,14 +284,25 @@ export default function PontosView() {
   const pontosNoMapa = useMemo(() => {
     const base = global ? area.pontos : pontos;
     const extras = [];
-    if (global && pontoFocado && !base.some((p) => String(p.codigo) === String(pontoFocado.codigo))) {
+    // Pontos escolhidos continuam desenhados mesmo quando saem da área consultada.
+    marcados.forEach((marcado) => {
+      if (typeof marcado.lat === "number" && !base.some((p) => String(p.codigo) === marcado.codigo)) extras.push(marcado);
+    });
+    if (global && pontoFocado && ![...base, ...extras].some((p) => String(p.codigo) === String(pontoFocado.codigo))) {
       extras.push(pontoFocado);
     }
     if (!global && !base.length && maisProximo) {
       extras.push(maisProximo);
     }
     return extras.length ? [...base, ...extras] : base;
-  }, [global, area.pontos, pontos, pontoFocado, maisProximo]);
+  }, [global, area.pontos, pontos, pontoFocado, maisProximo, marcados]);
+
+  // Cartão do ponto tocado no mapa (celular): fica no topo do painel, com as mesmas opções dos cartões da lista.
+  const pontoSelecionado = useMemo(() => {
+    if (selecionado == null) return null;
+    const mesmo = (ponto) => String(ponto.codigo) === String(selecionado);
+    return marcados.find(mesmo) ?? pontosNoMapa.find(mesmo) ?? null;
+  }, [selecionado, marcados, pontosNoMapa]);
 
   let resumo = "";
   if (geo.status === "solicitando") resumo = "Obtendo sua localização...";
@@ -135,15 +313,74 @@ export default function PontosView() {
   const proximoRaio = RAIOS.find((valor) => valor > raio);
   const aproximarMapa = global && !visaoPermiteBusca(visao);
 
+  const quantidadeNaArea = useMemo(() => {
+    if (!global || !visao || !visaoPermiteBusca(visao)) return 0;
+    return area.pontos.filter((p) => p.lat <= visao.norte && p.lat >= visao.sul && p.lng <= visao.leste && p.lng >= visao.oeste).length;
+  }, [global, visao, area.pontos]);
+  // Texto da alça do painel: o que o painel mostra, para quem o deixou recolhido saber o que há nele.
+  let resumoAlca = resumo;
+  if (geo.erro) resumoAlca = geo.erro;
+  else if (global) {
+    if (aproximarMapa) resumoAlca = "Aproxime o mapa para ver os pontos";
+    else if (area.carregando) resumoAlca = "Buscando pontos da área...";
+    else resumoAlca = `${quantidadeNaArea} ${quantidadeNaArea === 1 ? "ponto na área do mapa" : "pontos na área do mapa"}`;
+  } else if (!resumoAlca) resumoAlca = "Pontos perto de você";
+  const margemSuperiorMapa = desktop ? 0 : global ? MARGEM_MAPA_CONTROLES_GLOBAL : MARGEM_MAPA_CONTROLES;
+  const margemInferiorMapa = desktop ? 0 : painel.alturaAssentada + barra;
+
   return (
-    <main className="flex min-h-[calc(100dvh-68px)] w-full max-w-full flex-col overflow-x-hidden bg-superficie-alt lg:h-[calc(100dvh-68px)] lg:flex-row lg:overflow-hidden">
-      <section aria-labelledby="titulo-pontos" className={`flex w-full min-w-0 flex-col gap-4 p-4 lg:w-[26rem] lg:shrink-0 lg:overflow-y-auto ${marcados.length ? "pb-56" : "pb-8"}`}>
+    <main ref={mainRef} className="relative flex h-[calc(100dvh-68px)] w-full max-w-full flex-col overflow-hidden bg-superficie-alt lg:flex-row">
+      {/* Celular: painel inferior por cima do mapa em tela cheia (altura e apoio na barra de seleção vêm de variáveis CSS).
+          Desktop: coluna lateral com rolagem própria, como sempre foi. */}
+      <section
+        ref={secaoRef}
+        id="painel-pontos"
+        aria-labelledby="titulo-pontos"
+        style={{ "--altura-painel": painel.altura ? `${painel.altura}px` : undefined, "--barra-selecao": `${barra}px` }}
+        className={`flex w-full min-w-0 flex-col lg:w-[26rem] lg:shrink-0 lg:overflow-y-auto max-lg:absolute max-lg:inset-x-0 max-lg:bottom-[var(--barra-selecao)] max-lg:z-[1050] max-lg:h-[var(--altura-painel,45%)] max-lg:overflow-hidden max-lg:rounded-t-2xl max-lg:border-t-2 max-lg:border-borda-forte max-lg:bg-superficie-alt max-lg:shadow-[0_-4px_12px_rgb(0_0_0/20%)] ${painel.arrastando ? "" : "max-lg:transition-[height,bottom] max-lg:duration-200 motion-reduce:transition-none"}`}
+      >
+        <AlcaPainel estado={painel.estado} resumo={resumoAlca} propsAlca={painel.propsAlca} idPainel="conteudo-painel-pontos" />
+        <div id="conteudo-painel-pontos" ref={conteudoRef} className={`flex flex-col gap-4 p-4 max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto max-lg:overscroll-contain max-lg:pt-2 ${marcados.length ? "lg:pb-56" : ""} pb-8`}>
         <div>
-          <h1 id="titulo-pontos" className="text-xl font-extrabold text-texto sm:text-2xl">{global ? "Todos os pontos" : "Pontos perto de você"}</h1>
-          <p className="mt-1 text-sm text-texto-suave">Encontre o código de um ponto de ônibus para criar sua exibição.</p>
+          <h1 id="titulo-pontos" className="text-xl font-extrabold text-texto max-lg:sr-only sm:text-2xl">{global ? "Todos os pontos" : "Pontos perto de você"}</h1>
+          <p className="mt-1 text-sm text-texto-suave max-lg:hidden">Encontre o código de um ponto de ônibus para criar sua exibição.</p>
         </div>
 
-        <div role="group" aria-label="Modo de busca" className="grid grid-cols-2 gap-2">
+        {pontoSelecionado ? (
+          <div className="flex flex-col gap-2 lg:hidden">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-base font-bold text-texto">Ponto selecionado</h2>
+              <button type="button" onClick={() => setSelecionado(null)} aria-label="Fechar o ponto selecionado" className="flex size-11 items-center justify-center rounded-md border border-borda-forte text-texto focus:ring-2 focus:ring-foco focus:outline-none">
+                <X size={18} aria-hidden="true" />
+              </button>
+            </div>
+            <CartaoPonto
+              ponto={pontoSelecionado}
+              idCartao="ponto-selecionado-movel"
+              selecionado
+              copiado={copiado === pontoSelecionado.codigo}
+              marcado={codigosMarcados.has(String(pontoSelecionado.codigo))}
+              podeMarcar={podeMarcar}
+              onAlternarMarca={alternarMarca}
+              onRemover={codigosMarcados.has(String(pontoSelecionado.codigo)) ? removerMarca : undefined}
+              onSelecionar={() => aoIrPara(pontoSelecionado)}
+              onCopiar={aoCopiar}
+            />
+          </div>
+        ) : null}
+
+        {origemCriador ? (
+          <div className="flex flex-col gap-2 rounded-md border border-borda-forte bg-superficie p-3 text-sm text-texto">
+            <p>Você está escolhendo pontos para o criador de exibição. Os do formulário aparecem marcados no mapa.</p>
+            <Link href={montarHrefCriador(marcados, { origemCriador, codigoEdicao })} className="flex w-fit items-center gap-1.5 font-bold underline focus:ring-2 focus:ring-foco focus:outline-none">
+              <ArrowLeft size={16} aria-hidden="true" />
+              Voltar ao criador de exibição
+            </Link>
+            {avisoCriador ? <p role="status" className="text-texto-suave">{avisoCriador}</p> : null}
+          </div>
+        ) : null}
+
+        <div role="group" aria-label="Modo de busca" className="grid grid-cols-2 gap-2 max-lg:hidden">
           {MODOS.map((opcao) => (
             <button key={opcao.id} type="button" onClick={() => aoTrocarModo(opcao.id)} aria-pressed={modo === opcao.id} className={`${botao} border ${modo === opcao.id ? "border-marca bg-marca text-sobre-marca" : "border-borda-forte bg-superficie text-texto hover:bg-superficie-forte"}`}>
               {opcao.rotulo}
@@ -151,13 +388,13 @@ export default function PontosView() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row lg:flex-col">
+        <div className="flex flex-col gap-2 sm:flex-row max-lg:hidden lg:flex-col">
           <button type="button" onClick={aoUsarLocalizacao} disabled={geo.status === "solicitando"} className={`${botao} bg-marca text-sobre-marca hover:bg-marca-forte disabled:cursor-not-allowed disabled:opacity-60`}>
             <LocateFixed size={18} aria-hidden="true" />
             {geo.posicao?.origem === "gps" ? "Atualizar minha localização" : global ? "Ir para minha localização" : "Usar minha localização"}
           </button>
           {global ? null : (
-            <button type="button" onClick={() => setEscolhendoManual((atual) => !atual)} aria-pressed={escolhendo} disabled={geo.status === "negada" || geo.status === "indisponivel"} className={`${botao} border border-borda-forte bg-superficie text-texto hover:bg-superficie-forte aria-pressed:bg-superficie-forte disabled:opacity-50`}>
+            <button type="button" onClick={aoAlternarEscolherLocal} aria-pressed={escolhendo} disabled={geo.status === "negada" || geo.status === "indisponivel"} className={`${botao} border border-borda-forte bg-superficie text-texto hover:bg-superficie-forte aria-pressed:bg-superficie-forte disabled:opacity-50`}>
               <Crosshair size={18} aria-hidden="true" />
               Escolher outro local no mapa
             </button>
@@ -171,8 +408,34 @@ export default function PontosView() {
           </div>
         ) : null}
 
+        {marcados.length ? (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-base font-bold text-texto">
+              {origemCriador ? "Pontos da exibição" : "Pontos selecionados"} ({marcados.length} de {LIMITE_PONTOS_EXIBICAO})
+            </h2>
+            <ol aria-label={origemCriador ? "Pontos da exibição" : "Pontos selecionados"} className="flex flex-col gap-3">
+              {marcados.map((ponto) => (
+                <li key={ponto.codigo}>
+                  <CartaoPonto
+                    ponto={ponto}
+                    idCartao={`ponto-exibicao-${ponto.codigo}`}
+                    selecionado={String(selecionado) === ponto.codigo}
+                    copiado={copiado === ponto.codigo}
+                    marcado
+                    podeMarcar={podeMarcar}
+                    onAlternarMarca={alternarMarca}
+                    onRemover={removerMarca}
+                    onSelecionar={(codigo) => (typeof ponto.lat === "number" ? aoIrPara(ponto) : aoSelecionar(codigo))}
+                    onCopiar={aoCopiar}
+                  />
+                </li>
+              ))}
+            </ol>
+          </div>
+        ) : null}
+
         {global ? (
-          <PainelGlobal area={area} visao={visao} posicao={geo.posicao} selecionado={selecionado} copiado={copiado} marcados={codigosMarcados} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={aoSelecionar} onCopiar={aoCopiar} onIrPara={aoIrPara} />
+          <PainelGlobal area={area} visao={visao} posicao={geo.posicao} texto={textoBusca} onTexto={setTextoBusca} selecionado={selecionado} copiado={copiado} marcados={codigosMarcados} podeMarcar={podeMarcar} onAlternarMarca={alternarMarca} onSelecionar={aoSelecionar} onCopiar={aoCopiar} onIrPara={aoIrPara} />
         ) : (
           <>
             <fieldset className="lg:hidden">
@@ -232,11 +495,49 @@ export default function PontosView() {
           Sua localização é usada só para esta busca: o Busca Bus não a guarda. Já sabe o código?{" "}
           <Link href="/exibicao" className="underline">Acessar exibição</Link>
         </p>
+        </div>
       </section>
 
-      <div ref={areaMapaRef} className="relative order-first h-[38dvh] min-h-[240px] max-h-[340px] w-full shrink-0 lg:order-none lg:h-auto lg:max-h-none lg:flex-1">
+      <div className="absolute inset-0 lg:relative lg:inset-auto lg:flex-1">
+        {/* Celular: busca (modo "todos") e botões de modo/localização flutuam sobre o mapa; no desktop ficam no painel lateral. */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex flex-col gap-2 p-3 lg:hidden">
+          {global ? (
+            <div className="pointer-events-auto relative">
+              <Search size={18} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-texto-mudo" />
+              <input
+                type="search"
+                value={textoBusca}
+                onChange={(evento) => setTextoBusca(evento.target.value)}
+                onFocus={() => painel.setEstado((atual) => (atual === "recolhido" ? "medio" : atual))}
+                maxLength={80}
+                autoComplete="off"
+                aria-label="Buscar por nome, endereço ou código"
+                placeholder="Buscar nome, endereço ou código"
+                className="min-h-11 w-full rounded-full border border-borda-forte bg-superficie py-2 pr-4 pl-11 text-base text-texto shadow-lg focus:ring-2 focus:ring-foco focus:outline-none"
+              />
+            </div>
+          ) : null}
+          <div className="pointer-events-auto flex items-center gap-2">
+            <div role="group" aria-label="Modo de busca" className="flex min-w-0 flex-1 rounded-full border border-borda-forte bg-superficie p-1 shadow-lg">
+              {MODOS.map((opcao) => (
+                <button key={opcao.id} type="button" onClick={() => aoTrocarModo(opcao.id)} aria-pressed={modo === opcao.id} className={`min-h-9 min-w-0 flex-1 truncate rounded-full px-2 text-sm font-bold transition focus:ring-2 focus:ring-foco focus:outline-none ${modo === opcao.id ? "bg-marca text-sobre-marca" : "text-texto"}`}>
+                  {opcao.curto}
+                </button>
+              ))}
+            </div>
+            {global ? null : (
+              <button type="button" onClick={aoAlternarEscolherLocal} aria-pressed={escolhendo} aria-label="Escolher outro local no mapa" disabled={geo.status === "negada" || geo.status === "indisponivel"} className="flex size-11 shrink-0 items-center justify-center rounded-full border border-borda-forte bg-superficie text-texto shadow-lg focus:ring-2 focus:ring-foco focus:outline-none disabled:opacity-50 aria-pressed:bg-marca aria-pressed:text-sobre-marca">
+                <Crosshair size={20} aria-hidden="true" />
+              </button>
+            )}
+            <button type="button" onClick={aoUsarLocalizacao} disabled={geo.status === "solicitando"} aria-label={geo.posicao?.origem === "gps" ? "Atualizar minha localização" : "Usar minha localização"} className="flex size-11 shrink-0 items-center justify-center rounded-full bg-marca text-sobre-marca shadow-lg focus:ring-2 focus:ring-foco focus:outline-none disabled:cursor-not-allowed disabled:opacity-60">
+              <LocateFixed size={20} aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+
         {aproximarMapa ? (
-          <p className="pointer-events-none absolute top-3 left-1/2 z-[1000] w-max max-w-[calc(100%-5rem)] -translate-x-1/2 rounded-full bg-superficie px-3 py-1.5 text-center text-xs font-bold text-texto shadow-lg sm:px-4 sm:py-2 sm:text-sm">
+          <p className="pointer-events-none absolute top-[7.75rem] left-1/2 z-[1000] w-max max-w-[calc(100%-5rem)] -translate-x-1/2 rounded-full bg-superficie px-3 py-1.5 text-center text-xs font-bold text-texto shadow-lg sm:px-4 sm:py-2 sm:text-sm lg:top-3">
             Aproxime o mapa para ver os pontos
           </p>
         ) : null}
@@ -246,11 +547,14 @@ export default function PontosView() {
           raio={global ? null : raio}
           pontos={pontosNoMapa}
           selecionado={selecionado}
-          onSelecionar={setSelecionado}
+          onSelecionar={aoSelecionarNoMapa}
+          marcados={codigosMarcados}
           escolhendo={escolhendo}
           onEscolherLocal={aoEscolherLocal}
           foco={foco}
           onVisaoMudou={setVisao}
+          margemSuperior={margemSuperiorMapa}
+          margemInferior={margemInferiorMapa}
         />
 
         {!global && (
@@ -284,7 +588,18 @@ export default function PontosView() {
         )}
 
       </div>
-      <BarraSelecao marcados={marcados} limite={LIMITE_PONTOS_EXIBICAO} onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))} onLimpar={() => setMarcados([])} />
+      <BarraSelecao
+        marcados={marcados}
+        limite={LIMITE_PONTOS_EXIBICAO}
+        onRemover={removerMarca}
+        onLimpar={() => setMarcados([])}
+        origemCriador={origemCriador}
+        codigoEdicao={codigoEdicao}
+        onCriarTemporaria={API_URL ? aoCriarTemporaria : undefined}
+        criandoTemporaria={criandoTemporaria}
+        erroTemporaria={erroTemporaria}
+        onAltura={setAlturaBarra}
+      />
     </main>
   );
 }

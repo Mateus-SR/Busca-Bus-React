@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { AREA_SAO_PAULO, dentroDeSaoPaulo } from "@busca-bus/core";
+import { AREA_SAO_PAULO, LIMITE_PARADAS_EXIBICAO, codigoParadaValido, dentroDeSaoPaulo } from "@busca-bus/core";
 import { criarPontosRepo } from "../../repos/pontos.js";
 
 const RAIO_PADRAO_METROS = 200;
@@ -61,6 +61,23 @@ export function pontosRoutes(db) {
       }
       // Só dígitos = o usuário digitou um código de ponto; procuramos pelo código exato.
       const pontos = /^\d+$/.test(termo) ? await repo.buscarCodigo(termo) : await repo.buscarTexto(termo, LIMITE_BUSCA);
+      res.set("Cache-Control", "public, max-age=3600");
+      return res.json({ total: pontos.length, pontos });
+    } catch (error) {
+      return next(error);
+    }
+  });
+
+  // Pontos por código (?codigo=1&codigo=2): usado para mostrar no mapa os pontos que já estão no criador de exibição.
+  // Códigos que não existem simplesmente não voltam; os inválidos são ignorados.
+  router.get("/codigos", async (req, res, next) => {
+    try {
+      if (!repo.disponivel) return semBanco(res);
+      const pedidos = [].concat(req.query.codigo ?? []);
+      const codigos = [...new Set(pedidos.filter((codigo) => typeof codigo === "string" && codigoParadaValido(codigo)))]
+        .slice(0, LIMITE_PARADAS_EXIBICAO);
+      if (!codigos.length) return erroValidacao(res, "Informe ao menos um código de ponto válido.");
+      const pontos = await repo.porCodigos(codigos);
       res.set("Cache-Control", "public, max-age=3600");
       return res.json({ total: pontos.length, pontos });
     } catch (error) {

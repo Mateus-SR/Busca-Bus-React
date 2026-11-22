@@ -16,6 +16,8 @@ function normalizarExibicao(documento) {
       ),
     },
     criadoEm: documento.created_at ?? documento.criadoEm ?? null,
+    temporaria: Boolean(documento.temporaria),
+    expiraEm: documento.expira_em ?? documento.expiraEm ?? null,
   };
 }
 
@@ -34,10 +36,13 @@ export function criarExibicoesRepo(db) {
   return {
     disponivel: Boolean(collection),
     async porCodigo(codigo) {
-      return normalizarExibicao(await collection?.findOne({
+      const exibicao = normalizarExibicao(await collection?.findOne({
         $or: [{ codigo_exibicao: codigo }, { codigo: codigo }, { codigo_exib: codigo }],
         ativo: { $ne: false },
       }));
+      // O índice TTL só apaga a cada ~1 min; até lá a temporária vencida já deve contar como inexistente.
+      if (exibicao?.expiraEm && new Date(exibicao.expiraEm) <= new Date()) return null;
+      return exibicao;
     },
     async doUsuario(usuarioId) {
       if (!collection) return [];
@@ -50,7 +55,8 @@ export function criarExibicoesRepo(db) {
     async criar(exibicao) {
       if (!collection) return null;
       const documento = {
-        usu_id: normalizarId(exibicao.usuarioId),
+        // Temporárias nascem sem dono (criadas sem login): não entram em "minhas exibições".
+        ...(exibicao.usuarioId ? { usu_id: normalizarId(exibicao.usuarioId) } : {}),
         fac_id: normalizarId(exibicao.instituicaoId),
         codigo_exibicao: exibicao.codigo,
         nome_exibicao: exibicao.nome,
@@ -62,6 +68,7 @@ export function criarExibicoesRepo(db) {
         created_at: new Date(exibicao.criadoEm),
         last_update: new Date(exibicao.criadoEm),
         ativo: exibicao.ativo,
+        ...(exibicao.temporaria ? { temporaria: true, expira_em: new Date(exibicao.expiraEm) } : {}),
       };
       await collection.insertOne(documento);
       return normalizarExibicao(documento);
