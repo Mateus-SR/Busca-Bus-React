@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Check, Copy, MapPin, Plus } from "lucide-react";
+import { Check, Copy, MapPin, Plus, Trash2 } from "lucide-react";
 import { formatarDistancia } from "@busca-bus/core";
 
 // `selecionado` = destacado no mapa; `marcado` = escolhido para criar a exibição (várias de uma vez, até o limite).
-export default function CartaoPonto({ ponto, selecionado, copiado, marcado = false, podeMarcar = true, onAlternarMarca, onSelecionar, onCopiar }) {
+// `idCartao` evita ids repetidos quando o mesmo ponto aparece em duas listas; `onRemover` mostra um botão explícito de tirar da seleção.
+export default function CartaoPonto({ ponto, selecionado, copiado, marcado = false, podeMarcar = true, onAlternarMarca, onSelecionar, onCopiar, onRemover, idCartao }) {
   return (
-    <article id={`ponto-${ponto.codigo}`} className={`scroll-mt-4 rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
+    <article id={idCartao ?? `ponto-${ponto.codigo}`} className={`scroll-mt-4 rounded-lg border p-3 ${selecionado ? "border-marca bg-superficie-sutil ring-2 ring-marca contraste:border-acento contraste:ring-acento" : "border-borda bg-superficie"}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-base font-bold break-words text-texto">{ponto.nome || "Ponto sem nome"}</h3>
@@ -47,6 +48,17 @@ export default function CartaoPonto({ ponto, selecionado, copiado, marcado = fal
           {copiado ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
           {copiado ? "Copiado" : "Copiar código"}
         </button>
+        {onRemover ? (
+          <button
+            type="button"
+            onClick={() => onRemover(ponto.codigo)}
+            aria-label={`Remover o ponto ${ponto.nome || ponto.codigo} da exibição`}
+            className="flex items-center gap-1.5 rounded-md border border-erro px-3 py-1.5 text-sm font-semibold text-erro-forte transition hover:bg-erro/10 focus:ring-2 focus:ring-foco focus:outline-none"
+          >
+            <Trash2 size={16} aria-hidden="true" />
+            Remover
+          </button>
+        ) : null}
         <button
           type="button"
           onClick={() => onSelecionar(ponto.codigo)}

@@ -77,7 +77,7 @@ export default function PontosView() {
       .then(({ pontos: achados = [] }) => {
         setMarcados((atuais) => atuais.map((item) => {
           const ponto = achados.find((achado) => String(achado.codigo) === item.codigo);
-          return ponto ? { ...item, nome: ponto.nome, lat: ponto.lat, lng: ponto.lng } : item;
+          return ponto ? { ...item, nome: ponto.nome, endereco: ponto.endereco, lat: ponto.lat, lng: ponto.lng } : item;
         }));
         const semCadastro = codigosIniciais.filter((codigo) => !achados.some((achado) => String(achado.codigo) === codigo));
         setAvisoCriador(semCadastro.length ? `Não encontramos no mapa: ${semCadastro.join(", ")}. Eles continuam na seleção.` : "");
@@ -101,7 +101,7 @@ export default function PontosView() {
   // Clique num ponto do mapa: leva a lista lateral até o cartão dele (o destaque já vem do `selecionado`).
   useEffect(() => {
     if (!rolarParaLista) return;
-    const cartao = document.getElementById(`ponto-${rolarParaLista.codigo}`);
+    const cartao = document.getElementById(rolarParaLista.alvo);
     const reduzir = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     cartao?.scrollIntoView({ behavior: reduzir ? "auto" : "smooth", block: "center" });
   }, [rolarParaLista]);
@@ -113,7 +113,7 @@ export default function PontosView() {
     setMarcados((atuais) => {
       if (atuais.some((item) => item.codigo === ponto.codigo)) return atuais.filter((item) => item.codigo !== ponto.codigo);
       if (atuais.length >= LIMITE_PONTOS_EXIBICAO) return atuais;
-      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome, lat: ponto.lat, lng: ponto.lng }];
+      return [...atuais, { codigo: ponto.codigo, nome: ponto.nome, endereco: ponto.endereco, lat: ponto.lat, lng: ponto.lng }];
     });
   }
 
@@ -144,9 +144,15 @@ export default function PontosView() {
     areaMapaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
+  // Ponto que já está na exibição aparece (com todas as opções) na seção "Pontos da exibição"; os demais, na lista de resultados.
   function aoSelecionarNoMapa(codigo) {
     setSelecionado(codigo);
-    setRolarParaLista({ codigo, id: Date.now() });
+    const jaNaExibicao = marcados.some((ponto) => String(ponto.codigo) === String(codigo));
+    setRolarParaLista({ alvo: jaNaExibicao ? `ponto-exibicao-${codigo}` : `ponto-${codigo}`, id: Date.now() });
+  }
+
+  function removerMarca(codigo) {
+    setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo));
   }
 
   async function aoCriarTemporaria() {
@@ -258,6 +264,32 @@ export default function PontosView() {
           <div aria-live="polite" className="flex flex-col gap-2 text-sm">
             {geo.erro ? <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">{geo.erro}</p> : null}
             {imprecisa && !global ? <p className="rounded-md bg-superficie p-3 text-texto-suave">Sua localização está imprecisa (cerca de {Math.round(geo.posicao.precisao)} m). Os pontos mostrados podem não ser os mais próximos; se precisar, escolha o local no mapa.</p> : null}
+          </div>
+        ) : null}
+
+        {marcados.length ? (
+          <div className="flex flex-col gap-2">
+            <h2 className="text-base font-bold text-texto">
+              {origemCriador ? "Pontos da exibição" : "Pontos selecionados"} ({marcados.length} de {LIMITE_PONTOS_EXIBICAO})
+            </h2>
+            <ol aria-label={origemCriador ? "Pontos da exibição" : "Pontos selecionados"} className="flex flex-col gap-3">
+              {marcados.map((ponto) => (
+                <li key={ponto.codigo}>
+                  <CartaoPonto
+                    ponto={ponto}
+                    idCartao={`ponto-exibicao-${ponto.codigo}`}
+                    selecionado={String(selecionado) === ponto.codigo}
+                    copiado={copiado === ponto.codigo}
+                    marcado
+                    podeMarcar={podeMarcar}
+                    onAlternarMarca={alternarMarca}
+                    onRemover={removerMarca}
+                    onSelecionar={(codigo) => (typeof ponto.lat === "number" ? aoIrPara(ponto) : aoSelecionar(codigo))}
+                    onCopiar={aoCopiar}
+                  />
+                </li>
+              ))}
+            </ol>
           </div>
         ) : null}
 
@@ -378,7 +410,7 @@ export default function PontosView() {
       <BarraSelecao
         marcados={marcados}
         limite={LIMITE_PONTOS_EXIBICAO}
-        onRemover={(codigo) => setMarcados((atuais) => atuais.filter((ponto) => ponto.codigo !== codigo))}
+        onRemover={removerMarca}
         onLimpar={() => setMarcados([])}
         origemCriador={origemCriador}
         codigoEdicao={codigoEdicao}
