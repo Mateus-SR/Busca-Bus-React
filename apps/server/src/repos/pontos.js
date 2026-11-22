@@ -58,6 +58,9 @@ export function criarPontosRepo(db) {
         { $project: PROJECAO },
       ]).toArray();
     },
+    porCodigos(codigos) {
+      return collection.aggregate([{ $match: { _id: { $in: codigos } } }, { $project: PROJECAO }]).toArray();
+    },
     buscarCodigo(codigo) {
       return collection.aggregate([{ $match: { _id: codigo } }, { $project: PROJECAO }]).toArray();
     },

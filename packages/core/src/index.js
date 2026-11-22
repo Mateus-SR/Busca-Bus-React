@@ -4,6 +4,14 @@ export { formatarDuracao } from "./duracao.js";
 export { EVENTOS, EVENTOS_SOCKET } from "./eventos.js";
 export { INTERVALO_COLETA_MS } from "./intervalos.js";
 export { validarEmail, validarSenha } from "./schemas.js";
+export {
+  TAMANHO_MAXIMO_CODIGO_PARADA,
+  LIMITE_PARADAS_EXIBICAO,
+  CONFIG_EXIBICAO_TEMPORARIA,
+  VALIDADE_EXIBICAO_TEMPORARIA_HORAS,
+  codigoParadaValido,
+  limparCodigoParada,
+} from "./paradas.js";
 export { normalizarExibicao, normalizarOnibus } from "./dto.js";
 export { ehFalhaTransitoriaApi, ehStatusTransitorioApi, aguardarDisponibilidadeApi } from "./api/disponibilidade.js";
 export { TIPOS_EVENTO, LOCAIS_EVENTO, LOCAIS_COM_NUMERO, ROLES_ADMIN, ehAdmin } from "./calendario.js";
