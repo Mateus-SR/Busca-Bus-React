@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Search } from "lucide-react";
 import { distanciaMetros } from "@busca-bus/core";
 import useBuscaPontos from "@/hooks/useBuscaPontos";
@@ -14,8 +14,8 @@ const dentro = (ponto, visao) => ponto.lat <= visao.norte && ponto.lat >= visao.
 // Modo "todos os pontos": busca por nome/endereço/código e lista dos pontos da área visível do mapa.
 // `area` vem de usePontosNaArea, chamado no PontosView porque os mesmos pontos também são desenhados no mapa.
 
-export default function PainelGlobal({ area, visao, posicao, selecionado, copiado, marcados, podeMarcar, onAlternarMarca, onSelecionar, onCopiar, onIrPara }) {
-  const [texto, setTexto] = useState("");
+// O texto da busca vive no PontosView: no celular o campo flutua sobre o mapa, e aqui só aparecem os resultados.
+export default function PainelGlobal({ area, visao, posicao, texto, onTexto, selecionado, copiado, marcados, podeMarcar, onAlternarMarca, onSelecionar, onCopiar, onIrPara }) {
   const busca = useBuscaPontos(texto);
 
   const visiveis = useMemo(() => {
@@ -41,7 +41,7 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
 
   return (
     <div className="flex flex-col gap-4">
-      <div>
+      <div className="max-lg:hidden">
         <label htmlFor="busca-pontos" className="mb-1 block text-sm font-semibold text-texto-suave">Buscar por nome, endereço ou código</label>
         <div className="relative">
           <Search size={18} aria-hidden="true" className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-texto-mudo" />
@@ -49,7 +49,7 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
             id="busca-pontos"
             type="search"
             value={texto}
-            onChange={(evento) => setTexto(evento.target.value)}
+            onChange={(evento) => onTexto(evento.target.value)}
             maxLength={80}
             autoComplete="off"
             placeholder="Ex.: Clínicas ou 18848"
@@ -58,7 +58,7 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
         </div>
       </div>
 
-      <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto">
+      <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto empty:-mb-4">
         {busca.curto ? <p className="text-texto-suave">Digite pelo menos 3 caracteres para buscar.</p> : null}
         {busca.carregando ? <p className="font-semibold">Buscando...</p> : null}
         {busca.erro ? <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">{busca.erro}</p> : null}
@@ -77,9 +77,9 @@ export default function PainelGlobal({ area, visao, posicao, selecionado, copiad
         onCopiar={onCopiar}
       />
 
-      <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto">
+      <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto empty:-mb-4">
         {aproximar ? (
-          <p className="rounded-md bg-superficie p-3 text-texto-suave">Aproxime o mapa (a partir do zoom {ZOOM_MINIMO_GLOBAL}) para ver os pontos de ônibus da região, ou use a busca acima.</p>
+          <p className="rounded-md bg-superficie p-3 text-texto-suave">Aproxime o mapa (a partir do zoom {ZOOM_MINIMO_GLOBAL}) para ver os pontos de ônibus da região, ou use a busca.</p>
         ) : null}
         {area.erro ? (
           <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">

@@ -13,7 +13,23 @@ function coordsPonto(ponto) {
   return [lat, lng];
 }
 
-export default function PontosMapa({ centro, precisao, raio, pontos = [], selecionado, onSelecionar, escolhendo, onEscolherLocal, foco, onVisaoMudou, marcados }) {
+// `margemSuperior`/`margemInferior` (px) = faixas do mapa cobertas por controles e pelo painel inferior no celular (0 no desktop).
+// Centralizar e enquadrar levam isso em conta para o ponto não ficar escondido atrás do painel.
+// Opções de enquadramento do Leaflet com a margem de cada lado somada à folga `base`.
+function opcoesDeEnquadramento(margens, base, extra = {}) {
+  return { paddingTopLeft: [base, base + margens.superior], paddingBottomRight: [base, base + margens.inferior], ...extra };
+}
+
+// Leva o ponto ao meio da parte visível do mapa (a que sobra entre os controles e o painel), sem mudar o zoom se `zoom` for omitido.
+function centralizarNoVisivel(mapa, coords, margens, zoom) {
+  const alvoZoom = zoom ?? mapa.getZoom();
+  const deslocamento = (margens.inferior - margens.superior) / 2;
+  const centro = deslocamento ? mapa.unproject(mapa.project(coords, alvoZoom).add([0, deslocamento]), alvoZoom) : coords;
+  if (zoom === undefined) mapa.panTo(centro);
+  else mapa.setView(centro, zoom);
+}
+
+export default function PontosMapa({ centro, precisao, raio, pontos = [], selecionado, onSelecionar, escolhendo, onEscolherLocal, foco, onVisaoMudou, marcados, margemSuperior = 0, margemInferior = 0 }) {
   const containerRef = useRef(null);
   const mapaRef = useRef(null);
   const camadaCentroRef = useRef(null);
@@ -22,11 +38,16 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
   const marcadoresPorCodigoRef = useRef(new Map());
   const centroAnteriorRef = useRef(null);
   const acoesRef = useRef({ escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou });
+  const margensRef = useRef({ superior: margemSuperior, inferior: margemInferior });
   const [mapaPronto, setMapaPronto] = useState(false);
 
   useEffect(() => {
     acoesRef.current = { escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou };
   }, [escolhendo, onEscolherLocal, onSelecionar, onVisaoMudou]);
+
+  useEffect(() => {
+    margensRef.current = { superior: margemSuperior, inferior: margemInferior };
+  }, [margemSuperior, margemInferior]);
 
   useEffect(() => {
     if (containerRef.current) containerRef.current.style.cursor = escolhendo ? "crosshair" : "";
@@ -84,9 +105,9 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
       L.circleMarker(posicao, { radius: 8, color: contorno, weight: 3, fillColor: cor, fillOpacity: 1, interactive: false }).addTo(camada);
       if (raio) {
         const circuloRaio = L.circle(posicao, { radius: raio, color: cor, weight: 2, dashArray: "6 6", fillColor: cor, fillOpacity: 0.05, interactive: false }).addTo(camada);
-        mapaRef.current.fitBounds(circuloRaio.getBounds(), { padding: [24, 24], maxZoom: 18 });
+        mapaRef.current.fitBounds(circuloRaio.getBounds(), opcoesDeEnquadramento(margensRef.current, 24, { maxZoom: 18 }));
       } else if (centroAnteriorRef.current !== centro) {
-        mapaRef.current.setView(posicao, Math.max(mapaRef.current.getZoom(), 16));
+        centralizarNoVisivel(mapaRef.current, posicao, margensRef.current, Math.max(mapaRef.current.getZoom(), 16));
       }
       centroAnteriorRef.current = centro;
     });
@@ -138,7 +159,7 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
   useEffect(() => {
     const ponto = selecionado && pontosPorCodigoRef.current.get(String(selecionado));
     if (mapaRef.current && ponto) {
-      mapaRef.current.panTo([ponto.lat, ponto.lng]);
+      centralizarNoVisivel(mapaRef.current, [ponto.lat, ponto.lng], margensRef.current);
       marcadoresPorCodigoRef.current.get(String(selecionado))?.openTooltip();
     }
   }, [selecionado]);
@@ -147,10 +168,20 @@ export default function PontosMapa({ centro, precisao, raio, pontos = [], seleci
     if (mapaPronto && foco) {
       mapaRef.current.invalidateSize();
       // `limites` ([[sul, oeste], [norte, leste]]) enquadra vários pontos de uma vez.
-      if (foco.limites) mapaRef.current.fitBounds(foco.limites, { padding: [40, 40], maxZoom: 17 });
-      else mapaRef.current.setView([foco.lat, foco.lng], foco.zoom ?? 17);
+      if (foco.limites) mapaRef.current.fitBounds(foco.limites, opcoesDeEnquadramento(margensRef.current, 40, { maxZoom: 17 }));
+      else centralizarNoVisivel(mapaRef.current, [foco.lat, foco.lng], margensRef.current, foco.zoom ?? 17);
     }
   }, [mapaPronto, foco]);
 
-  return <div ref={containerRef} role="region" aria-label="Mapa dos pontos de ônibus" className="h-full min-h-[240px] w-full" />;
+  // No celular o zoom (canto superior esquerdo) desce para baixo dos controles flutuantes e a atribuição (canto inferior direito)
+  // sobe para fora do painel; no desktop as duas variáveis valem 0 e nada muda.
+  return (
+    <div
+      ref={containerRef}
+      role="region"
+      aria-label="Mapa dos pontos de ônibus"
+      style={{ "--mapa-margem-superior": `${margemSuperior}px`, "--mapa-margem-inferior": `${margemInferior}px` }}
+      className="h-full min-h-[240px] w-full [&_.leaflet-bottom]:mb-[var(--mapa-margem-inferior)] [&_.leaflet-top]:mt-[var(--mapa-margem-superior)]"
+    />
+  );
 }
