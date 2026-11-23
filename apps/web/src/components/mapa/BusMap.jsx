@@ -59,12 +59,9 @@ function criarIconeParada(L, cor) {
 }
 
 // Rótulo permanente do pino: número do ponto e nome (ou o código, se o ponto não tem nome).
-// Ao clicar/tocar no pino ou no rótulo ele "expande" e mostra também o endereço e o código; é um balão só por pino.
-function conteudoTooltipParada(item, cor, indice, codigoExibicao, expandido) {
-  const detalhes = expandido
-    ? `${item.endereco ? `<span class="font-normal">${escaparHtml(item.endereco)}</span>` : ""}<span class="text-[11px] font-normal">Código ${escaparHtml(item.codigo)}</span>`
-    : "";
-  return `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigoExibicao)}${detalhes}</span>`;
+// Endereço e código ficam só na legenda.
+function conteudoTooltipParada(item, cor, indice, codigoExibicao) {
+  return `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO} shrink-0" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span><span>${escaparHtml(item.nome || item.codigo || codigoExibicao)}</span></span>`;
 }
 
 function atualizarOpacidadePontos(mapa, marcadores) {
@@ -82,8 +79,6 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
   const marcadoresRef = useRef(new Map());
   const chavesIconeRef = useRef(new Map());
   const pontosRef = useRef(new Map());
-  const expandidosRef = useRef(new Set());
-  const itensPontosRef = useRef(new Map());
   const centralizouPontosRef = useRef(false);
   const [mapaPronto, setMapaPronto] = useState(false);
 
@@ -92,7 +87,6 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
     const marcadores = marcadoresRef.current;
     const chavesIcone = chavesIconeRef.current;
     const pontosMap = pontosRef.current;
-    const expandidos = expandidosRef.current;
     import("leaflet").then(({ default: L }) => {
       if (cancelado || !containerRef.current) return;
       const mapa = L.map(containerRef.current, {
@@ -114,8 +108,6 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
       chavesIcone.clear();
       pontosMap.forEach((marcador) => marcador.remove());
       pontosMap.clear();
-      expandidos.clear();
-      itensPontosRef.current.clear();
       mapaRef.current?.remove();
       mapaRef.current = null;
       centralizouPontosRef.current = false;
@@ -201,8 +193,6 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         if (!codigosAtuais.has(cod)) {
           marcador.remove();
           pontosRef.current.delete(cod);
-          expandidosRef.current.delete(cod);
-          itensPontosRef.current.delete(cod);
         }
       });
 
@@ -213,9 +203,9 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
 
         const cor = corDoPonto(indice);
         const existente = pontosRef.current.get(cod);
-        const expandido = expandidosRef.current.has(cod);
-        const tooltip = conteudoTooltipParada(item, cor, indice, codigo, expandido);
+        const tooltip = conteudoTooltipParada(item, cor, indice, codigo);
         if (existente) {
+          // Nome e posição podem chegar depois do pino (o cadastro vem de outra requisição).
           // Só mexe no que mudou: o radar chega a cada ciclo e não deve reescrever o DOM à toa.
           const posicaoAtual = existente.getLatLng();
           if (posicaoAtual.lat !== lat || posicaoAtual.lng !== lng) existente.setLatLng([lat, lng]);
@@ -223,30 +213,9 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         } else {
           const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
             .addTo(mapaRef.current)
-            .bindTooltip(tooltip, {
-              permanent: true,
-              interactive: true,
-              direction: "top",
-              offset: [0, -34],
-              className: CLASSE_TOOLTIP_PONTO,
-            });
-          // Clique no pino ou no rótulo alterna o endereço. O conteúdo é refeito a partir do item mais recente.
-          // O mesmo clique pode chegar pelo pino e pelo rótulo; o evento original é o mesmo, então só vale uma vez.
-          let ultimoClique = null;
-          const alternar = (evento) => {
-            if (evento?.originalEvent && evento.originalEvent === ultimoClique) return;
-            ultimoClique = evento?.originalEvent ?? null;
-            const dentro = expandidosRef.current.has(cod);
-            if (dentro) expandidosRef.current.delete(cod);
-            else expandidosRef.current.add(cod);
-            const atual = itensPontosRef.current.get(cod);
-            if (atual) marcador.setTooltipContent(conteudoTooltipParada(atual.item, atual.cor, atual.indice, codigo, !dentro));
-          };
-          marcador.on("click", alternar);
-          marcador.getTooltip().on("click", alternar);
+            .bindTooltip(tooltip, { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO });
           pontosRef.current.set(cod, marcador);
         }
-        itensPontosRef.current.set(cod, { item, cor, indice });
 
         if (indice === 0 && !centralizouPontosRef.current) {
           centralizouPontosRef.current = true;

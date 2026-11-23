@@ -450,6 +450,9 @@ html[data-contraste] tbody tr:hover td {
 }
 
 .ponto-tooltip {
+  /* Raio menor que o do balão padrão: com nome longo em duas linhas, a pílula não vira uma lente. */
+  border-radius: 18px;
+  padding: 4px 8px;
   transition: opacity 180ms ease;
 }
 
