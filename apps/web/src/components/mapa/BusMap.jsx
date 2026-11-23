@@ -58,6 +58,12 @@ function criarIconeParada(L, cor) {
   });
 }
 
+// Rótulo permanente do pino: número do ponto e nome (ou o código, se o ponto não tem nome).
+// Endereço e código ficam só na legenda.
+function conteudoTooltipParada(item, cor, indice, codigoExibicao) {
+  return `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO} shrink-0" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span><span>${escaparHtml(item.nome || item.codigo || codigoExibicao)}</span></span>`;
+}
+
 function atualizarOpacidadePontos(mapa, marcadores) {
   const zoom = mapa.getZoom();
   const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.25;
@@ -195,14 +201,19 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         const [lat, lng] = obterPosicao(item);
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        if (!pontosRef.current.has(cod)) {
-          const cor = corDoPonto(indice);
+        const cor = corDoPonto(indice);
+        const existente = pontosRef.current.get(cod);
+        const tooltip = conteudoTooltipParada(item, cor, indice, codigo);
+        if (existente) {
+          // Nome e posição podem chegar depois do pino (o cadastro vem de outra requisição).
+          // Só mexe no que mudou: o radar chega a cada ciclo e não deve reescrever o DOM à toa.
+          const posicaoAtual = existente.getLatLng();
+          if (posicaoAtual.lat !== lat || posicaoAtual.lng !== lng) existente.setLatLng([lat, lng]);
+          if (existente.getTooltip().getContent() !== tooltip) existente.setTooltipContent(tooltip);
+        } else {
           const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
             .addTo(mapaRef.current)
-            .bindTooltip(
-              `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
-              { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO },
-            );
+            .bindTooltip(tooltip, { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO });
           pontosRef.current.set(cod, marcador);
         }
 
