@@ -58,6 +58,18 @@ function criarIconeParada(L, cor) {
   });
 }
 
+// Rótulo permanente do pino: número do ponto e nome (ou o código, se o ponto não tem nome).
+function conteudoTooltipParada(item, cor, indice, codigoExibicao) {
+  return `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigoExibicao)}</span>`;
+}
+
+// Balão que abre ao clicar/tocar no pino: nome, endereço e código do ponto. Abre acima do rótulo permanente (offset extra) para não cobri-lo.
+function conteudoPopupParada(item) {
+  const nome = item.nome ? `<strong>${escaparHtml(item.nome)}</strong>` : "<strong>Ponto sem nome</strong>";
+  const endereco = item.endereco ? `<br />${escaparHtml(item.endereco)}` : "";
+  return `${nome}${endereco}<br /><small>Código ${escaparHtml(item.codigo)}</small>`;
+}
+
 function atualizarOpacidadePontos(mapa, marcadores) {
   const zoom = mapa.getZoom();
   const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.25;
@@ -195,14 +207,27 @@ export default function BusMap({ codigo, onibus = [], pontos = [], ponto = null 
         const [lat, lng] = obterPosicao(item);
         if (typeof lat !== "number" || typeof lng !== "number") return;
 
-        if (!pontosRef.current.has(cod)) {
-          const cor = corDoPonto(indice);
+        const cor = corDoPonto(indice);
+        const existente = pontosRef.current.get(cod);
+        if (existente) {
+          // Nome, endereço e posição podem chegar depois do pino (o cadastro vem de outra requisição).
+          // Só mexe no que mudou: o radar chega a cada ciclo e não deve reescrever o DOM à toa.
+          const posicaoAtual = existente.getLatLng();
+          if (posicaoAtual.lat !== lat || posicaoAtual.lng !== lng) existente.setLatLng([lat, lng]);
+          const tooltip = conteudoTooltipParada(item, cor, indice, codigo);
+          if (existente.getTooltip().getContent() !== tooltip) existente.setTooltipContent(tooltip);
+          const popup = conteudoPopupParada(item);
+          if (existente.getPopup().getContent() !== popup) existente.setPopupContent(popup);
+        } else {
           const marcador = L.marker([lat, lng], { icon: criarIconeParada(L, cor), zIndexOffset: 1000 })
             .addTo(mapaRef.current)
-            .bindTooltip(
-              `<span class="${CLASSE_TOOLTIP_PARADA}"><span class="${CLASSE_PONTO}" style="background:${cor}" aria-hidden="true">Ponto ${indice + 1}</span>${escaparHtml(item.nome || item.codigo || codigo)}</span>`,
-              { permanent: true, direction: "top", offset: [0, -34], className: CLASSE_TOOLTIP_PONTO },
-            );
+            .bindTooltip(conteudoTooltipParada(item, cor, indice, codigo), {
+              permanent: true,
+              direction: "top",
+              offset: [0, -34],
+              className: CLASSE_TOOLTIP_PONTO,
+            })
+            .bindPopup(conteudoPopupParada(item), { offset: [0, -34 - 36] });
           pontosRef.current.set(cod, marcador);
         }
 
