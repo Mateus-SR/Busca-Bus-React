@@ -6,6 +6,8 @@ export function normalizarExibicao(exibicao) {
     usuarioId: exibicao.usuarioId ?? exibicao.usu_id ?? null,
     paradas: exibicao.paradas ?? exibicao.codigos_parada ?? [],
     instituicaoId: exibicao.instituicaoId ?? exibicao.instituicao ?? null,
+    temporaria: Boolean(exibicao.temporaria),
+    expiraEm: exibicao.expiraEm ?? exibicao.expira_em ?? null,
     config: {
       tempoAtraso: exibicao.config?.tempoAtraso ?? exibicao.config?.tempo_atraso ?? 1,
       tempoAdiantado: exibicao.config?.tempoAdiantado ?? exibicao.config?.tempo_adiantado ?? 1,
