@@ -12,6 +12,7 @@ export {
   codigoParadaValido,
   limparCodigoParada,
 } from "./paradas.js";
+export { mesclarPontos } from "./pontos.js";
 export { normalizarExibicao, normalizarOnibus } from "./dto.js";
 export { ehFalhaTransitoriaApi, ehStatusTransitorioApi, aguardarDisponibilidadeApi } from "./api/disponibilidade.js";
 export { TIPOS_EVENTO, LOCAIS_EVENTO, LOCAIS_COM_NUMERO, ROLES_ADMIN, ehAdmin } from "./calendario.js";

@@ -31,9 +31,12 @@ export const CLASSE_BALAO =
 export const CLASSE_PINO_PARADA =
   "block size-[26px] -rotate-45 rounded-[50%_50%_50%_0] border-[3px] border-solid shadow-[0_2px_6px_rgb(0_0_0/30%)]";
 
-// Conteúdo do tooltip permanente da parada.
+// Conteúdo do tooltip permanente da parada: bolinha "Ponto N" e nome lado a lado.
+// `w-max` é necessário: o tooltip do Leaflet nasce num painel de largura 0 e, sem largura própria, encolhe até o
+// menor conteúdo possível (a bolinha e o nome ficariam espremidos). Com `w-max` o nome ocupa o espaço que precisar
+// e só quebra de linha ao passar de `max-w` (que acompanha a tela no celular).
 export const CLASSE_TOOLTIP_PARADA =
-  "inline-flex min-w-[150px] max-w-[200px] flex-col items-center gap-0.5 text-center whitespace-normal";
+  "inline-flex w-max max-w-[min(360px,75vw)] items-center gap-1 text-left leading-tight break-words whitespace-normal flex-col";
 export const CLASSE_TOOLTIP_PONTO = "ponto-tooltip";
 
 // Os textos vêm da API e entram em `html` de L.divIcon / bindTooltip, então precisam ser escapados.

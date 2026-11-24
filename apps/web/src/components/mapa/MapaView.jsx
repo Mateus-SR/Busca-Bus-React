@@ -2,9 +2,11 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { mesclarPontos } from "@busca-bus/core";
 import LegendaPontos from "@/components/mapa/LegendaPontos";
 import useRadarOnibus from "@/hooks/useRadarOnibus";
 import useExibicao from "@/hooks/useExibicao";
+import useDadosPontos from "@/hooks/useDadosPontos";
 
 const BusMap = dynamic(() => import("@/components/mapa/BusMap"), {
   ssr: false,
@@ -20,7 +22,9 @@ export default function MapaView({ codigo, voltarHref, onibus = [], pontos = [] 
     aguardar: carregando || !exibicao?.paradas?.length,
   });
   const dadosOnibus = codigo ? radar.onibus : onibus;
-  const dadosPontos = codigo ? radar.pontos : pontos;
+  // Nome e endereço vêm do cadastro (GTFS), que o radar da SPTrans não traz; o radar segue mandando a posição ao vivo.
+  const cadastro = useDadosPontos(codigo ? exibicao?.paradas : null);
+  const dadosPontos = codigo ? mesclarPontos({ radar: radar.pontos, cadastro, paradas: exibicao?.paradas }) : pontos;
 
   return (
     <main className="flex h-[calc(100dvh-68px)] min-h-[32rem] flex-col overflow-hidden bg-superficie-alt">
