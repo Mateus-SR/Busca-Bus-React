@@ -36,7 +36,7 @@ export const CLASSE_PINO_PARADA =
 // menor conteúdo possível (a bolinha e o nome ficariam espremidos). Com `w-max` o nome ocupa o espaço que precisar
 // e só quebra de linha ao passar de `max-w` (que acompanha a tela no celular).
 export const CLASSE_TOOLTIP_PARADA =
-  "inline-flex w-max max-w-[min(360px,75vw)] items-center gap-1.5 text-left leading-tight break-words whitespace-normal";
+  "inline-flex w-max max-w-[min(360px,75vw)] items-center gap-1 text-left leading-tight break-words whitespace-normal flex-col";
 export const CLASSE_TOOLTIP_PONTO = "ponto-tooltip";
 
 // Os textos vêm da API e entram em `html` de L.divIcon / bindTooltip, então precisam ser escapados.

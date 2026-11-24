@@ -66,7 +66,7 @@ function conteudoTooltipParada(item, cor, indice, codigoExibicao) {
 
 function atualizarOpacidadePontos(mapa, marcadores) {
   const zoom = mapa.getZoom();
-  const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.25;
+  const opacidade = zoom >= 15 ? 1 : zoom >= 14 ? 0.75 : zoom >= 13 ? 0.5 : 0.15;
   marcadores.forEach((marcador) => {
     const elemento = marcador.getTooltip()?.getElement();
     if (elemento) elemento.style.opacity = String(opacidade);
