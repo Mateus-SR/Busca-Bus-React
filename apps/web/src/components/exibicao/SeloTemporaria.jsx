@@ -18,7 +18,6 @@ export default function SeloTemporaria({ expiraEm }) {
       aria-label={descricao}
       className="inline-flex shrink-0 items-center gap-1 rounded-full border-2 border-borda-enfase px-2 py-0.5 text-xs font-bold whitespace-nowrap text-texto-forte"
     >
-      Temporária
       {validade ? <span className="font-normal">· expira {validade}</span> : null}
     </span>
   );
