@@ -79,7 +79,7 @@ export default function PainelGlobal({ area, visao, posicao, texto, onTexto, sel
 
       <div aria-live="polite" className="flex flex-col gap-2 text-sm text-texto empty:-mb-4">
         {aproximar ? (
-          <p className="rounded-md bg-superficie p-3 text-texto-suave">Aproxime o mapa (a partir do zoom {ZOOM_MINIMO_GLOBAL}) para ver os pontos de ônibus da região, ou use a busca.</p>
+          <p className="rounded-md bg-superficie p-3 text-texto-suave">Aproxime o mapa para ver os pontos de ônibus da região, ou use a busca.</p>
         ) : null}
         {area.erro ? (
           <p role="alert" className="rounded-md border border-erro bg-erro/10 p-3 text-erro-forte">

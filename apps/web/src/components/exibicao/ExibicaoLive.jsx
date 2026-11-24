@@ -5,6 +5,7 @@ import { BusFront, Copy, MapPin, Share2, Monitor, MonitorOff } from "lucide-reac
 import ExibicaoTable from "@/components/exibicao/ExibicaoTable";
 import FiltroOrdenacao from "@/components/exibicao/FiltroOrdenacao";
 import FavoriteStar from "@/components/exibicao/FavoriteStar";
+import SeloTemporaria from "@/components/exibicao/SeloTemporaria";
 import NotificacoesExibicao from "@/components/exibicao/NotificacoesExibicao";
 import InlineToast from "@/components/ui/InlineToast";
 import useExibicao from "@/hooks/useExibicao";
@@ -265,7 +266,7 @@ export default function ExibicaoLive({ codigo }) {
             <div className="flex w-full min-w-0 flex-col items-center lg:absolute lg:top-0 lg:left-1/2 lg:w-max lg:-translate-x-1/2 lg:items-center">
               <div className="flex max-w-full min-w-0 items-center gap-2">
                 <span className="truncate text-lg font-bold sm:text-xl">{exibicao?.nome}</span>
-                <FavoriteStar codigo={codigo} />
+                {exibicao?.temporaria ? <SeloTemporaria expiraEm={exibicao.expiraEm} /> : <FavoriteStar codigo={codigo} />}
               </div>
               <div className="mt-1 flex flex-col items-center gap-2 text-sm">
                 <span className="font-roboto-mono italic">Código: {codigo}</span>

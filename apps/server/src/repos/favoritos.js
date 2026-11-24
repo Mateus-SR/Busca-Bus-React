@@ -49,6 +49,8 @@ export function criarFavoritosRepo(db) {
     async adicionar(usuarioId, codigo) {
       const exibicao = await buscarExibicao(codigo);
       if (!exibicao) return null;
+      // Exibição temporária expira sozinha; favoritar criaria um favorito que some em 24h.
+      if (exibicao.temporaria) return { temporaria: true };
       const filtro = {
         $or: [
           { usuarioId: { $in: idsDoUsuario(usuarioId) }, exibicaoId: exibicao._id },

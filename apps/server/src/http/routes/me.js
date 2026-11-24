@@ -152,6 +152,7 @@ export function meRoutes(config, db) {
       if (!favoritosRepo.disponivel) return res.status(503).json({ erro: "Banco de dados não configurado." });
       const resultado = await favoritosRepo.adicionar(req.usuarioId, req.params.codigo);
       if (!resultado) return res.status(404).json({ erro: "Exibição não encontrada." });
+      if (resultado.temporaria) return res.status(409).json({ erro: "Exibição temporária não pode ser favoritada." });
       return res.status(resultado.jaExistia ? 200 : 201).json({
         favoritado: true,
         exibicao: resultado.exibicao,
